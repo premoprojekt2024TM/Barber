@@ -4,3 +4,4 @@ export { Store } from './Store';
 export { Friendship } from './Friendship';
 export { ChatRoom } from './ChatRoom';
 export { Message } from './message';
+export { ExtendedHair } from './ExtendedHair';
