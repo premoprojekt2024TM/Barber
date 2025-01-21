@@ -32,63 +32,6 @@ fastify.register(cors, {
 });
 
 
-fastify.register(require('@fastify/swagger'), {
-  openapi: {
-    openapi: '3.0.0',
-    info: {
-      title: 'Barber-finder swagger',
-      description: 'Testing the Barber-finder Fastify APIs',
-      version: '0.1.0',
-    },
-    servers: [
-      {
-        url: 'http://localhost:8080',
-        description: 'Development server',
-      },
-    ],
-    tags: [
-      { name: 'user', description: 'User related end-points' },
-      { name: 'code', description: 'Code related end-points' },
-    ],
-    components: {
-      securitySchemes: {
-        bearerAuth: {
-          type: 'http',
-          scheme: 'bearer',
-          bearerFormat: 'JWT', 
-        },
-      },
-    },
-    security: [
-      {
-        bearerAuth: [],
-      },
-    ],
-  },
-});
-
-
-fastify.register(import('@fastify/swagger-ui'), {
-  routePrefix: '/documentation',
-  uiConfig: {
-    docExpansion: 'full',
-    deepLinking: false
-  },
-  uiHooks: {
-    onRequest: function (request, reply, next) { next() },
-    preHandler: function (request, reply, next) { next() }
-  },
-  staticCSP: true,
-  transformStaticCSP: (header) => header,
-  transformSpecification: (swaggerObject, request, reply) => { return swaggerObject },
-  transformSpecificationClone: true
-}),
-
-
-
-
-
-
 
 
 
