@@ -6,13 +6,8 @@ import axios from 'axios';
 import * as dotenv from 'dotenv';
 dotenv.config();
 
-
 export const createStore = async (request: AuthenticatedRequest, reply: FastifyReply) => {
   const userId = request.user?.id;
-
-  if (!userId) {
-    return reply.status(400).send({ message: 'User ID is missing' });
-  }
 
   const { name, description, address, city, postalCode, phone, email } = request.body as model.Store;
 
@@ -85,4 +80,5 @@ export const getAllStores = async (request: FastifyRequest, reply: FastifyReply)
     return reply.status(500).send({ message: 'An error occurred while retrieving stores' });
   }
 };
+
 
