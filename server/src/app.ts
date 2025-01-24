@@ -9,6 +9,8 @@ import { userRoutes } from './routes/userRoutes';
 import { chatRoutes } from './routes/chatRoutes';
 import { friendRoutes } from './routes/friendRoutes';
 import { storeRoutes } from './routes/storeRoutes';
+import { detectFaces } from './microservice/detectFaces'; 
+import fetch from 'node-fetch'; 
 
 
 
@@ -40,6 +42,7 @@ fastify.register(userRoutes, { prefix: '/api/v1' });
 fastify.register(chatRoutes, { prefix: '/api/v1' });
 fastify.register(storeRoutes, { prefix: '/api/v1' });
 fastify.register(friendRoutes, { prefix: '/api/v1' });
+
 
 fastify.listen({ port: 8080 }, (err, address) => {
   if (err) {
