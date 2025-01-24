@@ -9,8 +9,7 @@ import { userRoutes } from './routes/userRoutes';
 import { chatRoutes } from './routes/chatRoutes';
 import { friendRoutes } from './routes/friendRoutes';
 import { storeRoutes } from './routes/storeRoutes';
-import { detectFaces } from './microservice/detectFaces'; 
-import fetch from 'node-fetch'; 
+
 
 
 
