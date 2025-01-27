@@ -16,7 +16,11 @@ export const AppDataSource = new DataSource({
   model.Friendship,
   model.ChatRoom,
   model.Message,
-  model.ExtendedHair
+  model.ExtendedHair,
+  model.StorePictures,
+  model.StoreWorkers,
+  model.AvailabilityTimes,
+  model.Appointment
   ],              
   synchronize: true,           
   logging: true                   

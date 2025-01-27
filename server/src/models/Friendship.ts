@@ -20,4 +20,7 @@ export class Friendship {
     default: 'pending',
   })
   status!: 'pending' | 'accepted' | 'rejected';
+  
+  
+  
 }

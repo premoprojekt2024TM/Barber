@@ -171,30 +171,58 @@ export const profile = async (request: AuthenticatedRequest, reply: FastifyReply
   try {
     const userRepository = AppDataSource.getRepository(model.User);
     const extendedUserRepository = AppDataSource.getRepository(model.ExtendedUser);
+    const extendedHairRepository = AppDataSource.getRepository(model.ExtendedHair);
 
     const user = await userRepository.findOne({ where: { id: userId } });
     if (!user) {
       return reply.status(404).send({ message: 'User not found' });
     }
 
-    const extendedUser = await extendedUserRepository.findOne({
-      where: { user: { id: userId } },
-      relations: ['user'], 
-    });
+    let extendedUser;
+    let profileData;
 
-    if (!extendedUser) {
-      return reply.status(404).send({ message: 'Extended user not found' });
+    if (user.role === 'client') {
+      extendedUser = await extendedUserRepository.findOne({
+        where: { user: { id: userId } },
+        relations: ['user'],
+      });
+
+      if (!extendedUser) {
+        return reply.status(404).send({ message: 'Extended user not found' });
+      }
+
+      profileData = {
+        userId: user.id,
+        username: user.username,
+        email: user.email,
+        firstName: extendedUser.firstName,
+        lastName: extendedUser.lastName,
+        birthday: extendedUser.birthday,
+        profilePic: extendedUser.profilePic,
+      };
+    } else if (user.role === 'hairdresser') {
+      const extendedHair = await extendedHairRepository.findOne({
+        where: { user: { id: userId } },
+        relations: ['user'],
+      });
+
+      if (!extendedHair) {
+        return reply.status(404).send({ message: 'Extended hairdresser not found' });
+      }
+
+      profileData = {
+        userId: user.id,
+        username: user.username,
+        email: user.email,
+        firstName: extendedHair.firstName,
+        lastName: extendedHair.lastName,
+        profilePic: extendedHair.profilePic,
+        isVerified: extendedHair.isVerified,
+        description: extendedHair.description,
+      };
+    } else {
+      return reply.status(400).send({ message: 'Invalid role' });
     }
-
-    const profileData = {
-      userId: user.id,
-      username: user.username,
-      email: user.email,
-      firstName: extendedUser.firstName,
-      lastName: extendedUser.lastName,
-      birthday: extendedUser.birthday,
-      profilePic: extendedUser.profilePic,
-    };
 
     return reply.send({ message: 'Profile data fetched successfully', profileData });
   } catch (error) {
@@ -277,6 +305,7 @@ export const verification = async (request: AuthenticatedRequest, reply: Fastify
   try {
     if (faces.length === 1) {
       extendedUser.isVerified = true;
+      extendedUser.profilePic = imageUrl
     } else {
       extendedUser.isVerified = false;
     }

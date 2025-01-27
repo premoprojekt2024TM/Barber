@@ -1,5 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn ,OneToMany} from 'typeorm';
 import { User } from './User';
+import { StorePictures } from './StorePictures';
 
 @Entity()
 export class Store {
@@ -36,5 +37,8 @@ export class Store {
 
   @Column('double precision', { nullable: true })
   longitude?: number;
+  
+  @OneToMany(() => StorePictures, (storePicture) => storePicture.store)
+  pictures!: StorePictures[];
   
 }

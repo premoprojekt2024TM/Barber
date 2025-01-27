@@ -1,5 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
-
+import { Entity, PrimaryGeneratedColumn, Column,OneToMany } from 'typeorm';
+import { AvailabilityTimes } from './Availability';
 @Entity()
 export class User {
   @PrimaryGeneratedColumn('increment')
@@ -20,4 +20,7 @@ export class User {
     default: 'client', 
   })
   role!: 'client' | 'hairdresser';
+  
+  @OneToMany(() => AvailabilityTimes, (availabilityTimes) => availabilityTimes.user)
+   availabilityTimes!: AvailabilityTimes[];
 }

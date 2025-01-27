@@ -9,9 +9,8 @@ import { userRoutes } from './routes/userRoutes';
 import { chatRoutes } from './routes/chatRoutes';
 import { friendRoutes } from './routes/friendRoutes';
 import { storeRoutes } from './routes/storeRoutes';
-
-
-
+import { availRoutes } from './routes/availRoutes';
+import { appointmentRoutes } from './routes/appointmentRoutes';
 
 
 dotenv.config();
@@ -41,6 +40,8 @@ fastify.register(userRoutes, { prefix: '/api/v1' });
 fastify.register(chatRoutes, { prefix: '/api/v1' });
 fastify.register(storeRoutes, { prefix: '/api/v1' });
 fastify.register(friendRoutes, { prefix: '/api/v1' });
+fastify.register(availRoutes, { prefix: '/api/v1' } );
+fastify.register(appointmentRoutes, { prefix: '/api/v1' } );
 
 
 fastify.listen({ port: 8080 }, (err, address) => {
