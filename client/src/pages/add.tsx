@@ -33,7 +33,7 @@ const AddPage: React.FC = () => {
               <DragDropContext onDragEnd={handleOnDragEnd}>
                 <Grid container spacing={3}>
                   <Grid item xs={12} sm={6} lg={4}>
-                    <ColumnMemo variant="planned" />
+                    <ColumnMemo variant="monday" />
                   </Grid>
                   <Grid item xs={12} sm={6} lg={4}>
                     <ColumnMemo variant="ongoing" />
@@ -44,6 +44,7 @@ const AddPage: React.FC = () => {
                   <Grid item xs={12} sm={6} lg={4}>
                     <ColumnMemo variant='archived' />
                   </Grid>
+                  
                 </Grid>
               </DragDropContext>
             </Box>

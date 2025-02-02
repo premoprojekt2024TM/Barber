@@ -39,7 +39,14 @@ const useTodos = create<TodoStore>()(
         planned: [],
         ongoing: [],
         done: [],
-        archived: [], 
+        archived: [],
+        monday: [], // Add support for each day of the week
+        tuesday: [],
+        wednesday: [],
+        thursday: [],
+        friday: [],
+        saturday: [],
+        sunday: [],
       },
       
       counter: 1,

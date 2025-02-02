@@ -3,9 +3,21 @@ import { Chip } from '@mui/material';
 import { cn } from './utils';
 
 // Define the available variants for the Badge
-export type Variant = 'planned' | 'ongoing' | 'done' | 'outline' | 'archived';
+export type Variant = 
+  | 'planned'
+  | 'ongoing'
+  | 'done'
+  | 'outline'
+  | 'archived'
+  | 'monday'
+  | 'tuesday'
+  | 'wednesday'
+  | 'thursday'
+  | 'friday'
+  | 'saturday'
+  | 'sunday';
 
-// Create the badge styles for different variants
+// Create the badge styles for different variants, including days of the week
 const badgeStyles = (variant: Variant) => {
   switch (variant) {
     case 'planned':
@@ -49,6 +61,62 @@ const badgeStyles = (variant: Variant) => {
           backgroundColor: 'rgba(169, 169, 169, 0.3)', // darker gray on hover
         },
       };
+    case 'monday':
+      return {
+        color: 'white',
+        backgroundColor: '#ff7043', // Monday - Orange
+        '&:hover': {
+          backgroundColor: '#f4511e', // darker orange on hover
+        },
+      };
+    case 'tuesday':
+      return {
+        color: 'white',
+        backgroundColor: '#66bb6a', // Tuesday - Green
+        '&:hover': {
+          backgroundColor: '#388e3c', // darker green on hover
+        },
+      };
+    case 'wednesday':
+      return {
+        color: 'white',
+        backgroundColor: '#42a5f5', // Wednesday - Blue
+        '&:hover': {
+          backgroundColor: '#1e88e5', // darker blue on hover
+        },
+      };
+    case 'thursday':
+      return {
+        color: 'white',
+        backgroundColor: '#ab47bc', // Thursday - Purple
+        '&:hover': {
+          backgroundColor: '#8e24aa', // darker purple on hover
+        },
+      };
+    case 'friday':
+      return {
+        color: 'white',
+        backgroundColor: '#ffca28', // Friday - Yellow
+        '&:hover': {
+          backgroundColor: '#ffb300', // darker yellow on hover
+        },
+      };
+    case 'saturday':
+      return {
+        color: 'white',
+        backgroundColor: '#ff8a80', // Saturday - Light Red
+        '&:hover': {
+          backgroundColor: '#f44336', // darker red on hover
+        },
+      };
+    case 'sunday':
+      return {
+        color: 'white',
+        backgroundColor: '#7e57c2', // Sunday - Purple
+        '&:hover': {
+          backgroundColor: '#5e35b1', // darker purple on hover
+        },
+      };
     default:
       return {};
   }
@@ -69,7 +137,7 @@ function Badge({ className, variant = 'outline', label, ...props }: BadgeProps) 
         fontWeight: '600',
         padding: '0.25rem 0.75rem', // padding inside the chip
         transition: 'background-color 0.2s ease',
-        ...badgeStyles(variant),
+        ...badgeStyles(variant), // Apply styles based on the variant
       }}
       className={cn(className)} // You can still use the cn utility to merge classes
       {...props}

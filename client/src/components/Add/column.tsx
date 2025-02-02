@@ -1,5 +1,4 @@
 import React from "react";
-import { Badge } from "./badge";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Task from "./task";
 import * as z from "zod";
@@ -19,16 +18,23 @@ interface ColumnProps extends React.DetailedHTMLProps<React.HTMLAttributes<HTMLD
   variant: TaskVariant;
 }
 
+// Adjust columnTitle function to include both task states and days of the week
 const columnTitle = (state: string): string => {
   const titles: Record<string, string> = {
     planned: "TO DO",
     ongoing: "IN PROGRESS",
     done: "DONE",
     archived: "ARCHIVED",  // New column title
+    monday: "MONDAY",
+    tuesday: "TUESDAY",
+    wednesday: "WEDNESDAY",
+    thursday: "THURSDAY",
+    friday: "FRIDAY",
+    saturday: "SATURDAY",
+    sunday: "SUNDAY",
   };
   return titles[state] || "";
 };
-
 
 export const Column = React.forwardRef<HTMLDivElement, ColumnProps>(({ variant, className }, ref) => {
   const addTodo = useTodos((store) => store.addTodos);
@@ -61,13 +67,9 @@ export const Column = React.forwardRef<HTMLDivElement, ColumnProps>(({ variant, 
       }}
     >
       <CardHeader
-        title={
-          <Badge variant={variant} className="ml-2 cursor-default font-bold">
-            <Typography variant="h6">{columnTitle(variant)}</Typography>
-          </Badge>
-        }
+
         action={
-          variant === "planned" ? (
+          variant !== "done" ? (  // Only show the + icon for columns where variant is NOT 'done'
             <IconButton
               color="primary"
               onClick={() => {
@@ -101,8 +103,8 @@ export const Column = React.forwardRef<HTMLDivElement, ColumnProps>(({ variant, 
             ))}
             {provided.placeholder}
 
-            {/* Task Input (Visible when adding a task) */}
-            {variant === "planned" && (
+            {/* Task Input (Visible when adding a task for all days, but NOT 'done') */}
+            {variant !== "done" && (
               <div className={cn("p-2", isAddingTodo ? "block" : "hidden")}>
                 <Form {...form}>
                   <form
