@@ -5,8 +5,6 @@ import { generateToken } from '../middlewares/authMiddleware';
 import * as model from '../models/index'; 
 import { loginSchema, registerSchema, updateSchema } from '../shared/validation/userValidation';
 import { AuthenticatedRequest , GetUserParams } from '../interfaces/interfaces';
-import { detectFaces } from '../microservice/detectFaces';
-import fetch from 'node-fetch'; 
 
 
 
@@ -55,7 +53,6 @@ export const registerUser = async (request: FastifyRequest, reply: FastifyReply)
       newExtendedHair.user = newUser;
       newExtendedHair.firstName = '';
       newExtendedHair.lastName = '';
-      newExtendedHair.isVerified = undefined;
       newExtendedHair.profilePic = 'https://place-hold.it/300';
       newExtendedHair.description = '';
       await AppDataSource.getRepository(model.ExtendedHair).save(newExtendedHair);
@@ -217,7 +214,6 @@ export const profile = async (request: AuthenticatedRequest, reply: FastifyReply
         firstName: extendedHair.firstName,
         lastName: extendedHair.lastName,
         profilePic: extendedHair.profilePic,
-        isVerified: extendedHair.isVerified,
         description: extendedHair.description,
       };
     } else {
@@ -269,58 +265,5 @@ export const getUserByUsername = async (request: FastifyRequest<{ Params: GetUse
   } catch (error) {
     console.error('Error fetching user:', error);
     return reply.status(500).send({ message: 'An error occurred while fetching user data' });
-  }
-};
-
-
-export const verification = async (request: AuthenticatedRequest, reply: FastifyReply) => {
-  const userId = request.user?.id;
-
-  if (!userId) {
-    return reply.status(400).send({ message: 'User ID is missing' });
-  }
-
-  const { imageUrl } = request.body as { imageUrl: string };
-
-  if (!imageUrl) {
-    return reply.status(400).send({ message: 'Please provide an image.' });
-  }
-
-  const response = await fetch(imageUrl);
-  if (!response.ok) {
-    return reply.status(400).send({ message: 'Failed to fetch the image from the URL' });
-  }
-  
-  const imageBuffer = await response.buffer();
-  const faces = await detectFaces(imageBuffer);
-  
-
-    const extendedUserRepository = AppDataSource.getRepository(model.ExtendedHair);
-    const extendedUser = await extendedUserRepository.findOne({ where: { user: { id: userId } } });
-
-    if (!extendedUser) {
-      return reply.status(404).send({ message: 'Extended user not found' });
-    }
-
-  try {
-    if (faces.length === 1) {
-      extendedUser.isVerified = true;
-      extendedUser.profilePic = imageUrl
-    } else {
-      extendedUser.isVerified = false;
-    }
-
-    await extendedUserRepository.save(extendedUser);
-
-    return reply.send({
-      message: faces.length === 1
-        ? 'Face detected and user verified.'
-        : 'Face detection failed or multiple faces detected.',
-      isVerified: extendedUser.isVerified,
-    });
-
-  } catch (error) {
-    console.error('Error during verification:', error);
-    return reply.status(500).send({ message: 'An error occurred during face verification' });
   }
 };

@@ -20,9 +20,6 @@ export class ExtendedHair {
   profilePic?: string;
   
   @Column({ nullable: true }) 
-  isVerified?: boolean;
-  
-  @Column({ nullable: true }) 
   description?: string;
   
   
