@@ -2,7 +2,6 @@ import * as React from 'react';
 import { Chip } from '@mui/material';
 import { cn } from './utils';
 
-// Define the available variants for the Badge
 export type Variant = 
   | 'planned'
   | 'ongoing'
@@ -17,15 +16,14 @@ export type Variant =
   | 'saturday'
   | 'sunday';
 
-// Create the badge styles for different variants, including days of the week
 const badgeStyles = (variant: Variant) => {
   switch (variant) {
     case 'planned':
       return {
         color: 'orange',
-        backgroundColor: 'rgba(255, 165, 0, 0.1)', // light orange
+        backgroundColor: 'rgba(255, 165, 0, 0.1)',
         '&:hover': {
-          backgroundColor: 'rgba(255, 165, 0, 0.2)', // darker orange on hover
+          backgroundColor: 'rgba(255, 165, 0, 0.2)', 
         },
       };
     case 'ongoing':

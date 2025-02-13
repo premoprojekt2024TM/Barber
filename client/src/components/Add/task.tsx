@@ -11,8 +11,7 @@ import { TaskVariant } from "./types";
 
 // MUI imports
 import { Card, CardContent, IconButton, Typography } from "@mui/material";
-import ModeEditIcon from '@mui/icons-material/ModeEdit';
-import DeleteIcon from '@mui/icons-material/Delete'; // Import the trash icon
+import DeleteIcon from '@mui/icons-material/Delete'; 
 
 interface TaskProps {
   id: string;
