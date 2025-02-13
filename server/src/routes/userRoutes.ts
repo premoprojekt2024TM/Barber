@@ -1,6 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import { deleteUser, getUserByUsername, loginUser, profile, registerUser, updateUser } from '../controllers/authController';
-import { authenticateJwt } from '../middlewares/authMiddleware';
+import { authenticateJwt,authorizeRole } from '../middlewares/authMiddleware';
 
 export const userRoutes = async (fastify: FastifyInstance) => {
   fastify.post('/register', registerUser);
@@ -9,4 +9,16 @@ export const userRoutes = async (fastify: FastifyInstance) => {
   fastify.get('/profile', { preHandler: authenticateJwt }, profile);
   fastify.get('/user/:username', getUserByUsername);
   fastify.put('/new', { preHandler: authenticateJwt }, updateUser);
+  //test routes
+  fastify.get('/client', { preHandler: [authenticateJwt, authorizeRole(['client'])] }, async (request, reply) => {
+    return { message: 'Welcome, Client!' };
+  });
+
+  fastify.get('/hair', { preHandler: [authenticateJwt, authorizeRole(['hairdresser'])] }, async (request, reply) => {
+    return { message: 'Welcome, Hair!' };
+  });
+
+
+
+
 };

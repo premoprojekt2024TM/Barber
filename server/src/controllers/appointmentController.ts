@@ -60,7 +60,6 @@ export const createAppointment = async (request: AuthenticatedRequest, reply: Fa
   }
 };
 
-
 export const getAppointment = async (request: AuthenticatedRequest, reply: FastifyReply) => {
   const clientId = request.user?.id;  
   if (!clientId) {

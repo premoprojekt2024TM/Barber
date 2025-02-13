@@ -41,3 +41,20 @@ export const authenticateJwt = async (request: AuthenticatedRequest, reply: Fast
   }
 };
 
+
+export const authorizeRole = (allowedRoles: ('client' | 'hairdresser')[]) => {
+  return async (request: AuthenticatedRequest, reply: FastifyReply) => {
+    const user = request.user;
+    if (!user) {
+      return reply.status(401).send({ message: 'User is not authenticated' });
+    }
+
+    const { role } = user;
+
+    if (!allowedRoles.includes(role)) {
+      return reply.status(403).send({ message: 'Forbidden: You do not have the required permissions' });
+    }
+
+    return true;
+  };
+};
