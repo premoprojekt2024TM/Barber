@@ -5,9 +5,9 @@ import { AuthenticatedRequest, JwtPayload } from '../interfaces/interfaces';
 const JWT_SECRET = "process.env.JWT_SECRET"; 
 
 
-export const generateToken = (user: { id: number; email: string; role: 'client' | 'hairdresser'; username: string }) => {
+export const generateToken = (user: { userId: number; email: string; role: 'client' | 'worker'; username: string }) => {
   const payload = {
-    id: user.id,
+    userId: user.userId,
     email: user.email,
     role: user.role,
     username: user.username, 
@@ -29,7 +29,7 @@ export const authenticateJwt = async (request: AuthenticatedRequest, reply: Fast
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
     request.user = { 
-      id: decoded.id, 
+      userId: decoded.userId, 
       email: decoded.email, 
       role: decoded.role, 
       username: decoded.username  
@@ -42,7 +42,7 @@ export const authenticateJwt = async (request: AuthenticatedRequest, reply: Fast
 };
 
 
-export const authorizeRole = (allowedRoles: ('client' | 'hairdresser')[]) => {
+export const authorizeRole = (allowedRoles: ('client' | 'worker')[]) => {
   return async (request: AuthenticatedRequest, reply: FastifyReply) => {
     const user = request.user;
     if (!user) {

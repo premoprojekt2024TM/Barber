@@ -18,7 +18,7 @@ export async function chatController(fastify: FastifyInstance) {
       const decoded = jwt.verify(token, "process.env.JWT_SECRET") as JwtPayload;
       
       socket.user = {
-        id: decoded.id,
+        id: decoded.userId,
         email: decoded.email,
         role: decoded.role,
         username: decoded.username,
@@ -32,13 +32,13 @@ export async function chatController(fastify: FastifyInstance) {
     }
   };
 
-  const saveMessage = async (chatroomId: string, senderId: number, content: string) => {
+  const saveMessage = async (chatroomId: number, senderId: number, content: string) => {
     try {
       const chatRoom = await AppDataSource.getRepository(model.ChatRoom).findOne({
-        where: { id: chatroomId }
-      });
+        where: { chatroomId: chatroomId }, 
+      })
       const sender = await AppDataSource.getRepository(model.User).findOne({
-        where: { id: senderId }
+        where: { userId: senderId }
       });
 
       if (!chatRoom || !sender) {
@@ -65,8 +65,8 @@ export async function chatController(fastify: FastifyInstance) {
 
     const chatRoom = await AppDataSource.getRepository(model.ChatRoom).findOne({
       where: [
-        { id: chatroomId, user1: { id: user.id } },
-        { id: chatroomId, user2: { id: user.id } },
+        { chatroomId: chatroomId, user1: { userId: user.id } },
+        { chatroomId: chatroomId, user2: { userId: user.id } },
       ],
     });
 
@@ -77,17 +77,18 @@ export async function chatController(fastify: FastifyInstance) {
     }
 
     console.log(`New WebSocket connection from ${user.username} to chatroom ${chatroomId}`);
-    if (!clients.has(chatroomId)) {
-      clients.set(chatroomId, new Set());
+    var stringchatroom = chatroomId.toString()
+    if (!clients.has(stringchatroom)) {
+      clients.set(stringchatroom, new Set());
     }
-    clients.get(chatroomId)!.add(socket);
+    clients.get(stringchatroom)!.add(socket);
 
     socket.on('message', async (message: string) => {
       console.log(`Received message from ${user.username} in chatroom ${chatroomId}: ${message.toString()}`);
 
       await saveMessage(chatroomId, user.id, message.toString());
 
-      for (let client of clients.get(chatroomId) || []) {
+      for (let client of clients.get(stringchatroom) || []) {
         if (client !== socket && client.readyState === client.OPEN) {
           client.send(JSON.stringify({
             userName: user.username,
@@ -99,14 +100,14 @@ export async function chatController(fastify: FastifyInstance) {
     });
 
     socket.on('close', () => {
-      clients.get(chatroomId)?.delete(socket);
+      clients.get(stringchatroom)?.delete(socket);
       console.log(`WebSocket connection from ${user.username} to chatroom ${chatroomId} closed.`);
     });
   });
 }
 
 export const createChatroom = async (request: any, reply: FastifyReply) => {
-  const userId = request.user?.id;
+  const userId = request.user?.userId;
   const { friendId } = request.body as { friendId: number };
 
   if (userId === friendId) {
@@ -114,8 +115,8 @@ export const createChatroom = async (request: any, reply: FastifyReply) => {
   }
 
   try {
-    const user = await AppDataSource.getRepository(model.User).findOneBy({ id: userId });
-    const friend = await AppDataSource.getRepository(model.User).findOneBy({ id: friendId });
+    const user = await AppDataSource.getRepository(model.User).findOneBy({ userId: userId });
+    const friend = await AppDataSource.getRepository(model.User).findOneBy({ userId: friendId });
 
     if (!user || !friend) {
       return reply.status(404).send({ message: 'User or Friend not found' });
@@ -147,17 +148,16 @@ export const createChatroom = async (request: any, reply: FastifyReply) => {
 };
 
 export const getChatroomsForUser = async (request: any, reply: FastifyReply) => {
-  const userId = request.user?.id;
-
+  const userId = request.user?.userId; 
   if (!userId) {
-    return reply.status(400).send({ message: 'User not authenticated' });
+    return reply.status(404).send({ message: "User not authenticated" }); 
   }
 
   try {
     const chatrooms = await AppDataSource.getRepository(model.ChatRoom).find({
       where: [
-        { user1: { id: userId } },
-        { user2: { id: userId } }
+        { user1: { userId: userId } },
+        { user2: { userId: userId } }
       ],
     });
 
@@ -172,35 +172,32 @@ export const getChatroomsForUser = async (request: any, reply: FastifyReply) => 
   }
 };
 
-export const getChatHistory = async (request: any, reply: FastifyReply) => {
-  const userId = request.user?.id;
-  const { chatroomId } = request.params as { chatroomId: string };
 
-  if (!userId) {
-    return reply.status(400).send({ message: 'User not authenticated' });
-  }
+export const getChatHistory = async (request: any, reply: FastifyReply) => {
+  const userId = request.user?.userId; 
+  const { chatroomId } = request.params; 
+
 
   try {
     const chatRoom = await AppDataSource.getRepository(model.ChatRoom).findOne({
-      where: { id: chatroomId },
-      relations: ['user1', 'user2'],
+      where: { chatroomId: Number(chatroomId) }, 
+      relations: ['user1', 'user2'],  
     });
 
     if (!chatRoom) {
       return reply.status(404).send({ message: 'Chatroom not found' });
     }
 
-    if (chatRoom.user1.id !== userId && chatRoom.user2.id !== userId) {
+    if (chatRoom.user1.userId !== userId && chatRoom.user2.userId !== userId) {
       return reply.status(403).send({ message: 'You do not have permission to view this chat history' });
     }
-
     const messages = await AppDataSource.getRepository(model.Message).find({
-      where: { chatRoom: { id: chatRoom.id } },
-      order: { createdAt: 'ASC' },  
-      relations: ['sender'],
+      where: { chatRoom: { chatroomId: chatRoom.chatroomId } },
+      order: { createdAt: 'ASC' },
+      relations: ['sender'], 
     });
 
-    return reply.status(200).send({ messages, chatroomId: chatRoom.id });
+    return reply.status(200).send({ messages, chatroomId: chatRoom.chatroomId });
   } catch (error) {
     console.error('Error fetching chat history:', error);
     return reply.status(500).send({ message: 'An error occurred while fetching the chat history' });

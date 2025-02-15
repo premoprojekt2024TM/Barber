@@ -11,14 +11,13 @@ export const AppDataSource = new DataSource({
   password: 'root',      
   entities: [
   model.User,
-  model.ExtendedUser,
   model.Store,
   model.Friendship,
   model.ChatRoom,
   model.Message,
-  model.ExtendedHair,
+  model.ExtendedWorker,
   model.StorePictures,
-  model.StoreWorkers,
+  model.StoreWorker,
   model.AvailabilityTimes,
   model.Appointment
   ],              

@@ -6,7 +6,7 @@ import { AuthenticatedRequest,FriendRequestBody } from '../interfaces/interfaces
 
 
 export const sendFriendRequest = async (request: AuthenticatedRequest, reply: FastifyReply) => {
-  const userId = request.user?.id;
+  const userId = request.user?.userId;
   const { friendId } = request.body as { friendId: number };
 
   if (userId === friendId) {
@@ -14,8 +14,8 @@ export const sendFriendRequest = async (request: AuthenticatedRequest, reply: Fa
   }
 
   try {
-    const user = await AppDataSource.getRepository(model.User).findOneBy({ id: userId });
-    const friend = await AppDataSource.getRepository(model.User).findOneBy({ id: friendId });
+    const user = await AppDataSource.getRepository(model.User).findOneBy({ userId: userId });
+    const friend = await AppDataSource.getRepository(model.User).findOneBy({ userId: friendId });
 
     if (!user || !friend) {
       return reply.status(404).send({ message: 'User or Friend not found' });
@@ -27,8 +27,8 @@ export const sendFriendRequest = async (request: AuthenticatedRequest, reply: Fa
 
     const existingFriendRequest = await AppDataSource.getRepository(model.Friendship).findOne({
       where: [
-        { user: { id: userId }, friend: { id: friendId }, status: 'pending' },
-        { user: { id: friendId }, friend: { id: userId }, status: 'pending' },
+        { user: { userId: userId }, friend: { userId: friendId }, status: 'pending' },
+        { user: { userId: friendId }, friend: { userId: userId }, status: 'pending' },
       ],
     });
 
@@ -52,7 +52,7 @@ export const sendFriendRequest = async (request: AuthenticatedRequest, reply: Fa
 };
 
 export const acceptFriendRequest = async (request: AuthenticatedRequest, reply: FastifyReply) => {
-  const userId = request.user?.id;
+  const userId = request.user?.userId;
   const { friendId } = request.body as FriendRequestBody;
 
   if (userId === friendId) {
@@ -62,8 +62,8 @@ export const acceptFriendRequest = async (request: AuthenticatedRequest, reply: 
   try {
     const friendRequest = await AppDataSource.getRepository(model.Friendship).findOne({
       where: [
-        { user: { id: userId }, friend: { id: friendId }, status: 'pending' },
-        { user: { id: friendId }, friend: { id: userId }, status: 'pending' },
+        { user: { userId: userId }, friend: { userId: friendId }, status: 'pending' },
+        { user: { userId: friendId }, friend: { userId: userId }, status: 'pending' },
       ],
     });
 
@@ -76,8 +76,8 @@ export const acceptFriendRequest = async (request: AuthenticatedRequest, reply: 
 
     const reciprocalRequest = await AppDataSource.getRepository(model.Friendship).findOne({
       where: [
-        { user: { id: friendId }, friend: { id: userId }, status: 'pending' },
-        { user: { id: userId }, friend: { id: friendId }, status: 'pending' },
+        { user: { userId: friendId }, friend: { userId: userId }, status: 'pending' },
+        { user: { userId: userId }, friend: { userId: friendId }, status: 'pending' },
       ],
     });
 
@@ -95,7 +95,7 @@ export const acceptFriendRequest = async (request: AuthenticatedRequest, reply: 
 
 
 export const rejectFriendRequest = async (request: AuthenticatedRequest, reply: FastifyReply) => {
-  const userId = request.user?.id;
+  const userId = request.user?.userId;
   const { friendId } = request.body as FriendRequestBody;
 
   if (userId === friendId) {
@@ -105,8 +105,8 @@ export const rejectFriendRequest = async (request: AuthenticatedRequest, reply: 
   try {
     const friendRequest = await AppDataSource.getRepository(model.Friendship).findOne({
       where: [
-        { user: { id: userId }, friend: { id: friendId }, status: 'pending' },
-        { user: { id: friendId }, friend: { id: userId }, status: 'pending' },
+        { user: { userId: userId }, friend: { userId: friendId }, status: 'pending' },
+        { user: { userId: friendId }, friend: { userId: userId }, status: 'pending' },
       ],
     });
 
@@ -119,8 +119,8 @@ export const rejectFriendRequest = async (request: AuthenticatedRequest, reply: 
 
     const reciprocalRequest = await AppDataSource.getRepository(model.Friendship).findOne({
       where: [
-        { user: { id: friendId }, friend: { id: userId }, status: 'pending' },
-        { user: { id: userId }, friend: { id: friendId }, status: 'pending' },
+        { user: { userId: friendId }, friend: { userId: userId }, status: 'pending' },
+        { user: { userId: userId }, friend: { userId: friendId }, status: 'pending' },
       ],
     });
 
@@ -138,13 +138,13 @@ export const rejectFriendRequest = async (request: AuthenticatedRequest, reply: 
 
 
 export const getFriends = async (request: AuthenticatedRequest, reply: FastifyReply) => {
-  const userId = request.user?.id;
+  const userId = request.user?.userId;
 
   try {
     const friendships = await AppDataSource.getRepository(model.Friendship).find({
       where: [
-        { user: { id: userId }, status: 'accepted' },
-        { friend: { id: userId }, status: 'accepted' }
+        { user: { userId: userId }, status: 'accepted' },
+        { friend: { userId: userId }, status: 'accepted' }
       ]
     });
 
@@ -152,7 +152,7 @@ export const getFriends = async (request: AuthenticatedRequest, reply: FastifyRe
       return reply.status(404).send({ message: 'You have no friends' });
     }
     const friends = friendships.map((friendship) => {
-      return friendship.user.id === userId ? friendship.friend : friendship.user;
+      return friendship.user.userId === userId ? friendship.friend : friendship.user;
     });
 
     return reply.status(200).send({ friends });
@@ -164,12 +164,12 @@ export const getFriends = async (request: AuthenticatedRequest, reply: FastifyRe
 
 
 export const getPendingFriendRequests = async (request: AuthenticatedRequest, reply: FastifyReply) => {
-  const userId = request.user?.id;
+  const userId = request.user?.userId;
 
   try {
     const pendingRequests = await AppDataSource.getRepository(model.Friendship).find({
       where: {
-        friend: { id: userId },
+        friend: { userId: userId },
         status: 'pending',
       },
     });
@@ -189,7 +189,7 @@ export const getPendingFriendRequests = async (request: AuthenticatedRequest, re
 
 
 export const deleteFriendship = async (request: AuthenticatedRequest, reply: FastifyReply) => {
-  const userId = request.user?.id;
+  const userId = request.user?.userId;
   const { friendId } = request.body as FriendRequestBody;
 
   if (userId === friendId) {
@@ -199,8 +199,8 @@ export const deleteFriendship = async (request: AuthenticatedRequest, reply: Fas
   try {
     const friendships = await AppDataSource.getRepository(model.Friendship).find({
       where: [
-        { user: { id: userId }, friend: { id: friendId } },
-        { user: { id: friendId }, friend: { id: userId } }
+        { user: { userId: userId }, friend: { userId: friendId } },
+        { user: { userId: friendId }, friend: { userId: userId } }
       ],
     });
 

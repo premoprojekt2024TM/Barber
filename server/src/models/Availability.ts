@@ -1,25 +1,25 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
-import { User } from './User'; 
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { User } from './User';
 
-@Entity()
+@Entity('AvailabilityTimes')
 export class AvailabilityTimes {
-  @PrimaryGeneratedColumn('increment')
-  id!: number;
+  @PrimaryGeneratedColumn()
+  timeSlotId!: number;
 
-  @ManyToOne(() => User, (user) => user.availabilityTimes, { onDelete: 'CASCADE' })
+  @ManyToOne(() => User, (user) => user.availabilityTimes)
+  @JoinColumn({ name: 'user_id' })
   user!: User;
 
-  @Column({ type: 'varchar', length: 10 })  
+  @Column()
   day!: string;
 
-  @Column({ type: 'varchar', length: 5 }) 
-  time_slot!: string;
-  
+  @Column()
+  timeSlot!: string;
+
   @Column({
     type: 'enum',
     enum: ['accepted', 'available'],
     default: 'available',
   })
-  status!:  'accepted' | 'available';
-  
+  status!: 'accepted' | 'available';
 }

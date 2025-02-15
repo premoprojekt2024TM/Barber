@@ -1,16 +1,16 @@
-import { Entity, PrimaryGeneratedColumn, ManyToOne, JoinColumn, Column } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { User } from './User';
 
-@Entity()
+@Entity('Friendship')
 export class Friendship {
-  @PrimaryGeneratedColumn('increment')
-  id!: number;
+  @PrimaryGeneratedColumn()
+  friendshipId!: number;
 
-  @ManyToOne(() => User, { eager: true, onDelete: 'CASCADE' })
+  @ManyToOne(() => User, (user) => user.friendships)
   @JoinColumn({ name: 'user_id' })
   user!: User;
 
-  @ManyToOne(() => User, { eager: true, onDelete: 'CASCADE' })
+  @ManyToOne(() => User, (user) => user.friendRequests)
   @JoinColumn({ name: 'friend_id' })
   friend!: User;
 
@@ -20,7 +20,4 @@ export class Friendship {
     default: 'pending',
   })
   status!: 'pending' | 'accepted' | 'rejected';
-  
-  
-  
 }

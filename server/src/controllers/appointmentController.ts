@@ -4,28 +4,29 @@ import * as model from '../models/index';
 import { AuthenticatedRequest,CreateAppointmentRequestBody } from '../interfaces/interfaces';  
 
 export const createAppointment = async (request: AuthenticatedRequest, reply: FastifyReply) => {
-  const clientId = request.user?.id;  
+  const clientId = request.user?.userId;  
   if (!clientId) {
     return reply.status(400).send({ message: 'User not authenticated' });
   }
 
-  const { hairdresserId, day, timeSlot, notes } = request.body as CreateAppointmentRequestBody;
+  const { storeworkerId, day, timeSlot, notes } = request.body as CreateAppointmentRequestBody;
 
-  const hairdresser = await AppDataSource.getRepository(model.User).findOne({ where: { id: hairdresserId, role: 'hairdresser' } });
-  if (!hairdresser) {
-    return reply.status(404).send({ message: 'Hairdresser not found' });
+  const storeworker = await AppDataSource.getRepository(model.User).findOne({ 
+    where: { userId: storeworkerId, role: 'worker' }
+  });
+  if (!storeworker) {
+    return reply.status(404).send({ message: 'Store worker (hairdresser) not found' });
   }
 
-  if (clientId === hairdresser.id) {
+  if (clientId === storeworker.userId) {
     return reply.status(400).send({ message: 'Client cannot be the same as the hairdresser' });
   }
 
-
   const timeSlotEntity = await AppDataSource.getRepository(model.AvailabilityTimes).findOne({
     where: { 
-      user: { id: hairdresserId },
+      user: { userId: storeworkerId },
       day: day,
-      time_slot: timeSlot,
+      timeSlot: timeSlot,
       status: 'available'  
     }
   });
@@ -35,14 +36,12 @@ export const createAppointment = async (request: AuthenticatedRequest, reply: Fa
   }
 
   const newAppointment = new model.Appointment();
-  newAppointment.client = { id: clientId } as any; 
-  newAppointment.hairdresser = hairdresser; 
+  newAppointment.client = { userId: clientId } as any; 
+  newAppointment.worker = storeworker; 
   newAppointment.timeSlot = timeSlotEntity;  
   newAppointment.status = 'confirmed';  
-  newAppointment.notes = notes;  
-
+  newAppointment.notes = notes || ''; 
   timeSlotEntity.status = 'accepted';
-
 
   try {
     await AppDataSource.getRepository(model.AvailabilityTimes).save(timeSlotEntity); 
@@ -61,7 +60,7 @@ export const createAppointment = async (request: AuthenticatedRequest, reply: Fa
 };
 
 export const getAppointment = async (request: AuthenticatedRequest, reply: FastifyReply) => {
-  const clientId = request.user?.id;  
+  const clientId = request.user?.userId;  
   if (!clientId) {
     return reply.status(400).send({ message: 'User not authenticated' });
   }

@@ -1,15 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn ,OneToMany} from 'typeorm';
-import { User } from './User';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
+import { StoreWorker } from './StoreWorker';
 import { StorePictures } from './StorePictures';
 
-@Entity()
+@Entity('Store')
 export class Store {
-  @PrimaryGeneratedColumn('increment')
-  id!: number;
-
-  @ManyToOne(() => User, { nullable: false })
-  @JoinColumn({ name: 'createdBy' })
-  createdBy!: User;
+  @PrimaryGeneratedColumn()
+  storeId!: number;
 
   @Column()
   name!: string;
@@ -31,14 +27,16 @@ export class Store {
 
   @Column()
   email!: string;
-  
-  @Column('double precision', { nullable: true })
-  latitude?: number;
 
-  @Column('double precision', { nullable: true })
-  longitude?: number;
-  
-  @OneToMany(() => StorePictures, (storePicture) => storePicture.store)
-  pictures!: StorePictures[];
-  
+  @Column({ type: 'float' })
+  latitude!: number;
+
+  @Column({ type: 'float' })
+  longitude!: number;
+
+  @OneToMany(() => StoreWorker, (storeWorker) => storeWorker.store)
+  storeWorkers!: StoreWorker[];
+
+  @OneToMany(() => StorePictures, (storePictures) => storePictures.store)
+  storePictures!: StorePictures[];
 }

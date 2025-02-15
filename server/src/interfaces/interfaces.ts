@@ -2,18 +2,18 @@ import { FastifyRequest } from "fastify/types/request";
 
 export interface AuthenticatedRequest extends FastifyRequest {
   user?: {
-    id: number;
+    userId: number;
     email: string;
-    role: 'client' | 'hairdresser';
+    role: 'client' | 'worker';
     username: string;  
   };
   
 }
 
 export interface JwtPayload {
-  id: number;
+  userId: number;
   email: string;
-  role: 'client' | 'hairdresser';
+  role: 'client' | 'worker';
   username: string; 
 }
 
@@ -22,7 +22,7 @@ export interface GetUserParams {
 }
 
 export interface ChatroomParams {
-  chatroomId: string; 
+  chatroomId: number; 
 }
 
 export interface FriendRequestBody {
@@ -62,7 +62,7 @@ export interface GetIdParams {
 
 
 export interface CreateAppointmentRequestBody {
-  hairdresserId: number;  
+  storeworkerId: number;
   timeSlot: string;     
   notes?: string;   
   day: string; 

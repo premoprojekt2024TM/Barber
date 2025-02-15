@@ -2,30 +2,30 @@ import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 't
 import { User } from './User';
 import { AvailabilityTimes } from './Availability';
 
-@Entity()
+@Entity('Appointment')
 export class Appointment {
-  @PrimaryGeneratedColumn('increment')
-  id!: number;
+  @PrimaryGeneratedColumn()
+  appointmentId!: number;
 
-  @ManyToOne(() => User, { onDelete: 'CASCADE' })
-  @JoinColumn()
-  client!: User; 
+  @ManyToOne(() => User, (user) => user.appointments)
+  @JoinColumn({ name: 'client_id' })
+  client!: User;
 
-  @ManyToOne(() => User, { onDelete: 'CASCADE' })
-  @JoinColumn()
-  hairdresser!: User;  
+  @ManyToOne(() => User, (user) => user.workerAppointments)
+  @JoinColumn({ name: 'worker_id' })
+  worker!: User;
 
-  @ManyToOne(() => AvailabilityTimes, { onDelete: 'CASCADE' })
-  @JoinColumn()
-  timeSlot!: AvailabilityTimes;  
+  @ManyToOne(() => AvailabilityTimes, (availabilityTimes) => availabilityTimes)
+  @JoinColumn({ name: 'time_slot_id' })
+  timeSlot!: AvailabilityTimes;
 
   @Column({
     type: 'enum',
     enum: ['confirmed', 'completed'],
     default: 'confirmed',
   })
-  status!: 'confirmed' | 'completed'; 
+  status!: 'confirmed' | 'completed';
 
-  @Column({ type: 'varchar', length: 255, nullable: true })
-  notes?: string; 
+  @Column({ nullable: true })
+  notes?: string;
 }

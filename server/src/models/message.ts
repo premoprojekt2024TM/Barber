@@ -1,23 +1,23 @@
-import { Entity, PrimaryGeneratedColumn, ManyToOne, JoinColumn, Column, CreateDateColumn } from 'typeorm';
-import { User } from './User';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { ChatRoom } from './ChatRoom';
+import { User } from './User';
 
-@Entity()
+@Entity('Message')
 export class Message {
-  @PrimaryGeneratedColumn('uuid')
-  id!: string;  
+  @PrimaryGeneratedColumn()
+  messageId!: number;
 
-  @ManyToOne(() => ChatRoom, { eager: true })
+  @ManyToOne(() => ChatRoom, (chatRoom) => chatRoom)
   @JoinColumn({ name: 'chatroom_id' })
-  chatRoom!: ChatRoom;  
+  chatRoom!: ChatRoom;
 
-  @ManyToOne(() => User, { eager: true })
+  @ManyToOne(() => User, (user) => user.chatRooms)
   @JoinColumn({ name: 'sender_id' })
-  sender!: User; 
+  sender!: User;
 
-  @Column('text')
-  content!: string;  
+  @Column()
+  content!: string;
 
-  @CreateDateColumn()
-  createdAt!: Date;  
+  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  createdAt!: Date;
 }

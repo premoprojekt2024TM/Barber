@@ -6,7 +6,7 @@ import { authenticateJwt } from '../middlewares/authMiddleware';
 
 export const storeRoutes = async (fastify: FastifyInstance) => {
   const rateLimiter = new RateLimiterMemory({
-    points: 3, 
+    points: 100, 
     duration: 10 * 60,
   });
 

@@ -7,14 +7,12 @@ import { AuthenticatedRequest,AvailabilityRequest,GetIdParams } from '../interfa
 
 
 export const createAvailability = async (request: AuthenticatedRequest, reply: FastifyReply) => {
-  const userId = request.user?.id; 
+  const userId = request.user?.userId;
   if (!userId) {
     return reply.status(400).send({ message: 'User not authenticated' });
   }
 
-  const { monday, tuesday, wednesday, thursday, friday, saturday, sunday } = request.body as AvailabilityRequest ;
-
-  await AppDataSource.getRepository(model.AvailabilityTimes).delete({ user: { id: userId } });
+  const { monday, tuesday, wednesday, thursday, friday, saturday, sunday } = request.body as AvailabilityRequest;
 
   const timeSlots = [
     { day: 'monday', slots: monday },
@@ -26,17 +24,34 @@ export const createAvailability = async (request: AuthenticatedRequest, reply: F
     { day: 'sunday', slots: sunday },
   ];
 
+  // Loop over each day and process the time slots
   for (const { day, slots } of timeSlots) {
     if (slots && slots.length > 0) {
-      const availabilityTimes = slots.map((timeSlot: string) => {
-        const availabilityTime = new model.AvailabilityTimes();
-        availabilityTime.user = { id: userId } as any;  
-        availabilityTime.day = day;
-        availabilityTime.time_slot = timeSlot;
-        return availabilityTime;
-      });
+      for (const timeSlot of slots) {
+        // Check if the time slot for this day and user already exists
+        let existingAvailability = await AppDataSource.getRepository(model.AvailabilityTimes).findOne({
+          where: {
+            user: { userId: userId },
+            day: day,
+            timeSlot: timeSlot,
+          },
+        });
 
-      await AppDataSource.getRepository(model.AvailabilityTimes).save(availabilityTimes);
+        if (existingAvailability) {
+          // If it exists, you can update the status or any other property if necessary
+          existingAvailability.status = 'available'; // or any other update
+          await AppDataSource.getRepository(model.AvailabilityTimes).save(existingAvailability);
+        } else {
+          // If it doesn't exist, create a new entry
+          const newAvailabilityTime = new model.AvailabilityTimes();
+          newAvailabilityTime.user = { userId } as any; // Ensuring the correct user association
+          newAvailabilityTime.day = day;
+          newAvailabilityTime.timeSlot = timeSlot;
+          newAvailabilityTime.status = 'available'; // Set the status to 'available'
+          
+          await AppDataSource.getRepository(model.AvailabilityTimes).save(newAvailabilityTime);
+        }
+      }
     }
   }
 
@@ -44,6 +59,7 @@ export const createAvailability = async (request: AuthenticatedRequest, reply: F
     message: 'Availability created or updated successfully',
   });
 };
+
 
 export const getAvailability = async (request: FastifyRequest, reply: FastifyReply) => {
   const { id } = request.params as GetIdParams;
@@ -67,7 +83,7 @@ export const getAvailability = async (request: FastifyRequest, reply: FastifyRep
 
     const availabilityByDay = availability.reduce((acc: { [key: string]: string[] }, curr) => {
       if (!acc[curr.day]) acc[curr.day] = [];
-      acc[curr.day].push(curr.time_slot);
+      acc[curr.day].push(curr.timeSlot);
       return acc;
     }, {});
 

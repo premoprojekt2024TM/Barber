@@ -1,24 +1,22 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
-import { Store } from './Store';  
+import { Store } from './Store';
 
-@Entity()
+@Entity('StorePictures')
 export class StorePictures {
-  @PrimaryGeneratedColumn('increment')
-  id!: number;
+  @PrimaryGeneratedColumn()
+  pictureId!: number;
 
-  @ManyToOne(() => Store, (store) => store.pictures, { onDelete: 'CASCADE' })  
-  @JoinColumn()
-  store!: Store;  
-  @Column({ nullable: true })
-  coverimage?: string;  
+  @ManyToOne(() => Store, (store) => store.storePictures)
+  @JoinColumn({ name: 'store_id' })
+  store!: Store;
 
   @Column({ nullable: true })
-  coverimage2?: string;
+  imageUrl?: string;
 
-  @Column({ nullable: true })
-  coverimage3?: string; 
-
-  @Column({ nullable: true })
-  coverimage4?: string; 
-
+  @Column({
+    type: 'enum',
+    enum: ['cover_image', 'basic_image'],
+    default: 'basic_image',
+  })
+  imageType!: 'cover_image' | 'basic_image';
 }

@@ -16,8 +16,8 @@ export const registerUser = async (request: FastifyRequest, reply: FastifyReply)
 
   const { username, email, password, role } = result.data;
 
-  if (role !== 'client' && role !== 'hairdresser') {
-    return reply.status(400).send({ message: 'Invalid role. Must be either "client" or "hairdresser".' });
+  if (role !== 'client' && role !== 'worker') {
+    return reply.status(400).send({ message: 'Invalid role. Must be either "client" or "worker".' });
   }
 
   const existingUser = await AppDataSource.getRepository(model.User).findOneBy({ email });
@@ -37,28 +37,14 @@ export const registerUser = async (request: FastifyRequest, reply: FastifyReply)
     await AppDataSource.getRepository(model.User).save(newUser);
 
    
-   
-   
-    if (role === 'client') {
-      const newExtendedUser = new model.ExtendedUser();
-      newExtendedUser.user = newUser;
-      newExtendedUser.firstName = '';
-      newExtendedUser.lastName = '';
-      newExtendedUser.birthday = undefined;
-      newExtendedUser.profilePic = 'https://place-hold.it/300';
-      await AppDataSource.getRepository(model.ExtendedUser).save(newExtendedUser);
-    
-    } else if (role === 'hairdresser') {
-      const newExtendedHair = new model.ExtendedHair();
-      newExtendedHair.user = newUser;
-      newExtendedHair.firstName = '';
-      newExtendedHair.lastName = '';
-      newExtendedHair.profilePic = 'https://place-hold.it/300';
-      newExtendedHair.description = '';
-      await AppDataSource.getRepository(model.ExtendedHair).save(newExtendedHair);
+    if (role === 'worker') {
+      const newExtendedWorker = new model.ExtendedWorker();
+      newExtendedWorker.user = newUser;
+      newExtendedWorker.description = '';
+      await AppDataSource.getRepository(model.ExtendedWorker).save(newExtendedWorker);
     
     } else {
-      return reply.status(400).send({ message: 'Invalid role. Must be either "client" or "hairdresser".' });
+      return reply.status(400).send({ message: 'Invalid role. Must be either "client" or "worker".' });
     }
 
     return reply.status(201).send({ message: 'User created successfully' });
@@ -98,7 +84,7 @@ export const loginUser = async (request: FastifyRequest, reply: FastifyReply) =>
 };
 
 export const updateUser = async (request: AuthenticatedRequest, reply: FastifyReply) => {
-  const userId = request.user?.id;
+  const userId = request.user?.userId;
 
   if (!userId) {
     return reply.status(400).send({ message: 'User ID is missing' });
@@ -113,7 +99,7 @@ export const updateUser = async (request: AuthenticatedRequest, reply: FastifyRe
 
   try {
     const userRepository = AppDataSource.getRepository(model.User);
-    const user = await userRepository.findOneBy({ id: userId });
+    const user = await userRepository.findOneBy({ userId: userId });
 
     if (!user) {
       return reply.status(404).send({ message: 'User not found' });
@@ -136,14 +122,14 @@ export const updateUser = async (request: AuthenticatedRequest, reply: FastifyRe
 };
 
 export const deleteUser = async (request: AuthenticatedRequest, reply: FastifyReply) => {
-  const userId = request.user?.id;
+  const userId = request.user?.userId;
 
   if (!userId) {
     return reply.status(400).send({ message: 'User ID is missing' });
   }
   try {
     const userRepository = AppDataSource.getRepository(model.User);
-    const user = await userRepository.findOneBy({ id: userId });
+    const user = await userRepository.findOneBy({ userId: userId });
 
     if (!user) {
       return reply.status(404).send({ message: 'User not found' });
@@ -158,112 +144,3 @@ export const deleteUser = async (request: AuthenticatedRequest, reply: FastifyRe
 };
 
 
-export const profile = async (request: AuthenticatedRequest, reply: FastifyReply) => {
-  const userId = request.user?.id;
-
-  if (!userId) {
-    return reply.status(400).send({ message: 'User ID is missing' });
-  }
-
-  try {
-    const userRepository = AppDataSource.getRepository(model.User);
-    const extendedUserRepository = AppDataSource.getRepository(model.ExtendedUser);
-    const extendedHairRepository = AppDataSource.getRepository(model.ExtendedHair);
-
-    const user = await userRepository.findOne({ where: { id: userId } });
-    if (!user) {
-      return reply.status(404).send({ message: 'User not found' });
-    }
-
-    let extendedUser;
-    let profileData;
-
-    if (user.role === 'client') {
-      extendedUser = await extendedUserRepository.findOne({
-        where: { user: { id: userId } },
-        relations: ['user'],
-      });
-
-      if (!extendedUser) {
-        return reply.status(404).send({ message: 'Extended user not found' });
-      }
-
-      profileData = {
-        userId: user.id,
-        username: user.username,
-        email: user.email,
-        firstName: extendedUser.firstName,
-        lastName: extendedUser.lastName,
-        birthday: extendedUser.birthday,
-        profilePic: extendedUser.profilePic,
-      };
-    } else if (user.role === 'hairdresser') {
-      const extendedHair = await extendedHairRepository.findOne({
-        where: { user: { id: userId } },
-        relations: ['user'],
-      });
-
-      if (!extendedHair) {
-        return reply.status(404).send({ message: 'Extended hairdresser not found' });
-      }
-
-      profileData = {
-        userId: user.id,
-        username: user.username,
-        email: user.email,
-        firstName: extendedHair.firstName,
-        lastName: extendedHair.lastName,
-        profilePic: extendedHair.profilePic,
-        description: extendedHair.description,
-      };
-    } else {
-      return reply.status(400).send({ message: 'Invalid role' });
-    }
-
-    return reply.send({ message: 'Profile data fetched successfully', profileData });
-  } catch (error) {
-    console.error('Error fetching profile data:', error);
-    return reply.status(500).send({ message: 'An error occurred while fetching profile data' });
-  }
-};
-
-export const getUserByUsername = async (request: FastifyRequest<{ Params: GetUserParams }>, reply: FastifyReply) => {
-  const { username } = request.params;
-
-  if (!username || typeof username !== 'string') {
-    return reply.status(400).send({ message: 'Invalid username' });
-  }
-
-  try {
-    const userRepository = AppDataSource.getRepository(model.User);
-    const extendedUserRepository = AppDataSource.getRepository(model.ExtendedUser);
-
-    
-    const user = await userRepository.findOne({ where: { username } });
-
-    if (!user) {
-      return reply.status(404).send({ message: 'User not found' });
-    }
-
-    const extendedUser = await extendedUserRepository.findOne({
-      where: { user: { id: user.id } },
-      relations: ['user'], 
-    });
-
-    if (!extendedUser) {
-      return reply.status(404).send({ message: 'Extended user not found' });
-    }
-
-    return reply.send({
-      message: 'User fetched successfully',
-      user: {
-        id: user.id,
-        username: user.username,
-        profilePic: extendedUser.profilePic, 
-      },
-    });
-  } catch (error) {
-    console.error('Error fetching user:', error);
-    return reply.status(500).send({ message: 'An error occurred while fetching user data' });
-  }
-};

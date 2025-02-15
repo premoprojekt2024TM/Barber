@@ -1,19 +1,19 @@
-import { Entity, PrimaryGeneratedColumn, ManyToOne, JoinColumn, Column } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { User } from './User';
 
-@Entity()
+@Entity('ChatRoom')
 export class ChatRoom {
-  @PrimaryGeneratedColumn('uuid')
-  id!: string;  
+  @PrimaryGeneratedColumn()
+  chatroomId!: number;
 
-  @ManyToOne(() => User, { eager: true })
+  @ManyToOne(() => User, (user) => user.chatRooms)
   @JoinColumn({ name: 'user1_id' })
-  user1!: User;  
+  user1!: User;
 
-  @ManyToOne(() => User, { eager: true })
+  @ManyToOne(() => User, (user) => user.chatRooms2)
   @JoinColumn({ name: 'user2_id' })
-  user2!: User;  
+  user2!: User;
 
   @Column()
-  name!: string; 
+  name!: string;
 }
