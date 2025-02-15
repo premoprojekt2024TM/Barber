@@ -4,7 +4,7 @@ import { AppDataSource } from '../config/dbconfig';
 import { generateToken } from '../middlewares/authMiddleware';
 import * as model from '../models/index'; 
 import { loginSchema, registerSchema, updateSchema } from '../shared/validation/userValidation';
-import { AuthenticatedRequest , GetUserParams } from '../interfaces/interfaces';
+import { AuthenticatedRequest} from '../interfaces/interfaces';
 
 
 

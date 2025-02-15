@@ -24,11 +24,9 @@ export const createAvailability = async (request: AuthenticatedRequest, reply: F
     { day: 'sunday', slots: sunday },
   ];
 
-  // Loop over each day and process the time slots
   for (const { day, slots } of timeSlots) {
     if (slots && slots.length > 0) {
       for (const timeSlot of slots) {
-        // Check if the time slot for this day and user already exists
         let existingAvailability = await AppDataSource.getRepository(model.AvailabilityTimes).findOne({
           where: {
             user: { userId: userId },
@@ -38,16 +36,15 @@ export const createAvailability = async (request: AuthenticatedRequest, reply: F
         });
 
         if (existingAvailability) {
-          // If it exists, you can update the status or any other property if necessary
-          existingAvailability.status = 'available'; // or any other update
+
+          existingAvailability.status = 'available';
           await AppDataSource.getRepository(model.AvailabilityTimes).save(existingAvailability);
         } else {
-          // If it doesn't exist, create a new entry
           const newAvailabilityTime = new model.AvailabilityTimes();
-          newAvailabilityTime.user = { userId } as any; // Ensuring the correct user association
+          newAvailabilityTime.user = { userId } as any; 
           newAvailabilityTime.day = day;
           newAvailabilityTime.timeSlot = timeSlot;
-          newAvailabilityTime.status = 'available'; // Set the status to 'available'
+          newAvailabilityTime.status = 'available';
           
           await AppDataSource.getRepository(model.AvailabilityTimes).save(newAvailabilityTime);
         }
