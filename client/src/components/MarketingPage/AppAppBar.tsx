@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { styled, alpha } from '@mui/material/styles';
+import { styled } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
@@ -11,65 +11,90 @@ import MenuItem from '@mui/material/MenuItem';
 import Drawer from '@mui/material/Drawer';
 import MenuIcon from '@mui/icons-material/Menu';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
-import Sitemark from './SitemarkIcon';
+import Logo from '/src/pics/logo.svg';
 
-const StyledToolbar = styled(Toolbar)(({ theme }) => ({
+const StyledToolbar = styled(Toolbar)({
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
   flexShrink: 0,
-  borderRadius: `calc(${theme.shape.borderRadius}px + 8px)`,
+  borderRadius: '8px',
   backdropFilter: 'blur(24px)',
   border: '1px solid',
-  borderColor: (theme.vars || theme).palette.divider,
-  backgroundColor: theme.vars
-    ? `rgba(${theme.vars.palette.background.defaultChannel} / 0.4)`
-    : alpha(theme.palette.background.default, 0.4),
-  boxShadow: (theme.vars || theme).shadows[1],
+  borderColor: '#ccc',
+  backgroundColor: 'rgba(255, 255, 255, 0.4)',
+  boxShadow: '0px 2px 5px rgba(0, 0, 0, 0.2)',
   padding: '8px 12px',
+});
+
+// Styled Logo component with color inversion effect
+const StyledLogo = styled(Box)({
+  height: 40,
+  marginRight: '16px',
+  transition: 'filter 0.3s ease-in-out',
+  '&:hover': {
+    filter: 'invert(1)', // Invert colors on hover
+  },
+});
+
+const StyledMenuItem = styled(MenuItem)(({ theme }) => ({
+  color: 'black',
+  '&:hover': {
+    backgroundColor: 'rgba(0, 0, 0, 0.1)',
+    borderRadius: '4px',
+  },
+}));
+
+const StyledIconButton = styled(IconButton)(({ theme }) => ({
+  color: 'black',
+  '&:hover': {
+    backgroundColor: 'rgba(0, 0, 0, 0.1)',
+    borderRadius: '4px',
+  },
 }));
 
 export default function AppAppBar() {
   const [open, setOpen] = React.useState(false);
 
-  const toggleDrawer = (newOpen: boolean) => () => {
+  const toggleDrawer = (newOpen) => () => {
     setOpen(newOpen);
   };
 
   return (
     <AppBar
       position="fixed"
-      enableColorOnDark
       sx={{
         boxShadow: 0,
         bgcolor: 'transparent',
         backgroundImage: 'none',
-        mt: 'calc(var(--template-frame-height, 0px) + 28px)',
+        mt: '28px',
       }}
     >
       <Container maxWidth="lg">
         <StyledToolbar variant="dense" disableGutters>
-          <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'center', px: 0 }}>
-            <Sitemark />
-            <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
-              <Button variant="text" color="info" size="small">
-                Features
-              </Button>
-              <Button variant="text" color="info" size="small">
-                Testimonials
-              </Button>
-              <Button variant="text" color="info" size="small">
-                Highlights
-              </Button>
-              <Button variant="text" color="info" size="small">
-                Pricing
-              </Button>
-              <Button variant="text" color="info" size="small" sx={{ minWidth: 0 }}>
-                FAQ
-              </Button>
-              <Button variant="text" color="info" size="small" sx={{ minWidth: 0 }}>
-                Blog
-              </Button>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <StyledLogo component="img" src={Logo} alt="Logo" />
+            <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'center', px: 0 }}>
+              <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
+                <Button variant="text" color="inherit" size="small" sx={{ color: 'black' }}>
+                  Features
+                </Button>
+                <Button variant="text" color="inherit" size="small" sx={{ color: 'black' }}>
+                  Testimonials
+                </Button>
+                <Button variant="text" color="inherit" size="small" sx={{ color: 'black' }}>
+                  Highlights
+                </Button>
+                <Button variant="text" color="inherit" size="small" sx={{ color: 'black' }}>
+                  Pricing
+                </Button>
+                <Button variant="text" color="inherit" size="small" sx={{ color: 'black', minWidth: 0 }}>
+                  FAQ
+                </Button>
+                <Button variant="text" color="inherit" size="small" sx={{ color: 'black', minWidth: 0 }}>
+                  Blog
+                </Button>
+              </Box>
             </Box>
           </Box>
           <Box
@@ -79,7 +104,7 @@ export default function AppAppBar() {
               alignItems: 'center',
             }}
           >
-            <Button color="primary" variant="text" size="small">
+            <Button color="inherit" variant="text" size="small" sx={{ color: 'black' }}>
               Sign in
             </Button>
             <Button color="primary" variant="contained" size="small">
@@ -87,37 +112,40 @@ export default function AppAppBar() {
             </Button>
           </Box>
           <Box sx={{ display: { xs: 'flex', md: 'none' }, gap: 1 }}>
-            <IconButton aria-label="Menu button" onClick={toggleDrawer(true)}>
+            <StyledIconButton
+              aria-label="Menu button"
+              onClick={toggleDrawer(true)}
+            >
               <MenuIcon />
-            </IconButton>
+            </StyledIconButton>
             <Drawer
               anchor="top"
               open={open}
               onClose={toggleDrawer(false)}
               PaperProps={{
                 sx: {
-                  top: 'var(--template-frame-height, 0px)',
+                  top: '0px',
                 },
               }}
             >
-              <Box sx={{ p: 2, backgroundColor: 'background.default' }}>
+              <Box sx={{ p: 2, backgroundColor: '#fff' }}>
                 <Box
                   sx={{
                     display: 'flex',
                     justifyContent: 'flex-end',
                   }}
                 >
-                  <IconButton onClick={toggleDrawer(false)}>
+                  <StyledIconButton onClick={toggleDrawer(false)}>
                     <CloseRoundedIcon />
-                  </IconButton>
+                  </StyledIconButton>
                 </Box>
 
-                <MenuItem>Features</MenuItem>
-                <MenuItem>Testimonials</MenuItem>
-                <MenuItem>Highlights</MenuItem>
-                <MenuItem>Pricing</MenuItem>
-                <MenuItem>FAQ</MenuItem>
-                <MenuItem>Blog</MenuItem>
+                <StyledMenuItem>Features</StyledMenuItem>
+                <StyledMenuItem>Testimonials</StyledMenuItem>
+                <StyledMenuItem>Highlights</StyledMenuItem>
+                <StyledMenuItem>Pricing</StyledMenuItem>
+                <StyledMenuItem>FAQ</StyledMenuItem>
+                <StyledMenuItem>Blog</StyledMenuItem>
                 <Divider sx={{ my: 3 }} />
                 <MenuItem>
                   <Button color="primary" variant="contained" fullWidth>

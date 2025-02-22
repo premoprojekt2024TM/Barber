@@ -15,7 +15,7 @@ const StyledBox = styled('div')(({ theme }) => ({
   width: '100%',
   height: 400,
   marginTop: theme.spacing(8),
-  borderRadius: (theme.vars || theme).shape.borderRadius,
+  borderRadius: theme.shape.borderRadius,
   outline: '6px solid',
   outlineColor: 'hsla(220, 25%, 80%, 0.2)',
   border: '1px solid',

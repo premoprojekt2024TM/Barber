@@ -7,6 +7,9 @@ import { ChatRoom } from './ChatRoom';
 
 @Entity('User')
 export class User {
+    static mockImplementation(arg0: () => { save: jest.Mock<any, any, any>; }) {
+        throw new Error('Method not implemented.');
+    }
   @PrimaryGeneratedColumn('increment')
   userId!: number;
 
