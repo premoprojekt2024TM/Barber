@@ -42,7 +42,7 @@ export default function FAQ() {
           textAlign: { sm: 'left', md: 'center' },
         }}
       >
-        Frequently asked questions
+        Gyakran ismételt kérdések
       </Typography>
       <Box sx={{ width: '100%' }}>
         <Accordion
@@ -90,9 +90,7 @@ export default function FAQ() {
               gutterBottom
               sx={{ maxWidth: { sm: '100%', md: '70%' } }}
             >
-              Absolutely! We offer a hassle-free return policy. If you&apos;re not
-              completely satisfied, you can return the product within [number of
-              days] days for a full refund or exchange.
+              Melyik borbélyszalonok kínálnak olyan szolgáltatásokat, amik megfelelnek az igényeimnek (pl. hajvágás, szakállápolás, hajfestés)?
             </Typography>
           </AccordionDetails>
         </Accordion>
@@ -106,7 +104,7 @@ export default function FAQ() {
             id="panel3d-header"
           >
             <Typography component="span" variant="subtitle2">
-              What makes your product stand out from others in the market?
+            Melyik borbélyszalonok kínálnak olyan szolgáltatásokat, amik megfelelnek az igényeimnek (pl. hajvágás, szakállápolás, hajfestés)?
             </Typography>
           </AccordionSummary>
           <AccordionDetails>
@@ -115,9 +113,7 @@ export default function FAQ() {
               gutterBottom
               sx={{ maxWidth: { sm: '100%', md: '70%' } }}
             >
-              Our product distinguishes itself through its adaptability, durability,
-              and innovative features. We prioritize user satisfaction and
-              continually strive to exceed expectations in every aspect.
+              Melyik borbélyszalonok a legközelebb találhatóak hozzám?
             </Typography>
           </AccordionDetails>
         </Accordion>
@@ -131,7 +127,7 @@ export default function FAQ() {
             id="panel4d-header"
           >
             <Typography component="span" variant="subtitle2">
-              Is there a warranty on the product, and what does it cover?
+            Milyen visszajelzéseket kaptak más vendégektől a borbélyok és a szalonok?
             </Typography>
           </AccordionSummary>
           <AccordionDetails>
@@ -140,10 +136,7 @@ export default function FAQ() {
               gutterBottom
               sx={{ maxWidth: { sm: '100%', md: '70%' } }}
             >
-              Yes, our product comes with a [length of warranty] warranty. It covers
-              defects in materials and workmanship. If you encounter any issues
-              covered by the warranty, please contact our customer support for
-              assistance.
+              Mennyibe kerülnek a különböző szolgáltatások, és van-e lehetőség előzetes foglalásra?
             </Typography>
           </AccordionDetails>
         </Accordion>

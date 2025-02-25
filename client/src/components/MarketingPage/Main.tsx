@@ -17,26 +17,11 @@ export default function Main() {
         <Grid item xs={12} md={6}>
           <Box sx={{ color: 'white', pl: 10 }}>
             <Typography variant="h4" sx={{ marginBottom: 2 }}>
-              Highlight Title
+              Barberkereső
             </Typography>
             <Typography variant="body1" sx={{ marginBottom: 2 }}>
-              Here is the content that describes the highlight, which is shown beside the image.
-            </Typography>
-
-            {/* Two buttons */}
-            <Button 
-              variant="contained" 
-              color="primary" 
-              sx={{ marginRight: 2 }}
-            >
-              Button 1
-            </Button>
-            <Button 
-              variant="outlined" 
-              color="secondary"
-            >
-              Button 2
-            </Button>
+            A Barberkereső applikáció segít könnyedén megtalálni a legjobb borbélyszalonokat a közeledben,<br></br> lehetőséget biztosítva a szolgáltatások, vélemények és elérhetőségek gyors böngészésére. <br></br>Találd meg a stílusodhoz illő szakembert pár egyszerű lépésben!
+            </Typography> 
           </Box>
         </Grid>
 

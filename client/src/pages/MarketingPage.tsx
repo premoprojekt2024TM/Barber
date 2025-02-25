@@ -26,7 +26,7 @@ export default function MarketingPage(props: { disableCustomTheme?: boolean }) {
         <Divider />
         <FAQ />
         <Divider />
-        <Footer/>
+        
       </div>
     </AppTheme>
   );

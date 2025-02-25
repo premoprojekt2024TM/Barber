@@ -8,8 +8,8 @@ import Typography from '@mui/material/Typography';
 import ArrowCircleRightIcon from '@mui/icons-material/ArrowCircleRight'; 
 
 const FeatureCards = [
-  { image: '/src/pics/MainPage.jpeg', text: 'Feature 1', linkGoto: 'https://www.example.com' },
-  { image: '/src/pics/Mainpage2.jpg', text: 'Feature 2:', linkGoto: 'https://www.example.com' },
+  { image: '/src/pics/MainPage.jpeg', text: 'Partnereink', linkGoto: 'https://www.example.com' },
+  { image: '/src/pics/kep.jpg', text: 'Térkép', linkGoto: 'https://www.example.com' },
   { image: '', text: 'Feature 3', linkGoto: 'https://www.example.com' },
 ];
 
@@ -179,7 +179,7 @@ export default function Features() {
                           marginBottom: 2
                         }}
                       >
-                        Learn More
+                        Tovább
                       </Typography>
                       <a
                         href={feature.linkGoto}

@@ -76,24 +76,22 @@ export default function AppAppBar() {
             <StyledLogo component="img" src={Logo} alt="Logo" />
             <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'center', px: 0 }}>
               <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
+              <Button
+  variant="text"
+  color="inherit"
+  size="small"
+  sx={{ color: 'black' }}
+  href="#features"  // Ezzel az id-ra navigálunk
+>
+  Szolgáltatások
+</Button>
                 <Button variant="text" color="inherit" size="small" sx={{ color: 'black' }}>
-                  Features
-                </Button>
-                <Button variant="text" color="inherit" size="small" sx={{ color: 'black' }}>
-                  Testimonials
-                </Button>
-                <Button variant="text" color="inherit" size="small" sx={{ color: 'black' }}>
-                  Highlights
-                </Button>
-                <Button variant="text" color="inherit" size="small" sx={{ color: 'black' }}>
-                  Pricing
+                  Népszerű
                 </Button>
                 <Button variant="text" color="inherit" size="small" sx={{ color: 'black', minWidth: 0 }}>
-                  FAQ
+                 GyIK 
                 </Button>
-                <Button variant="text" color="inherit" size="small" sx={{ color: 'black', minWidth: 0 }}>
-                  Blog
-                </Button>
+
               </Box>
             </Box>
           </Box>
@@ -105,10 +103,10 @@ export default function AppAppBar() {
             }}
           >
             <Button color="inherit" variant="text" size="small" sx={{ color: 'black' }}>
-              Sign in
+              Bejelentkezés
             </Button>
             <Button color="primary" variant="contained" size="small">
-              Sign up
+              Regisztráció
             </Button>
           </Box>
           <Box sx={{ display: { xs: 'flex', md: 'none' }, gap: 1 }}>

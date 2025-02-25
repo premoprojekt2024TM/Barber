@@ -83,13 +83,11 @@ export default function Pricing() {
           gutterBottom
           sx={{ color: 'text.primary' }}
         >
-          Pricing
+          Népszerű Partnereink
         </Typography>
         <Typography variant="body1" sx={{ color: 'text.secondary' }}>
-          Quickly build an effective pricing table for your potential customers with
-          this layout. <br />
-          It&apos;s built with default Material UI components with little
-          customization.
+          Itt találod a legkedveltebb partner üzlteninket!  <br />
+          
         </Typography>
       </Box>
       <Grid

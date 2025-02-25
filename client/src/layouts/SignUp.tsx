@@ -69,16 +69,16 @@ export default function SignUp() {
       <CssBaseline enableColorScheme />
       <SignUpContainer direction="column" justifyContent="space-between">
         <Card variant="outlined">
-          <Typography component="h1" variant="h4" sx={{ width: '100%', fontSize: 'clamp(2rem, 10vw, 2.15rem)' }}>Sign up</Typography>
+          <Typography component="h1" variant="h4" sx={{ width: '100%', fontSize: 'clamp(2rem, 10vw, 2.15rem)' }}>Regisztráció</Typography>
           <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             <FormControl>
-              <FormLabel htmlFor="username">User Name</FormLabel>
+              <FormLabel htmlFor="username">Felhasználónév</FormLabel>
               <TextField 
                 name="username" 
                 required 
                 fullWidth 
                 id="username" 
-                placeholder="JonSnow"
+                placeholder="Felhasználónév"
                 value={username} 
                 onChange={(e) => setUsername(e.target.value)} 
               />
@@ -89,7 +89,7 @@ export default function SignUp() {
                 required 
                 fullWidth 
                 id="email" 
-                placeholder="your@email.com" 
+                placeholder="nev@email.com" 
                 name="email" 
                 autoComplete="email" 
                 variant="outlined"
@@ -98,7 +98,7 @@ export default function SignUp() {
               />
             </FormControl>
             <FormControl>
-              <FormLabel htmlFor="password">Password</FormLabel>
+              <FormLabel htmlFor="password">Jelszó</FormLabel>
               <TextField 
                 required 
                 fullWidth 
@@ -123,15 +123,15 @@ export default function SignUp() {
               onChange={(e, newRole) => setRole(newRole)} 
               sx={{ mb: 2 }}
             >
-              <ToggleButton value="client" sx={{ flex: 1 }}>Client</ToggleButton>
-              <ToggleButton value="hairdresser" sx={{ flex: 1 }}>Hairdresser</ToggleButton>
+              <ToggleButton value="client" sx={{ flex: 1 }}>Kliens</ToggleButton>
+              <ToggleButton value="hairdresser" sx={{ flex: 1 }}>Fodrász</ToggleButton>
             </ToggleButtonGroup>
 
-            <Button type="submit" fullWidth variant="contained">Sign up</Button>
+            <Button type="submit" fullWidth variant="contained">Regisztráció</Button>
           </Box>
           <Divider><Typography sx={{ color: 'text.secondary' }}>or</Typography></Divider>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <Typography sx={{ textAlign: 'center' }}>Already have an account? <Link component={RouterLink} to="/auth/sign-in" variant="body2">Sign In</Link></Typography>
+            <Typography sx={{ textAlign: 'center' }}>Van már fiókod? <Link component={RouterLink} to="/auth/sign-in" variant="body2">Jelentkezz be</Link></Typography>
           </Box>
         </Card>
       </SignUpContainer>
