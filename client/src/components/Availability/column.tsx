@@ -6,7 +6,7 @@ import { Form, FormControl, FormField, FormItem } from "./form";
 import { useForm } from "react-hook-form";
 import { cn } from "./utils";
 import { Droppable } from "@hello-pangea/dnd";
-import { useTodos } from "../Add/todoStore";
+import { useTodos } from "../Availability/todoStore";
 import { PlusIcon } from "@radix-ui/react-icons";
 import { formSchema } from "./schema";
 import { TaskVariant } from "./types";

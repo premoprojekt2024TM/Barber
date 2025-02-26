@@ -2,10 +2,10 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import Dashboard from './layouts/Dashboard';
 import FinderWithSidebar from './layouts/Store';
 import Finder from './layouts/Finder';
-import SignUp from './layouts/SignUp';
-import SignInSide from './layouts/SignInSide';
+import SignUp from './components/Auth/SignUp';
+import SignIn from './components/Auth/SignIn';
 import Addd from './layouts/Add';
-import MarketingPage from './pages/MarketingPage'
+import MainPage from './components/MainPage/MainPage'
 
 function App() {
   return (
@@ -16,10 +16,9 @@ function App() {
         <Route path="/store" element={<FinderWithSidebar />} />
         <Route path="/finder" element={<Finder />} />
         <Route path="/register" element={<SignUp />} />
-        <Route path="/login" element={<SignInSide />} />
+        <Route path="/login" element={<SignIn />} />
         <Route path="/add" element={<Addd />} />
-        <Route path="/main" element={<MarketingPage />} />
-
+        <Route path="/main" element={<MainPage />} />
         {/* Redirect from the root (/) to /login */}
         <Route path="/" element={<Navigate to="/login" />} />
         <Route path="*" element={<Navigate to="/login" />} />

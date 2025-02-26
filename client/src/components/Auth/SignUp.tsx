@@ -1,9 +1,9 @@
-import { Box, Button, CssBaseline, Divider, FormLabel, FormControl, Link, TextField, Typography, Stack, Card as MuiCard, styled, ToggleButton, ToggleButtonGroup } from '@mui/material';
+import { Box, Button, CssBaseline, Divider, FormLabel, FormControl, Link, TextField, Typography, Stack, Card as MuiCard, styled, ToggleButton, ToggleButtonGroup, FormHelperText } from '@mui/material';
 import { keyframes } from '@mui/material/styles';
-import AppTheme from '../shared-theme/AppTheme';
+import AppTheme from '../../shared-theme/AppTheme';
 import { Link as RouterLink, useNavigate } from 'react-router-dom'; 
 import { useState } from 'react';
-import axiosInstance from '../utils/axiosInstance';
+import axiosInstance from '../../utils/axiosInstance';
 
 const fadeInUp = keyframes`
   0% { opacity: 0; transform: translateY(30px); }
@@ -24,16 +24,25 @@ const SignUpContainer = styled(Stack)(({ theme }) => ({
   '&::before': { content: '""', position: 'absolute', zIndex: -1, inset: 0, backgroundImage: 'radial-gradient(ellipse at 50% 50%, hsl(210, 100%, 97%), hsl(0, 0%, 100%))' },
 }));
 
+interface AxiosErrorResponse {
+  response?: {
+    status: number;
+    data: string;
+  };
+}
+
 export default function SignUp() {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState('client');
+  const [role, setRole] = useState<'client' | 'hairdresser'>('client');
+  const [passwordErrorMessage, setPasswordErrorMessage] = useState<string>(''); // Only password error message
   
   const navigate = useNavigate(); 
 
-  const handleSubmit = async (event) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setPasswordErrorMessage(''); // Clear password error message before submitting
 
     const formData = {
       username,
@@ -42,24 +51,26 @@ export default function SignUp() {
       role,
     };
 
-    // Log the data being sent to the API
-    console.log("Data being sent to the API:", formData);
-
     try {
       const response = await axiosInstance.post('/api/v1/register', formData);
-
-      if (response.status === 201) {
-        console.log('Registration successful:', response.data);
-        // Navigate to the sign-in page after successful registration
-        navigate('/auth/sign-in'); 
+    
+      if (response.status === 200) {
+        navigate('/login'); 
       } else {
-        console.error('Registration failed:', response.data);
+        setPasswordErrorMessage('A regisztráció nem sikerült. Kérlek próbáld újra.');
       }
-    } catch (error) {
-      console.error('Error during registration:', error);
-      if (error.response) {
-        console.error("Error response data:", error.response.data);
-        console.error("Error response status:", error.response.status);
+    } catch (error: unknown) {
+      const axiosError = error as AxiosErrorResponse; // Típus castolás AxiosErrorResponse típusra
+      if (axiosError.response) {
+        if (axiosError.response.status === 400) {
+          setPasswordErrorMessage('Hibás adatok. Kérlek ellenőrizd a megadott információkat.');
+        } else if (axiosError.response.status === 500) {
+          setPasswordErrorMessage('A szerver hibát észlelt. Kérlek próbáld újra később.');
+        } else {
+          setPasswordErrorMessage('Ismeretlen hiba történt. Kérlek próbáld újra.');
+        }
+      } else {
+        setPasswordErrorMessage('Hálózati hiba. Kérlek próbáld újra később.');
       }
     }
   };
@@ -97,7 +108,7 @@ export default function SignUp() {
                 onChange={(e) => setEmail(e.target.value)} 
               />
             </FormControl>
-            <FormControl>
+            <FormControl error={!!passwordErrorMessage}>
               <FormLabel htmlFor="password">Jelszó</FormLabel>
               <TextField 
                 required 
@@ -111,16 +122,16 @@ export default function SignUp() {
                 value={password} 
                 onChange={(e) => setPassword(e.target.value)} 
               />
+              {passwordErrorMessage && <FormHelperText>{passwordErrorMessage}</FormHelperText>}
             </FormControl>
 
-            {/* Add gap between password and toggle buttons */}
-            <Box sx={{ mb: 2 }} /> {/* This is the gap you wanted */}
-            
+            <Box sx={{ mb: 2 }} /> 
+
             <ToggleButtonGroup 
               value={role} 
               exclusive 
               fullWidth 
-              onChange={(e, newRole) => setRole(newRole)} 
+              onChange={(_e, newRole) => setRole(newRole)} 
               sx={{ mb: 2 }}
             >
               <ToggleButton value="client" sx={{ flex: 1 }}>Kliens</ToggleButton>
@@ -129,9 +140,9 @@ export default function SignUp() {
 
             <Button type="submit" fullWidth variant="contained">Regisztráció</Button>
           </Box>
-          <Divider><Typography sx={{ color: 'text.secondary' }}>or</Typography></Divider>
+          <Divider><Typography sx={{ color: 'text.secondary' }}>vagy</Typography></Divider>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <Typography sx={{ textAlign: 'center' }}>Van már fiókod? <Link component={RouterLink} to="/auth/sign-in" variant="body2">Jelentkezz be</Link></Typography>
+            <Typography sx={{ textAlign: 'center' }}>Van már fiókod? <Link component={RouterLink} to="/login" variant="body2">Jelentkezz be</Link></Typography>
           </Box>
         </Card>
       </SignUpContainer>

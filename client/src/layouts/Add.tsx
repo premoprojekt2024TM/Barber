@@ -9,7 +9,7 @@ import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import AppNavbar from '../components/shared/AppNavbar';
 import Header from '../components/shared/Header';
-import AddPage from '../pages/add';
+import AddPage from '../components/Availability/add';
 import SideMenu from '../components/shared/SideMenu';
 import AppTheme from '../shared-theme/AppTheme';
 import {
@@ -33,7 +33,6 @@ export default function Addd(props: { disableCustomTheme?: boolean }) {
       <Box sx={{ display: 'flex' }}>
         <SideMenu />
         <AppNavbar />
-        {/* Main content */}
         <Box
           component="main"
           sx={(theme) => ({

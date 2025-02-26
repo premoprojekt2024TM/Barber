@@ -1,8 +1,6 @@
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
 import Typography from '@mui/material/Typography';
-import Button from '@mui/material/Button';
-
 export default function Main() {
   return (
     <Box
@@ -13,7 +11,6 @@ export default function Main() {
       }}
     >
       <Grid container spacing={2} alignItems="center">
-        {/* Left content section */}
         <Grid item xs={12} md={6}>
           <Box sx={{ color: 'white', pl: 10 }}>
             <Typography variant="h4" sx={{ marginBottom: 2 }}>
@@ -25,12 +22,11 @@ export default function Main() {
           </Box>
         </Grid>
 
-        {/* Enlarged Image Section */}
         <Grid item xs={12} md={6}>
           <Box
             sx={{
-              height: 600, // Make the box taller to prevent top cropping
-              overflow: 'hidden', // Crops the rest of the image
+              height: 600,
+              overflow: 'hidden', 
               display: 'flex',
               justifyContent: 'center',
               alignItems: 'center',
@@ -38,11 +34,11 @@ export default function Main() {
           >
             <Box
               component="img"
-              src="/src/pics/image-removebg.png"
+              src="src/components/MainPage/MainPagePictures/MainImage.png"
               alt="Highlight Image"
               sx={{
                 transform: 'scale(1.4)',
-                transformOrigin: 'top center', // Ensures top remains visible // Moves image down slightly to prevent top cropping
+                transformOrigin: 'top center',
               }}
             />
           </Box>

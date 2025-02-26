@@ -8,8 +8,8 @@ import Typography from '@mui/material/Typography';
 import ArrowCircleRightIcon from '@mui/icons-material/ArrowCircleRight'; 
 
 const FeatureCards = [
-  { image: '/src/pics/MainPage.jpeg', text: 'Partnereink', linkGoto: 'https://www.example.com' },
-  { image: '/src/pics/kep.jpg', text: 'Térkép', linkGoto: 'https://www.example.com' },
+  { image: 'src/components/MainPage/MainPagePictures/Feature1.jpeg', text: 'Partnereink', linkGoto: 'https://www.example.com' },
+  { image: 'src/components/MainPage/MainPagePictures/Feature2.jpg', text: 'Térkép', linkGoto: 'https://www.example.com' },
   { image: '', text: 'Feature 3', linkGoto: 'https://www.example.com' },
 ];
 
