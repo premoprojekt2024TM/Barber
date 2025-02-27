@@ -35,14 +35,28 @@ const AddPage: React.FC = () => {
                     <ColumnMemo variant="monday" />
                   </Grid>
                   <Grid item xs={12} sm={6} lg={4}>
-                    <ColumnMemo variant="ongoing" />
+                    <ColumnMemo variant="tuesday" />
                   </Grid>
+                  <Grid item xs={12} sm={6} lg={4}>
+                    <ColumnMemo variant="wednesday" />
+                  </Grid>
+                  <Grid item xs={12} sm={6} lg={4}>
+                    <ColumnMemo variant="thursday" />
+                  </Grid>
+                  <Grid item xs={12} sm={6} lg={4}>
+                    <ColumnMemo variant="friday" />
+                  </Grid>
+                  <Grid item xs={12} sm={6} lg={4}>
+                    <ColumnMemo variant="saturday" />
+                  </Grid>
+                  <Grid item xs={12} sm={6} lg={4}>
+                    <ColumnMemo variant="sunday" />
+                  </Grid>
+
                   <Grid item xs={12} sm={6} lg={4}>
                     <ColumnMemo variant='done' />
                   </Grid>
-                  <Grid item xs={12} sm={6} lg={4}>
-                    <ColumnMemo variant='archived' />
-                  </Grid>
+
                   
                 </Grid>
               </DragDropContext>

@@ -11,11 +11,26 @@ import { formSchema } from "./schema";
 import { TaskVariant } from "./types";
 
 // Material UI Imports
-import { Card, CardContent, CardHeader, IconButton, TextField, Typography } from '@mui/material';
+import { Card, CardHeader, IconButton, TextField, Box } from '@mui/material';
 
-interface ColumnProps extends React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement> {
-  variant: TaskVariant;
-}
+// Badge component for day labels
+const DayBadge = ({ day }: { day: string }) => {
+  return (
+    <Box
+      sx={{
+        display: "inline-block",
+        backgroundColor: "#1976d2", // Customize this color
+        color: "white",
+        borderRadius: "12px",
+        padding: "0.5rem 1rem",
+        fontSize: "1rem",
+        fontWeight: "bold",
+      }}
+    >
+      {day}
+    </Box>
+  );
+};
 
 // Adjust columnTitle function to include both task states and days of the week
 const columnTitle = (state: string): string => {
@@ -24,15 +39,15 @@ const columnTitle = (state: string): string => {
     ongoing: "IN PROGRESS",
     done: "DONE",
     archived: "ARCHIVED",  // New column title
-    monday: "MONDAY",
-    tuesday: "TUESDAY",
-    wednesday: "WEDNESDAY",
-    thursday: "THURSDAY",
-    friday: "FRIDAY",
-    saturday: "SATURDAY",
-    sunday: "SUNDAY",
+    monday: "HÉTFŐ",        // Day of the week
+    tuesday: "KEDD",        // Day of the week
+    wednesday: "SZERDA",    // Day of the week
+    thursday: "CSÜTÖRTÖK",  // Day of the week
+    friday: "PÉNTEK",      // Day of the week
+    saturday: "SZOMBAT",    // Day of the week
+    sunday: "VASÁRNAP",     // Day of the week
   };
-  return titles[state] || "";
+  return titles[state] || "";  // Return the title or an empty string
 };
 
 export const Column = React.forwardRef<HTMLDivElement, ColumnProps>(({ variant, className }, ref) => {
@@ -56,18 +71,25 @@ export const Column = React.forwardRef<HTMLDivElement, ColumnProps>(({ variant, 
   return (
     <Card
       ref={ref}
-      className={`group/column m-2 min-w-[282px] flex-1 ${className}`}
       variant="outlined"
       sx={{
         backgroundColor: "white",
         boxShadow: 3,
         borderRadius: 2,
         overflow: "hidden",
+        margin: 2,
+        minWidth: "282px",
+        flex: 1,
+        transformOrigin: "top left",
       }}
     >
       <CardHeader
+        title={
+          // Use the DayBadge component for day labels
+          <DayBadge day={columnTitle(variant)} />
+        }
         action={
-          variant !== "done" ? (  // Only show the + icon for columns where variant is NOT 'done'
+          variant !== "done" ? (
             <IconButton
               color="primary"
               onClick={() => {
@@ -79,7 +101,7 @@ export const Column = React.forwardRef<HTMLDivElement, ColumnProps>(({ variant, 
                 }
               }}
             >
-              <PlusIcon className="h-5 w-5" />
+              <PlusIcon />
             </IconButton>
           ) : null
         }
@@ -87,20 +109,25 @@ export const Column = React.forwardRef<HTMLDivElement, ColumnProps>(({ variant, 
       />
 
       <Droppable droppableId={variant}>
-        {(provided, snapshot) => (
+        {(provided) => (
           <div
             {...provided.droppableProps}
             ref={provided.innerRef}
-            className={`flex h-full min-h-[15rem] w-full flex-col p-1.5 ${snapshot.isUsingPlaceholder ? "border-biru" : ""}`}
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              height: "100%",
+              minHeight: "15rem",
+              paddingTop: "1rem",
+            }}
           >
             {todos.map((task, index) => (
               <Task index={index} key={task.id} id={task.id} state={variant} />
             ))}
             {provided.placeholder}
 
-            {/* Task Input (Visible when adding a task for all days, but NOT 'done') */}
             {variant !== "done" && (
-              <div className={`p-2 ${isAddingTodo ? "block" : "hidden"}`}>
+              <div style={{ padding: "1rem", display: isAddingTodo ? "block" : "none" }}>
                 <Form {...form}>
                   <form
                     onSubmit={form.handleSubmit(onSubmit)}
@@ -110,7 +137,7 @@ export const Column = React.forwardRef<HTMLDivElement, ColumnProps>(({ variant, 
                       control={form.control}
                       name="task"
                       render={({ field }) => (
-                        <FormItem className="relative text-bg">
+                        <FormItem>
                           <FormControl ref={inputRef}>
                             <TextField
                               {...field}
@@ -119,7 +146,7 @@ export const Column = React.forwardRef<HTMLDivElement, ColumnProps>(({ variant, 
                               maxRows={4}
                               variant="outlined"
                               size="small"
-                              error={form.formState.errors.task ? true : false}
+                              error={!!form.formState.errors.task}
                               helperText={form.formState.errors.task?.message}
                               onKeyDown={(e) => {
                                 if (e.key === "Enter") {
@@ -129,11 +156,9 @@ export const Column = React.forwardRef<HTMLDivElement, ColumnProps>(({ variant, 
                                   setIsAddingTodo(false);
                                 }
                               }}
-                              InputProps={{
-                                style: {
-                                  paddingTop: '10px',
-                                  paddingBottom: '10px',
-                                },
+                              sx={{
+                                paddingTop: "10px",
+                                paddingBottom: "10px",
                               }}
                             />
                           </FormControl>

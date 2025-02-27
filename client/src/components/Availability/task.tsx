@@ -9,8 +9,8 @@ import { useTextarea } from "./use-adjust-textarea";
 import { TaskVariant } from "./types";
 
 // MUI imports
-import { Card, CardContent, IconButton, Typography } from "@mui/material";
-import DeleteIcon from '@mui/icons-material/Delete'; 
+import { Card, CardContent, IconButton, Typography, TextareaAutosize } from "@mui/material";
+import DeleteIcon from '@mui/icons-material/Delete';
 
 interface TaskProps {
   id: string;
@@ -20,18 +20,20 @@ interface TaskProps {
 
 const Task = React.memo(function ({ id, index, state }: TaskProps) {
   const [editTask, setEditTask] = React.useState(false);
+
   const todo = useTodos((store) =>
     store.todos[state].find((task) => task.id === id),
   );
-  if (!todo) return null;
-
-  const editTodo = useTodos((store) => store.editTodo); // Get the delete function from the store
-
+  const editTodo = useTodos((store) => store.editTodo); // Get the edit function from the store
+  const deleteTodo = useTodos((store) => store.deleteTodos); // Get the delete function from the store
   const { textareaRef, adjustTextareaHeight } = useTextarea();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: { task: todo?.title },
   });
+
+  // If no todo is found, return null after hook initialization
+  if (!todo) return null;
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     if (values.task.trim().length !== 0) {
@@ -49,17 +51,23 @@ const Task = React.memo(function ({ id, index, state }: TaskProps) {
           {...provided.draggableProps}
           {...provided.dragHandleProps}
           ref={provided.innerRef}
-          className={`group/task relative my-0.5 flex h-fit justify-between rounded-sm ${snapshot.isDragging ? "outline outline-1 outline-biru" : ""}`}
           variant="outlined"
           sx={{
             backgroundColor: "background.paper",
             boxShadow: 3,
             borderRadius: 1,
             padding: 2,
+            marginBottom: 1,
+            position: "relative",
+            cursor: "move",
+            ...(snapshot.isDragging && {
+              borderColor: "primary.dark", 
+              boxShadow: 6,
+            }),
           }}
         >
           <CardContent sx={{ display: "flex", flexDirection: "column", width: "100%" }}>
-            {!editTask && (
+            {!editTask ? (
               <>
                 <Typography
                   variant="body2"
@@ -68,7 +76,6 @@ const Task = React.memo(function ({ id, index, state }: TaskProps) {
                     whiteSpace: "pre-wrap",
                     wordWrap: "break-word",
                     textDecoration: state === "done" ? "line-through" : "none",
-                    cursor: "pointer",
                     marginBottom: 1,
                   }}
                   onClick={() => {
@@ -83,14 +90,52 @@ const Task = React.memo(function ({ id, index, state }: TaskProps) {
                 >
                   {todo.title}
                 </Typography>
-
-                {/* Trash Icon Button to Delete Task */}
-                <IconButton              
-                  sx={{ position: "absolute", top: 8, right: 8 }} // Position the trash icon
+                <IconButton
+                  onClick={() => {
+                    deleteTodo(id, state); // Call the delete function with the task's id and state
+                  }}
+                  sx={{
+                    position: "absolute",
+                    top: 8,
+                    right: 8,
+                    color: "text.secondary",
+                  }}
                 >
                   <DeleteIcon />
                 </IconButton>
               </>
+            ) : (
+              <form onSubmit={form.handleSubmit(onSubmit)}>
+                <TextareaAutosize
+                  {...form.register("task")}
+                  minRows={3}
+                  maxRows={5}
+                  ref={(e: HTMLTextAreaElement | null) => {
+                    textareaRef.current = e;
+                    form.register("task").ref(e);
+                  }}
+                  onChange={adjustTextareaHeight}
+                  style={{
+                    width: "100%",
+                    padding: "8px",
+                    fontSize: "14px",
+                    borderRadius: "4px",
+                    border: "1px solid",
+                    borderColor: "grey.400",
+                    backgroundColor: "transparent",
+                    resize: "none",
+                  }}
+                />
+                <IconButton
+                  type="submit"
+                  sx={{
+                    marginTop: 1,
+                    alignSelf: "flex-end",
+                  }}
+                >
+                  <DeleteIcon />
+                </IconButton>
+              </form>
             )}
           </CardContent>
         </Card>
@@ -100,3 +145,4 @@ const Task = React.memo(function ({ id, index, state }: TaskProps) {
 });
 
 export default Task;
+

@@ -1,12 +1,20 @@
 import { z } from "zod";
 
+// Regex to validate time in HH:mm 24-hour format
+const timeRegex = /^(?:[01]?[0-9]|2[0-3]):[0-5][0-9]$/;
+
 const formSchema = z.object({
   task: z
     .string()
-    .min(2, {
-      message: "task must be at least 2 characters.",
+    .min(5, {
+      message: "Time must be at least 5 characters (HH:mm).",
     })
-    .max(100),
+    .max(5, {
+      message: "Time must be exactly 5 characters (HH:mm).",
+    })
+    .regex(timeRegex, {
+      message: "Please enter a valid time in 24-hour format (HH:mm).",
+    }),
 });
 
 export { formSchema };

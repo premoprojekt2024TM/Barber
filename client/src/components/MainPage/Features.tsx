@@ -101,6 +101,10 @@ export default function Features() {
                           opacity: 1,
                           visibility: 'visible',
                         },
+                        '& img': {
+                          filter: 'blur(5px)', // Apply blur on hover
+                          transition: 'filter 0.3s ease', // Smooth transition for blur effect
+                        },
                       },
                     }),
               }}
@@ -121,6 +125,7 @@ export default function Features() {
                       width: '350px',
                       height: '600px',
                       objectFit: 'cover',
+                      transition: 'filter 0.3s ease', // Transition for smooth blur effect
                     }}
                   />
                   <Box
@@ -132,7 +137,7 @@ export default function Features() {
                       width: '100%',
                       height: '100%',
                       backgroundColor: 'rgba(128, 128, 128, 0.3)',
-                      filter: 'blur(10px)',
+                      filter: 'blur(0px)',
                       transform: isMobile
                         ? activeIndex === index
                           ? 'translateY(0%)'
