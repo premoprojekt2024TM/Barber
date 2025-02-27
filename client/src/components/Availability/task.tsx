@@ -3,7 +3,6 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { Draggable } from "@hello-pangea/dnd";
 import { useTodos } from "./todoStore";
-import { cn } from "./utils";
 import { formSchema } from "./schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTextarea } from "./use-adjust-textarea";
@@ -50,10 +49,7 @@ const Task = React.memo(function ({ id, index, state }: TaskProps) {
           {...provided.draggableProps}
           {...provided.dragHandleProps}
           ref={provided.innerRef}
-          className={cn(
-            "group/task relative my-0.5 flex h-fit justify-between rounded-sm",
-            snapshot.isDragging && "outline outline-1 outline-biru"
-          )}
+          className={`group/task relative my-0.5 flex h-fit justify-between rounded-sm ${snapshot.isDragging ? "outline outline-1 outline-biru" : ""}`}
           variant="outlined"
           sx={{
             backgroundColor: "background.paper",

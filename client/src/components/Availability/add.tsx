@@ -3,11 +3,10 @@ import { DragDropContext, DropResult } from '@hello-pangea/dnd';
 import { useTodos } from '../Availability/todoStore';
 import { Box, CssBaseline, Grid } from '@mui/material';
 import { ColumnMemo } from '../Availability/column';
-import AppTheme from '../../shared-theme/AppTheme';  // You can remove this if not needed
+import AppTheme from '../../shared-theme/AppTheme';  
 
 const AddPage: React.FC = () => {
   const orderTask = useTodos((store) => store.moveTaskBetweenCategories);
-  const resetOrderNumber = useTodos((store) => store.resetCounter);
 
   function handleOnDragEnd(result: DropResult) {
     const { destination, source, draggableId } = result;
@@ -50,9 +49,7 @@ const AddPage: React.FC = () => {
             </Box>
           </Grid>
 
-          {/* Left Side (Optional additional content) */}
           <Grid item xs={12} md={12}>
-            {/* Additional content if necessary */}
           </Grid>
         </Grid>
     </AppTheme>

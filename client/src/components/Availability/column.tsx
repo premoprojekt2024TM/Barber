@@ -4,7 +4,6 @@ import Task from "./task";
 import * as z from "zod";
 import { Form, FormControl, FormField, FormItem } from "./form";
 import { useForm } from "react-hook-form";
-import { cn } from "./utils";
 import { Droppable } from "@hello-pangea/dnd";
 import { useTodos } from "../Availability/todoStore";
 import { PlusIcon } from "@radix-ui/react-icons";
@@ -57,7 +56,7 @@ export const Column = React.forwardRef<HTMLDivElement, ColumnProps>(({ variant, 
   return (
     <Card
       ref={ref}
-      className={cn("group/column m-2 min-w-[282px] flex-1", className)}
+      className={`group/column m-2 min-w-[282px] flex-1 ${className}`}
       variant="outlined"
       sx={{
         backgroundColor: "white",
@@ -67,7 +66,6 @@ export const Column = React.forwardRef<HTMLDivElement, ColumnProps>(({ variant, 
       }}
     >
       <CardHeader
-
         action={
           variant !== "done" ? (  // Only show the + icon for columns where variant is NOT 'done'
             <IconButton
@@ -93,10 +91,7 @@ export const Column = React.forwardRef<HTMLDivElement, ColumnProps>(({ variant, 
           <div
             {...provided.droppableProps}
             ref={provided.innerRef}
-            className={cn(
-              "flex h-full min-h-[15rem] w-full flex-col p-1.5",
-              snapshot.isUsingPlaceholder && "border-biru"
-            )}
+            className={`flex h-full min-h-[15rem] w-full flex-col p-1.5 ${snapshot.isUsingPlaceholder ? "border-biru" : ""}`}
           >
             {todos.map((task, index) => (
               <Task index={index} key={task.id} id={task.id} state={variant} />
@@ -105,7 +100,7 @@ export const Column = React.forwardRef<HTMLDivElement, ColumnProps>(({ variant, 
 
             {/* Task Input (Visible when adding a task for all days, but NOT 'done') */}
             {variant !== "done" && (
-              <div className={cn("p-2", isAddingTodo ? "block" : "hidden")}>
+              <div className={`p-2 ${isAddingTodo ? "block" : "hidden"}`}>
                 <Form {...form}>
                   <form
                     onSubmit={form.handleSubmit(onSubmit)}
