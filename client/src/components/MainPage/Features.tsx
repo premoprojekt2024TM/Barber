@@ -10,7 +10,7 @@ import ArrowCircleRightIcon from '@mui/icons-material/ArrowCircleRight';
 const FeatureCards = [
   { image: 'src/components/MainPage/MainPagePictures/Feature1.jpeg', text: 'Partnereink', linkGoto: 'https://www.example.com' },
   { image: 'src/components/MainPage/MainPagePictures/Feature2.jpg', text: 'Térkép', linkGoto: 'https://www.example.com' },
-  { image: '', text: 'Feature 3', linkGoto: 'https://www.example.com' },
+  { image: 'src/components/MainPage/MainPagePictures/Feature3.jpg', text: 'Időpontfoglalás', linkGoto: 'https://www.example.com' },
 ];
 
 export default function Features() {
