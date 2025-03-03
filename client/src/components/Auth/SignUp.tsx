@@ -36,13 +36,13 @@ export default function SignUp() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState<'client' | 'hairdresser'>('client');
-  const [passwordErrorMessage, setPasswordErrorMessage] = useState<string>(''); // Only password error message
+  const [passwordErrorMessage, setPasswordErrorMessage] = useState<string>(''); 
   
   const navigate = useNavigate(); 
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setPasswordErrorMessage(''); // Clear password error message before submitting
+    setPasswordErrorMessage(''); 
 
     const formData = {
       username,
@@ -54,13 +54,13 @@ export default function SignUp() {
     try {
       const response = await axiosInstance.post('/api/v1/register', formData);
     
-      if (response.status === 200) {
+      if (response.status === 201) {
         navigate('/login'); 
       } else {
         setPasswordErrorMessage('A regisztráció nem sikerült. Kérlek próbáld újra.');
       }
     } catch (error: unknown) {
-      const axiosError = error as AxiosErrorResponse; // Típus castolás AxiosErrorResponse típusra
+      const axiosError = error as AxiosErrorResponse;
       if (axiosError.response) {
         if (axiosError.response.status === 400) {
           setPasswordErrorMessage('Hibás adatok. Kérlek ellenőrizd a megadott információkat.');
@@ -135,7 +135,7 @@ export default function SignUp() {
               sx={{ mb: 2 }}
             >
               <ToggleButton value="client" sx={{ flex: 1 }}>Kliens</ToggleButton>
-              <ToggleButton value="hairdresser" sx={{ flex: 1 }}>Fodrász</ToggleButton>
+              <ToggleButton value="worker" sx={{ flex: 1 }}>Fodrász</ToggleButton>
             </ToggleButtonGroup>
 
             <Button type="submit" fullWidth variant="contained">Regisztráció</Button>

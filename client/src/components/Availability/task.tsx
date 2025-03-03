@@ -5,12 +5,11 @@ import { Draggable } from "@hello-pangea/dnd";
 import { useTodos } from "./todoStore";
 import { formSchema } from "./schema";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useTextarea } from "./use-adjust-textarea";
 import { TaskVariant } from "./types";
 
-// MUI imports
-import { Card, CardContent, IconButton, Typography, TextareaAutosize } from "@mui/material";
+import { Card, CardContent, IconButton, Typography, Input } from "@mui/material";
 import DeleteIcon from '@mui/icons-material/Delete';
+import CheckIcon from '@mui/icons-material/Check';
 
 interface TaskProps {
   id: string;
@@ -24,9 +23,9 @@ const Task = React.memo(function ({ id, index, state }: TaskProps) {
   const todo = useTodos((store) =>
     store.todos[state].find((task) => task.id === id),
   );
-  const editTodo = useTodos((store) => store.editTodo); // Get the edit function from the store
-  const deleteTodo = useTodos((store) => store.deleteTodos); // Get the delete function from the store
-  const { textareaRef, adjustTextareaHeight } = useTextarea();
+  const editTodo = useTodos((store) => store.editTodo);
+  const deleteTodo = useTodos((store) => store.deleteTodos);
+  
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: { task: todo?.title },
@@ -79,20 +78,14 @@ const Task = React.memo(function ({ id, index, state }: TaskProps) {
                     marginBottom: 1,
                   }}
                   onClick={() => {
-                    if (textareaRef?.current) {
-                      setEditTask(true);
-                      setTimeout(() => {
-                        textareaRef.current?.focus();
-                        adjustTextareaHeight();
-                      }, 0);
-                    }
+                    setEditTask(true);
                   }}
                 >
                   {todo.title}
                 </Typography>
                 <IconButton
                   onClick={() => {
-                    deleteTodo(id, state); // Call the delete function with the task's id and state
+                    deleteTodo(id, state);
                   }}
                   sx={{
                     position: "absolute",
@@ -106,35 +99,36 @@ const Task = React.memo(function ({ id, index, state }: TaskProps) {
               </>
             ) : (
               <form onSubmit={form.handleSubmit(onSubmit)}>
-                <TextareaAutosize
+                <Input
                   {...form.register("task")}
-                  minRows={3}
-                  maxRows={5}
-                  ref={(e: HTMLTextAreaElement | null) => {
-                    textareaRef.current = e;
-                    form.register("task").ref(e);
-                  }}
-                  onChange={adjustTextareaHeight}
-                  style={{
-                    width: "100%",
+                  fullWidth
+                  multiline
+                  disableUnderline
+                  autoFocus
+                  sx={{
                     padding: "8px",
                     fontSize: "14px",
                     borderRadius: "4px",
                     border: "1px solid",
                     borderColor: "grey.400",
                     backgroundColor: "transparent",
-                    resize: "none",
+                    marginBottom: 1,
                   }}
                 />
-                <IconButton
-                  type="submit"
-                  sx={{
-                    marginTop: 1,
-                    alignSelf: "flex-end",
-                  }}
-                >
-                  <DeleteIcon />
-                </IconButton>
+                <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                  <IconButton
+                    onClick={() => setEditTask(false)}
+                    sx={{ marginRight: 1 }}
+                  >
+                    <DeleteIcon />
+                  </IconButton>
+                  <IconButton
+                    type="submit"
+                    color="primary"
+                  >
+                    <CheckIcon />
+                  </IconButton>
+                </div>
               </form>
             )}
           </CardContent>
@@ -145,4 +139,3 @@ const Task = React.memo(function ({ id, index, state }: TaskProps) {
 });
 
 export default Task;
-

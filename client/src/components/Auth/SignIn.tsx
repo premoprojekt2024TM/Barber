@@ -4,8 +4,8 @@ import AppTheme from '../../shared-theme/AppTheme';
 import { Link as RouterLink, useNavigate } from 'react-router-dom'; 
 import { useState } from 'react';
 import axiosInstance from '../../utils/axiosInstance';
+import Cookies from 'js-cookie'; // Import js-cookie library for cookie management
 
-// Animáció: Fade In Up
 const fadeInUp = keyframes`
   0% { opacity: 0; transform: translateY(30px); }
   100% { opacity: 1; transform: translateY(0); }
@@ -32,16 +32,22 @@ interface AxiosErrorResponse {
   };
 }
 
+// Define token response interface
+interface LoginResponse {
+  token: string;
+  // Add any other fields your API returns
+}
+
 export default function SignIn() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [passwordError, setPasswordError] = useState(''); // State to manage error message for password
+  const [passwordError, setPasswordError] = useState('');
   
   const navigate = useNavigate(); 
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setPasswordError(''); // Reset the error message before the form submission
+    setPasswordError('');
 
     const formData = {
       email,
@@ -49,9 +55,21 @@ export default function SignIn() {
     };
 
     try {
-      const response = await axiosInstance.post('/api/v1/login', formData);
+      const response = await axiosInstance.post<LoginResponse>('/api/v1/login', formData);
 
-      if (response.status === 200) {
+      if (response.status === 200 && response.data.token) {
+        // Save token to cookie
+        // Set the cookie to expire in 7 days and make it secure + HTTP only
+        Cookies.set('jwt_token', response.data.token, { 
+          expires: 7, 
+          secure: process.env.NODE_ENV === 'production', 
+          sameSite: 'strict'
+        });
+        
+        // Update axios default headers for future requests
+        axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
+
+        // Redirect to dashboard
         navigate('/dashboard');
       } else {
         setPasswordError('A bejelentkezés nem sikerült. Kérlek próbáld újra.');
@@ -61,6 +79,8 @@ export default function SignIn() {
       if (axiosError.response) {
         if (axiosError.response.status === 400) {
           setPasswordError('Hibás adatok. Kérlek ellenőrizd a megadott információkat.');
+        } else if (axiosError.response.status === 401) {
+          setPasswordError('Érvénytelen email vagy jelszó. Kérlek próbáld újra.');
         } else if (axiosError.response.status === 500) {
           setPasswordError('A szerver hibát észlelt. Kérlek próbáld újra később.');
         } else {
@@ -102,7 +122,7 @@ export default function SignIn() {
                 placeholder="••••••••" 
                 type="password" 
                 id="password" 
-                autoComplete="new-password" 
+                autoComplete="current-password" 
                 variant="outlined"
                 value={password} 
                 onChange={(e) => setPassword(e.target.value)} 

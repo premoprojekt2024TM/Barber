@@ -140,12 +140,15 @@ export default function AppAppBar() {
                     <CloseRoundedIcon />
                   </StyledIconButton>
                 </Box>
-                <StyledMenuItem>Features</StyledMenuItem>
-                <StyledMenuItem>Testimonials</StyledMenuItem>
-                <StyledMenuItem>Highlights</StyledMenuItem>
-                <StyledMenuItem>Pricing</StyledMenuItem>
-                <StyledMenuItem>FAQ</StyledMenuItem>
-                <StyledMenuItem>Blog</StyledMenuItem>
+                <Link to="features" smooth={true} duration={500}>
+                <StyledMenuItem>Szolgáltatások</StyledMenuItem>
+                </Link>
+                <Link to="popular" smooth={true} duration={500}>
+                <StyledMenuItem>Népszerű</StyledMenuItem>
+                </Link>
+                <Link to="faq" smooth={true} duration={500}>
+                <StyledMenuItem>GyIK</StyledMenuItem>
+                </Link>
                 <Divider sx={{ my: 3 }} />
                 <MenuItem>
                   <Button color="primary" variant="contained" fullWidth>

@@ -36,10 +36,7 @@ const useTodos = create<TodoStore>()(
   persist(
     (set) => ({
       todos: {
-        planned: [],
-        ongoing: [],
         done: [],
-        archived: [],
         monday: [], // Add support for each day of the week
         tuesday: [],
         wednesday: [],
@@ -71,6 +68,10 @@ const useTodos = create<TodoStore>()(
       addTodos: (title, state) => {
         set((prev) => {
           const newTask = { title, state, id: nanoid(), order: prev.counter++ };
+      
+          // Log the new task to the console
+          console.log('New task added:', newTask);
+      
           return {
             todos: {
               ...prev.todos,
@@ -139,7 +140,7 @@ const useTodos = create<TodoStore>()(
           return { todos: { ...todos } };
         }),
     }),
-    { name: "to-doooo" },
+    { name: "availability" },
   ),
 );
 

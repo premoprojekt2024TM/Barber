@@ -1,25 +1,20 @@
-import React from "react";
+import * as React from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Task from "./task";
 import * as z from "zod";
-import { Form, FormControl, FormField, FormItem } from "./form";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { Droppable } from "@hello-pangea/dnd";
 import { useTodos } from "../Availability/todoStore";
-import { PlusIcon } from "@radix-ui/react-icons";
+import AddIcon from "@mui/icons-material/Add";
 import { formSchema } from "./schema";
-import { TaskVariant } from "./types";
+import { Card, CardHeader, IconButton, TextField, Box } from "@mui/material";
 
-// Material UI Imports
-import { Card, CardHeader, IconButton, TextField, Box } from '@mui/material';
-
-// Badge component for day labels
 const DayBadge = ({ day }: { day: string }) => {
   return (
     <Box
       sx={{
         display: "inline-block",
-        backgroundColor: "#1976d2", // Customize this color
+        backgroundColor: "#1976d2",
         color: "white",
         borderRadius: "12px",
         padding: "0.5rem 1rem",
@@ -32,148 +27,139 @@ const DayBadge = ({ day }: { day: string }) => {
   );
 };
 
-// Adjust columnTitle function to include both task states and days of the week
 const columnTitle = (state: string): string => {
   const titles: Record<string, string> = {
-    planned: "TO DO",
-    ongoing: "IN PROGRESS",
     done: "DONE",
-    archived: "ARCHIVED",  // New column title
-    monday: "HÉTFŐ",        // Day of the week
-    tuesday: "KEDD",        // Day of the week
-    wednesday: "SZERDA",    // Day of the week
-    thursday: "CSÜTÖRTÖK",  // Day of the week
-    friday: "PÉNTEK",      // Day of the week
-    saturday: "SZOMBAT",    // Day of the week
-    sunday: "VASÁRNAP",     // Day of the week
+    archived: "ARCHIVED",
+    monday: "HÉTFŐ",
+    tuesday: "KEDD",
+    wednesday: "SZERDA",
+    thursday: "CSÜTÖRTÖK",
+    friday: "PÉNTEK",
+    saturday: "SZOMBAT",
+    sunday: "VASÁRNAP",
   };
-  return titles[state] || "";  // Return the title or an empty string
+  return titles[state] || "";
 };
 
-export const Column = React.forwardRef<HTMLDivElement, ColumnProps>(({ variant, className }, ref) => {
-  const addTodo = useTodos((store) => store.addTodos);
-  const todos = useTodos((store) => store.todos[variant]);
-  const [isAddingTodo, setIsAddingTodo] = React.useState(false);
+export const Column = React.forwardRef<HTMLDivElement, ColumnProps>(
+  ({ variant, className }, ref) => {
+    const addTodo = useTodos((store) => store.addTodos);
+    const todos = useTodos((store) => store.todos[variant]);
+    const [isAddingTodo, setIsAddingTodo] = React.useState(false);
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: { task: "" },
-  });
+    const { control, handleSubmit, reset, formState, setFocus } = useForm<z.infer<typeof formSchema>>({
+      resolver: zodResolver(formSchema),
+      defaultValues: { task: "" },
+    });
 
-  const inputRef = React.useRef<HTMLInputElement>(null);
+    const inputRef = React.useRef<HTMLInputElement>(null);
 
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
-    addTodo(values.task, variant);
-    form.reset();
-    setIsAddingTodo(false);
-  };
+    const onSubmit = (values: z.infer<typeof formSchema>) => {
+      addTodo(values.task, variant);
+      reset();
+      setIsAddingTodo(false);
+    };
 
-  return (
-    <Card
-      ref={ref}
-      variant="outlined"
-      sx={{
-        backgroundColor: "white",
-        boxShadow: 3,
-        borderRadius: 2,
-        overflow: "hidden",
-        margin: 2,
-        minWidth: "282px",
-        flex: 1,
-        transformOrigin: "top left",
-      }}
-    >
-      <CardHeader
-        title={
-          // Use the DayBadge component for day labels
-          <DayBadge day={columnTitle(variant)} />
-        }
-        action={
-          variant !== "done" ? (
-            <IconButton
-              color="primary"
-              onClick={() => {
-                if (inputRef.current) {
+    return (
+      <Card
+        ref={ref}
+        variant="outlined"
+        sx={{
+          backgroundColor: "white",
+          boxShadow: 3,
+          borderRadius: 2,
+          overflow: "hidden",
+          margin: 2,
+          minWidth: "282px",
+          flex: 1,
+          transformOrigin: "top left",
+        }}
+      >
+        <CardHeader
+          title={<DayBadge day={columnTitle(variant)} />}
+          action={
+            variant !== "done" ? (
+              <IconButton
+                color="primary"
+                onClick={() => {
                   setIsAddingTodo(true);
                   setTimeout(() => {
-                    inputRef.current?.focus();
+                    if (inputRef.current) {
+                      setFocus("task");
+                    }
                   }, 0);
-                }
+                }}
+              >
+                <AddIcon />
+              </IconButton>
+            ) : null
+          }
+          sx={{ paddingBottom: 0 }}
+        />
+
+        <Droppable droppableId={variant}>
+          {(provided) => (
+            <div
+              {...provided.droppableProps}
+              ref={provided.innerRef}
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                height: "100%",
+                minHeight: "15rem",
+                paddingTop: "1rem",
               }}
             >
-              <PlusIcon />
-            </IconButton>
-          ) : null
-        }
-        sx={{ paddingBottom: 0 }}
-      />
+              {todos.map((task, index) => (
+                <Task index={index} key={task.id} id={task.id} state={variant} />
+              ))}
+              {provided.placeholder}
 
-      <Droppable droppableId={variant}>
-        {(provided) => (
-          <div
-            {...provided.droppableProps}
-            ref={provided.innerRef}
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              height: "100%",
-              minHeight: "15rem",
-              paddingTop: "1rem",
-            }}
-          >
-            {todos.map((task, index) => (
-              <Task index={index} key={task.id} id={task.id} state={variant} />
-            ))}
-            {provided.placeholder}
-
-            {variant !== "done" && (
-              <div style={{ padding: "1rem", display: isAddingTodo ? "block" : "none" }}>
-                <Form {...form}>
+              {variant !== "done" && (
+                <div style={{ padding: "1rem", display: isAddingTodo ? "block" : "none" }}>
                   <form
-                    onSubmit={form.handleSubmit(onSubmit)}
+                    onSubmit={handleSubmit(onSubmit)}
                     onBlur={() => setIsAddingTodo(false)}
                   >
-                    <FormField
-                      control={form.control}
+                    <Controller
                       name="task"
+                      control={control}
                       render={({ field }) => (
-                        <FormItem>
-                          <FormControl ref={inputRef}>
-                            <TextField
-                              {...field}
-                              fullWidth
-                              multiline
-                              maxRows={4}
-                              variant="outlined"
-                              size="small"
-                              error={!!form.formState.errors.task}
-                              helperText={form.formState.errors.task?.message}
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter") {
-                                  form.handleSubmit(onSubmit)();
-                                }
-                                if (e.key === "Escape") {
-                                  setIsAddingTodo(false);
-                                }
-                              }}
-                              sx={{
-                                paddingTop: "10px",
-                                paddingBottom: "10px",
-                              }}
-                            />
-                          </FormControl>
-                        </FormItem>
+                        <TextField
+                          {...field}
+                          inputRef={inputRef}
+                          fullWidth
+                          multiline
+                          maxRows={4}
+                          variant="outlined"
+                          size="small"
+                          error={!!formState.errors.task}
+                          helperText={formState.errors.task?.message}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              handleSubmit(onSubmit)();
+                            }
+                            if (e.key === "Escape") {
+                              setIsAddingTodo(false);
+                            }
+                          }}
+                          sx={{
+                            paddingTop: "10px",
+                            paddingBottom: "10px",
+                          }}
+                        />
                       )}
                     />
                   </form>
-                </Form>
-              </div>
-            )}
-          </div>
-        )}
-      </Droppable>
-    </Card>
-  );
-});
+                </div>
+              )}
+            </div>
+          )}
+        </Droppable>
+      </Card>
+    );
+  }
+);
 
 export const ColumnMemo = React.memo(Column);

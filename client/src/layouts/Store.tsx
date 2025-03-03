@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { CssBaseline, Box, Stack } from '@mui/material';
 import AppTheme from '../shared-theme/AppTheme';
-import SideMenu from '../components/shared/SideMenu';
-import AppNavbar from '../components/shared/AppNavbar';
-import Header from '../components/shared/Header';
+import SideMenu from '../components/Shared/SideMenu';
+import AppNavbar from '../components/Shared/AppNavbar';
+import Header from '../components/Shared/Header';
 import SimpleContainer1 from '../pages/StorePage';  // Import SimpleContainer1
 
 // Optional customizations for charts, data grids, etc.

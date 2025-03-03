@@ -7,10 +7,10 @@ import { alpha } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
-import AppNavbar from '../components/shared/AppNavbar';
-import Header from '../components/shared/Header';
+import AppNavbar from '../components/Shared/AppNavbar';
+import Header from '../components/Shared/Header';
 import FinderGrid from '../pages/FinderPage';
-import SideMenu from '../components/shared/SideMenu';
+import SideMenu from '../components/Shared/SideMenu';
 import AppTheme from '../shared-theme/AppTheme';
 import {
   chartsCustomizations,

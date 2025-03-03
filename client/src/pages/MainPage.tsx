@@ -3,11 +3,7 @@ import Grid from '@mui/material/Grid2';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import Copyright from '../internals/components/Copyright';
-import ChartUserByCountry from '../components/Dashboard/ChartUserByCountry';
-import CustomizedTreeView from '../components/Dashboard/CustomizedTreeView';
 import CustomizedDataGrid from '../components/Dashboard/CustomizedDataGrid';
-import HighlightedCard from '../components/Dashboard/HighlightedCard';
 import PageViewsBarChart from '../components/Dashboard/PageViewsBarChart';
 import SessionsChart from '../components/Dashboard/SessionsChart';
 import StatCard, { StatCardProps } from '../components/Dashboard/StatCard';
@@ -48,10 +44,6 @@ const data: StatCardProps[] = [
 export default function MainPage() {
   return (
     <Box sx={{ width: '100%', maxWidth: { sm: '100%', md: '1700px' } }}>
-      {/* cards */}
-      <Typography component="h2" variant="h6" sx={{ mb: 2 }}>
-        Overview
-      </Typography>
       <Grid
         container
         spacing={2}
@@ -64,7 +56,6 @@ export default function MainPage() {
           </Grid>
         ))}
         <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
-          <HighlightedCard />
         </Grid>
         <Grid size={{ xs: 12, md: 6 }}>
           <SessionsChart />
@@ -74,7 +65,7 @@ export default function MainPage() {
         </Grid>
       </Grid>
       <Typography component="h2" variant="h6" sx={{ mb: 2 }}>
-        Details
+        Kliensek
       </Typography>
       <Grid container spacing={2} columns={12}>
         <Grid size={{ xs: 12, lg: 9 }}>
@@ -82,12 +73,9 @@ export default function MainPage() {
         </Grid>
         <Grid size={{ xs: 12, lg: 3 }}>
           <Stack gap={2} direction={{ xs: 'column', sm: 'row', lg: 'column' }}>
-            <CustomizedTreeView />
-            <ChartUserByCountry />
           </Stack>
         </Grid>
       </Grid>
-      <Copyright sx={{ my: 4 }} />
     </Box>
   );
 }

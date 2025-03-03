@@ -1,6 +1,5 @@
 import { z } from "zod";
 
-// Regex to validate time in HH:mm 24-hour format
 const timeRegex = /^(?:[01]?[0-9]|2[0-3]):[0-5][0-9]$/;
 
 const formSchema = z.object({

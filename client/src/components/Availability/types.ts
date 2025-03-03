@@ -1,8 +1,5 @@
 export type TaskVariant = 
-  | "planned" 
-  | "ongoing" 
   | "done" 
-  | "archived"
   | "monday"
   | "tuesday"
   | "wednesday"

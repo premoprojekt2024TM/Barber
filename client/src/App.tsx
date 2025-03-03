@@ -6,12 +6,10 @@ import SignUp from './components/Auth/SignUp';
 import SignIn from './components/Auth/SignIn';
 import Addd from './layouts/Add';
 import MainPage from './components/MainPage/MainPage'
-
 function App() {
   return (
     <div>
       <Routes>
-        {/* Define your routes */}
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/store" element={<FinderWithSidebar />} />
         <Route path="/finder" element={<Finder />} />
@@ -19,9 +17,11 @@ function App() {
         <Route path="/login" element={<SignIn />} />
         <Route path="/add" element={<Addd />} />
         <Route path="/main" element={<MainPage />} />
-        {/* Redirect from the root (/) to /login */}
+        
+
         <Route path="/" element={<Navigate to="/login" />} />
         <Route path="*" element={<Navigate to="/login" />} />
+
       </Routes>
     </div>
   );
