@@ -58,7 +58,7 @@ export const createAvailability = async (request: AuthenticatedRequest, reply: F
 };
 
 
-export const getAvailability = async (request: FastifyRequest, reply: FastifyReply) => {
+export const getAvailabilitybyId = async (request: FastifyRequest, reply: FastifyReply) => {
   const { id } = request.params as GetIdParams;
 
   const userId = parseInt(id);
@@ -68,11 +68,11 @@ export const getAvailability = async (request: FastifyRequest, reply: FastifyRep
 
   try {
     const availability = await AppDataSource.getRepository(model.AvailabilityTimes)
-      .createQueryBuilder('availability')
-      .leftJoinAndSelect('availability.user', 'user')
-      .where('user.id = :id', { id: userId })
-      .andWhere('availability.status = :status', { status: 'available' })  
-      .getMany();
+    .createQueryBuilder('availability')
+    .leftJoinAndSelect('availability.user', 'user')
+    .where('user.userId = :id', { id: userId })
+    .andWhere('availability.status = :status', { status: 'available' })
+    .getMany();
 
     if (availability.length === 0) {
       return reply.status(404).send({ message: 'No available slots found for this user' });
@@ -86,6 +86,53 @@ export const getAvailability = async (request: FastifyRequest, reply: FastifyRep
 
     return reply.status(200).send({
       message: 'Availability fetched successfully',
+      availability: availabilityByDay,
+    });
+  } catch (error) {
+    console.error('Error fetching availability:', error);
+    return reply.status(500).send({
+      message: 'Error fetching availability',
+    });
+  }
+};
+
+
+export const getMyAvailability = async (request: AuthenticatedRequest, reply: FastifyReply) => {
+  try {
+    // Get the user from the request (assumes JWT authentication middleware has already run)
+    const user = request.user;
+    
+    // If no user was found in the request (not authenticated)
+    if (!user || !user.userId) {
+      return reply.status(401).send({ 
+        message: 'Authentication required to access this resource' 
+      });
+    }
+
+    // Get the availability times for the authenticated user
+    const availability = await AppDataSource.getRepository(model.AvailabilityTimes)
+      .createQueryBuilder('availability')
+      .leftJoinAndSelect('availability.user', 'user')
+      .where('user.userId = :userId', { userId: user.userId })
+      .andWhere('availability.status = :status', { status: 'available' })
+      .getMany();
+
+    // If no availability slots found
+    if (availability.length === 0) {
+      return reply.status(404).send({ 
+        message: 'No available slots found for your account' 
+      });
+    }
+
+    // Group availability by day
+    const availabilityByDay = availability.reduce((acc: { [key: string]: string[] }, curr) => {
+      if (!acc[curr.day]) acc[curr.day] = [];
+      acc[curr.day].push(curr.timeSlot);
+      return acc;
+    }, {});
+
+    return reply.status(200).send({
+      message: 'Your availability fetched successfully',
       availability: availabilityByDay,
     });
   } catch (error) {
