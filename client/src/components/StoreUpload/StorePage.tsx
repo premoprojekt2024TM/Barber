@@ -2,9 +2,9 @@
 
 import React, { useState, useRef } from 'react';
 import Grid from '@mui/material/Grid';
-import StoreInformationSection from '../components/StoreUpload/StoreInformationSection';
-import CircularUploadBoxes from '../components/StoreUpload/CircularUploadBoxes';
-import ImageAndThumbnailController from '../components/StoreUpload/ImageAndThumbnailController';
+import StoreInformationSection from '../../components/StoreUpload/StoreInformationSection';
+import CircularUploadBoxes from '../../components/StoreUpload/CircularUploadBoxes';
+import ImageAndThumbnailController from '../../components/StoreUpload/ImageAndThumbnailController';
 
 type FileState = (string | null)[];
 type UploadedState = boolean[];

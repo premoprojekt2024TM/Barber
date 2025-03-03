@@ -4,7 +4,7 @@ import AppTheme from '../../shared-theme/AppTheme';
 import { Link as RouterLink, useNavigate } from 'react-router-dom'; 
 import { useState } from 'react';
 import axiosInstance from '../../utils/axiosInstance';
-import Cookies from 'js-cookie'; // Import js-cookie library for cookie management
+import Cookies from 'js-cookie'; 
 
 const fadeInUp = keyframes`
   0% { opacity: 0; transform: translateY(30px); }
@@ -31,11 +31,8 @@ interface AxiosErrorResponse {
     data: string;
   };
 }
-
-// Define token response interface
 interface LoginResponse {
   token: string;
-  // Add any other fields your API returns
 }
 
 export default function SignIn() {
@@ -58,18 +55,14 @@ export default function SignIn() {
       const response = await axiosInstance.post<LoginResponse>('/api/v1/login', formData);
 
       if (response.status === 200 && response.data.token) {
-        // Save token to cookie
-        // Set the cookie to expire in 7 days and make it secure + HTTP only
         Cookies.set('jwt_token', response.data.token, { 
           expires: 7, 
           secure: process.env.NODE_ENV === 'production', 
           sameSite: 'strict'
         });
         
-        // Update axios default headers for future requests
         axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
 
-        // Redirect to dashboard
         navigate('/dashboard');
       } else {
         setPasswordError('A bejelentkezés nem sikerült. Kérlek próbáld újra.');

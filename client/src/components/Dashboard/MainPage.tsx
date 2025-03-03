@@ -3,10 +3,9 @@ import Grid from '@mui/material/Grid2';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import CustomizedDataGrid from '../components/Dashboard/CustomizedDataGrid';
-import PageViewsBarChart from '../components/Dashboard/PageViewsBarChart';
-import SessionsChart from '../components/Dashboard/SessionsChart';
-import StatCard, { StatCardProps } from '../components/Dashboard/StatCard';
+import CustomizedDataGrid from '../../components/Dashboard/CustomizedDataGrid';
+import SessionsChart from '../../components/Dashboard/SessionsChart';
+import StatCard, { StatCardProps } from '../../components/Dashboard/StatCard';
 
 const data: StatCardProps[] = [
   {
@@ -59,9 +58,6 @@ export default function MainPage() {
         </Grid>
         <Grid size={{ xs: 12, md: 6 }}>
           <SessionsChart />
-        </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <PageViewsBarChart />
         </Grid>
       </Grid>
       <Typography component="h2" variant="h6" sx={{ mb: 2 }}>

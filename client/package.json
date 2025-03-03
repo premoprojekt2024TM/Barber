@@ -29,6 +29,7 @@
     "@tsparticles/engine": "^3.8.1",
     "@tsparticles/react": "^3.0.0",
     "@types/axios": "^0.9.36",
+    "@types/mapbox-gl": "^3.4.1",
     "autosuggest-highlight": "^3.3.4",
     "axios": "^1.7.9",
     "class-variance-authority": "^0.7.1",

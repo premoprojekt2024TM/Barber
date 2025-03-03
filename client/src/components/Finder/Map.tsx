@@ -1,8 +1,10 @@
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { Button, ButtonGroup, Box, Container } from '@mui/material';
-import { Plus, Minus, Diff } from 'lucide-react';
+import AddIcon from '@mui/icons-material/Add';
+import RemoveIcon from '@mui/icons-material/Remove';
+import IsoIcon from '@mui/icons-material/Iso';
 import { hungarianPoints } from './cities';
 
 const MAPBOX_TOKEN = "pk.eyJ1IjoibWFyY2VsbHRlbWxlaXRuZXIiLCJhIjoiY201MWVycDVtMW52ZTJpcXc5aGJpMDJkaCJ9.z3ZnN8MWLZo5F8KbrjYYlw";
@@ -78,24 +80,30 @@ const setupMapClustering = (map: mapboxgl.Map, pointsData: GeoJSON.FeatureCollec
 
   map.on('click', 'clusters', (e) => {
     const features = map.queryRenderedFeatures(e.point, { layers: ['clusters'] });
-    const clusterId = features[0].properties.cluster_id;
-    map.getSource('points').getClusterExpansionZoom(clusterId, (err, zoom) => {
-      if (err) return;
-      map.easeTo({
-        center: features[0].geometry.coordinates,
-        zoom: zoom
+    const clusterId = features[0]?.properties?.cluster_id;
+    if (clusterId) {
+      (map.getSource('points') as mapboxgl.GeoJSONSource).getClusterExpansionZoom(clusterId, (err, zoom) => {
+        if (err) return;
+        const newZoom = zoom ?? 10; 
+        map.easeTo({
+          zoom: newZoom
+        });
       });
-    });
+    }
   });
 
   map.on('click', 'unclustered-point', (e) => {
-    const coordinates = e.features![0].geometry.coordinates.slice();
-    const { title, description } = e.features![0].properties;
+    const geometry = e.features![0].geometry;
+    
+    if (geometry.type === 'Point') {
+      const coordinates = geometry.coordinates;
+      const { title, description } = e.features![0].properties as { title: string, description: string };
 
-    new mapboxgl.Popup()
-      .setLngLat(coordinates)
-      .setHTML(`<strong>${title}</strong><br>${description}`)
-      .addTo(map);
+      new mapboxgl.Popup()
+        .setLngLat([coordinates[0], coordinates[1]]) 
+        .setHTML(`<strong>${title}</strong><br>${description}`)
+        .addTo(map);
+    }
   });
 
   map.on('mouseenter', 'clusters', () => {
@@ -106,12 +114,12 @@ const setupMapClustering = (map: mapboxgl.Map, pointsData: GeoJSON.FeatureCollec
   });
 };
 
-const Map: React.FC = () => {
+const Map = () => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
 
-  const handleZoomIn = () => map.current?.zoomTo((map.current?.getZoom() || 0) + 1);
-  const handleZoomOut = () => map.current?.zoomTo((map.current?.getZoom() || 0) - 1);
+  const handleZoomIn = () => map.current?.zoomIn();
+  const handleZoomOut = () => map.current?.zoomOut();
   const handleReset = () => {
     map.current?.jumpTo({
       center: DEFAULT_CENTER,
@@ -136,8 +144,10 @@ const Map: React.FC = () => {
     });
 
     map.current.on('load', () => {
-      setupMapClustering(map.current, hungarianPoints);
-      handleReset();
+      if (map.current) {
+        setupMapClustering(map.current, hungarianPoints);
+        handleReset();
+      }
     });
 
     return () => {
@@ -147,16 +157,15 @@ const Map: React.FC = () => {
 
   const buttons = [
     <Button key="zoomIn" variant="contained" color="primary" onClick={handleZoomIn} sx={{ minWidth: '25px', height: '30px', padding: '0 5px' }}>
-      <Plus size={14} />
+      <AddIcon fontSize="small" />
     </Button>,
     <Button key="zoomOut" variant="contained" color="primary" onClick={handleZoomOut} sx={{ minWidth: '25px', height: '30px', padding: '0 5px' }}>
-      <Minus size={14} />
+      <RemoveIcon fontSize='small' />
     </Button>
   ];
 
   return (
     <Container sx={{ display: 'flex', justifyContent: 'center', paddingTop: '20px', height: '100vh' }}>
-      {/* Map container */}
       <div
         ref={mapContainer}
         style={{
@@ -173,7 +182,6 @@ const Map: React.FC = () => {
         }}
       />
 
-      {/* Controls container */}
       <Box sx={{
         position: 'absolute',
         top: '20px',
@@ -183,19 +191,17 @@ const Map: React.FC = () => {
         flexDirection: 'column',
         gap: '8px',
       }}>
-        {/* Zoom controls */}
         <ButtonGroup orientation="vertical" aria-label="Zoom Controls" sx={{ '& .MuiButton-root': { minWidth: '25px', height: '30px', padding: '0 5px' } }}>
-          {buttons} {/* Ensure 'buttons' is an array of Button elements */}
+          {buttons}
         </ButtonGroup>
 
-        {/* Reset button */}
         <Button
           variant="outlined"
           color="secondary"
-          onClick={handleReset} // Ensure 'handleReset' is a valid function
+          onClick={handleReset} 
           sx={{ minWidth: 25, height: 30, padding: '0 5px' }}
         >
-          <Diff size={14} />
+          <IsoIcon fontSize="small" />
         </Button>
       </Box>
     </Container>

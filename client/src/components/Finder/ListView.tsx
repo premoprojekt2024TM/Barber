@@ -1,13 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { List, ListItem, ListItemText, Box, Divider, Collapse, Button, Typography, CircularProgress } from '@mui/material';
 import { ChevronDown } from 'lucide-react'; 
 import { hungarianPoints } from './cities'; 
 
-const ListView: React.FC = () => {
+interface Point {
+  properties: {
+    title: string;
+    description: string;
+    additionalDetails?: string;
+  };
+}
+
+const ListView = () => {
 
   const [expanded, setExpanded] = useState<number | null>(null);
   const [loading, setLoading] = useState<boolean>(true); 
-  
+
   useEffect(() => {
     setTimeout(() => {
       if (hungarianPoints?.features) {
@@ -18,9 +26,8 @@ const ListView: React.FC = () => {
       }
     }, 1000);
   }, []);
-  
+
   const handleExpandClick = (index: number) => {
-    
     setExpanded(expanded === index ? null : index);
   };
 
@@ -62,7 +69,7 @@ const ListView: React.FC = () => {
           scrollbarWidth: 'none', 
         }}
       >
-        {hungarianPoints.features.map((point, index) => (
+        {hungarianPoints.features.map((point: Point, index: number) => (
           <div key={index}>
             <ListItem
               sx={{

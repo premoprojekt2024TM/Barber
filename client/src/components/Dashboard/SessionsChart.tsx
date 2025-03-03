@@ -1,10 +1,5 @@
-import * as React from 'react';
 import { useTheme } from '@mui/material/styles';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import Chip from '@mui/material/Chip';
-import Typography from '@mui/material/Typography';
-import Stack from '@mui/material/Stack';
+import { Card, CardContent, Chip, Typography, Stack } from '@mui/material';
 import { LineChart } from '@mui/x-charts/LineChart';
 
 function AreaGradient({ color, id }: { color: string; id: string }) {

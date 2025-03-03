@@ -1,10 +1,10 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
-import Dashboard from './layouts/Dashboard';
-import FinderWithSidebar from './layouts/Store';
-import Finder from './layouts/Finder';
+import Dashboard from './components/Dashboard/Dashboard';
+import FinderWithSidebar from './components/StoreUpload/Store';
+import Finder from './components/Finder/Finder';
 import SignUp from './components/Auth/SignUp';
 import SignIn from './components/Auth/SignIn';
-import Addd from './layouts/Add';
+import Addd from './components/Availability/Add';
 import MainPage from './components/MainPage/MainPage'
 function App() {
   return (
