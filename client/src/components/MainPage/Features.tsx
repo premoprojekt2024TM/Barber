@@ -102,8 +102,8 @@ export default function Features() {
                           visibility: 'visible',
                         },
                         '& img': {
-                          filter: 'blur(5px)', // Apply blur on hover
-                          transition: 'filter 0.3s ease', // Smooth transition for blur effect
+                          filter: 'blur(5px)', 
+                          transition: 'filter 0.3s ease', 
                         },
                       },
                     }),
@@ -125,7 +125,7 @@ export default function Features() {
                       width: '350px',
                       height: '600px',
                       objectFit: 'cover',
-                      transition: 'filter 0.3s ease', // Transition for smooth blur effect
+                      transition: 'filter 0.3s ease', 
                     }}
                   />
                   <Box

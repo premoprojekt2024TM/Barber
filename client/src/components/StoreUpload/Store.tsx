@@ -14,19 +14,14 @@ export default function FinderWithSidebar() {
     <AppTheme>
       <CssBaseline enableColorScheme />
       <Box sx={{ display: 'flex' }}>
-        {/* Side Menu */}
         <SideMenu />
-
-        {/* Navbar */}
         <AppNavbar />
-
-        {/* Main Content */}
         <Box
           component="main"
           sx={() => ({
             flexGrow: 1,
             overflow: 'auto',
-            paddingTop: { xs: '80px', sm: '0' }, // Adjust padding for header overlap
+            paddingTop: { xs: '80px', sm: '0' },
           })}
         >
           <Stack

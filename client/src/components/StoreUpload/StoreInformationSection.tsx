@@ -63,19 +63,19 @@ const StoreInformationSection: React.FC<StoreInformationSectionProps> = ({ locat
     >
       {/* Store Title */}
       <Typography component="h2" variant="h6" sx={{ mb: 2 }}>
-        Store Information
+       Bolt információk
       </Typography>
 
       {/* Store Name */}
       <Box sx={{ width: '100%' }}>
         <Typography variant="body1" sx={{ mb: 1 }}>
-          Store Name
+          Bolt neve
         </Typography>
         <TextField
           fullWidth
           value={storeName}
           onChange={handleNameChange}
-          placeholder="Enter store name"
+          placeholder="Bolt neve"
           variant="outlined"
           size="medium"
           sx={{
@@ -90,12 +90,12 @@ const StoreInformationSection: React.FC<StoreInformationSectionProps> = ({ locat
       {/* Google Places Autocomplete */}
       <Box sx={{ width: '100%' }}>
         <Typography variant="body1" sx={{ mb: 1 }}>
-          Store Location
+          Bolt helye
         </Typography>
         <GooglePlacesAutocomplete
           apiKey={GOOGLE_MAPS_API_KEY}
           selectProps={{
-            placeholder: 'Search for a location',
+            placeholder: 'Cím keresése',
             onChange: (value) => setLocation(value),
             value: location?.label || '',
           }}
@@ -106,13 +106,13 @@ const StoreInformationSection: React.FC<StoreInformationSectionProps> = ({ locat
       {/* Store Phone */}
       <Box sx={{ width: '100%' }}>
         <Typography variant="body1" sx={{ mb: 1 }}>
-          Store Phone
+          Bolt telefonszáma
         </Typography>
         <TextField
           fullWidth
           value={storePhone}
           onChange={handlePhoneChange}
-          placeholder="Enter phone number"
+          placeholder="telefonszám"
           variant="outlined"
           size="medium"
           sx={{
@@ -127,13 +127,13 @@ const StoreInformationSection: React.FC<StoreInformationSectionProps> = ({ locat
       {/* Store Email */}
       <Box sx={{ width: '100%' }}>
         <Typography variant="body1" sx={{ mb: 1 }}>
-          Store Email
+          Bolt email címe
         </Typography>
         <TextField
           fullWidth
           value={storeEmail}
           onChange={handleEmailChange}
-          placeholder="Enter store email"
+          placeholder="email cím"
           variant="outlined"
           size="medium"
           sx={{

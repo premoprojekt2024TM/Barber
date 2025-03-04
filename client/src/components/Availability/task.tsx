@@ -31,7 +31,6 @@ const Task = React.memo(function ({ id, index, state }: TaskProps) {
     defaultValues: { task: todo?.title },
   });
 
-  // If no todo is found, return null after hook initialization
   if (!todo) return null;
 
   function onSubmit(values: z.infer<typeof formSchema>) {

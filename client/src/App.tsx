@@ -18,7 +18,6 @@ function App() {
         <Route path="/add" element={<Addd />} />
         <Route path="/main" element={<MainPage />} />
         
-
         <Route path="/" element={<Navigate to="/login" />} />
         <Route path="*" element={<Navigate to="/login" />} />
 

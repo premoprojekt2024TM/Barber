@@ -69,11 +69,9 @@ export const Column = React.forwardRef<HTMLDivElement, ColumnProps>(
           backgroundColor: "white",
           boxShadow: 3,
           borderRadius: 2,
-          overflow: "hidden",
           margin: 2,
           minWidth: "282px",
           flex: 1,
-          transformOrigin: "top left",
         }}
       >
         <CardHeader

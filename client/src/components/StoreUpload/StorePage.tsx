@@ -13,7 +13,7 @@ const SimpleContainer1 = () => {
   const [files, setFiles] = useState<FileState>(Array(4).fill(null));
   const [isUploadedFiles, setIsUploadedFiles] = useState<UploadedState>(Array(4).fill(false));
   const [currentIndex, setCurrentIndex] = useState<number>(0);
-  const [location, setLocation] = useState<any>(null);  // To store selected location
+  const [location, setLocation] = useState<any>(null);
 
   const fileInputRefs = [
     useRef<HTMLInputElement | null>(null),

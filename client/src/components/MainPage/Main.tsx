@@ -37,7 +37,7 @@ export default function Main() {
               src="src/components/MainPage/MainPagePictures/MainImage.png"
               alt="Highlight Image"
               sx={{
-                transform: 'scale(1.4)',
+                height :500,
                 transformOrigin: 'top center',
               }}
             />
