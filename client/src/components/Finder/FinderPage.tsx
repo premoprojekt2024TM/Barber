@@ -29,7 +29,7 @@ const FinderPage = () => {
         </Button>
 
         <Button variant="outlined" onClick={handleViewSwitch} sx={{ padding: '12px 20px', width: '250px', fontSize: '16px' }}>
-          {viewMode === 'grid' ? 'Switch to list view' : 'Switch to grid view'}
+          {viewMode === 'grid' ? 'Lista nézet' : 'Térkép nézet'}
         </Button>
 
         <Button variant="contained" onClick={handleSubmit} sx={{ padding: '10px 20px', minWidth: 'fit-content' }} aria-label="Adjust settings">

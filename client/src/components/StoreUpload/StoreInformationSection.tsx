@@ -17,10 +17,6 @@ const StoreInformationSection: React.FC<StoreInformationSectionProps> = ({ locat
   const [storePhone, setStorePhone] = useState('');
   const [storeEmail, setStoreEmail] = useState('');
 
-  const handleDescriptionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setStoreDescription(e.target.value);
-  };
-
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setStoreName(e.target.value);
   };
@@ -38,13 +34,12 @@ const StoreInformationSection: React.FC<StoreInformationSectionProps> = ({ locat
       name: storeName,
       description: storeDescription,
       address: location?.label,
-      city: location?.city,  // Assuming the city is part of the address object
-      postalCode: location?.postalCode,  // You might need to handle this separately
+      city: location?.city,  
+      postalCode: location?.postalCode,  
       phone: storePhone,
       email: storeEmail,
     };
 
-    // Handle form submission (send to backend or handle accordingly)
     console.log('Store Data Submitted:', storeData);
   };
 
@@ -61,7 +56,6 @@ const StoreInformationSection: React.FC<StoreInformationSectionProps> = ({ locat
         gap: 3,
       }}
     >
-      {/* Store Title */}
       <Typography component="h2" variant="h6" sx={{ mb: 2 }}>
        Bolt információk
       </Typography>
@@ -103,7 +97,6 @@ const StoreInformationSection: React.FC<StoreInformationSectionProps> = ({ locat
         />
       </Box>
 
-      {/* Store Phone */}
       <Box sx={{ width: '100%' }}>
         <Typography variant="body1" sx={{ mb: 1 }}>
           Bolt telefonszáma
@@ -124,7 +117,6 @@ const StoreInformationSection: React.FC<StoreInformationSectionProps> = ({ locat
         />
       </Box>
 
-      {/* Store Email */}
       <Box sx={{ width: '100%' }}>
         <Typography variant="body1" sx={{ mb: 1 }}>
           Bolt email címe
@@ -145,7 +137,6 @@ const StoreInformationSection: React.FC<StoreInformationSectionProps> = ({ locat
         />
       </Box>
 
-      {/* Store Description - Multiline TextField */}
      
 
 

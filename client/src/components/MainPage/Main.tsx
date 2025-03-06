@@ -36,6 +36,9 @@ export default function Main() {
               component="img"
               src="src/components/MainPage/MainPagePictures/MainImage.png"
               alt="Highlight Image"
+              style={{
+                
+              }}
               sx={{
                 height :500,
                 transformOrigin: 'top center',
