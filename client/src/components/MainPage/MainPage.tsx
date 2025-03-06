@@ -1,11 +1,11 @@
-import CssBaseline from '@mui/material/CssBaseline';
-import Divider from '@mui/material/Divider';
-import AppTheme from '../../shared-theme/AppTheme';
-import AppAppBar from './AppAppBar';
-import Main from './Main';
-import Pricing from './Pricing';
-import Features from './Features';
-import FAQ from './FAQ';
+import CssBaseline from "@mui/material/CssBaseline";
+import Divider from "@mui/material/Divider";
+import AppTheme from "../../shared-theme/AppTheme";
+import AppAppBar from "./AppAppBar";
+import Main from "./Main";
+import Pricing from "./Pricing";
+import Features from "./Features";
+import FAQ from "./FAQ";
 
 export default function MarketingPage(props: { disableCustomTheme?: boolean }) {
   return (
@@ -14,8 +14,8 @@ export default function MarketingPage(props: { disableCustomTheme?: boolean }) {
 
       <AppAppBar />
       <div id="Main">
-          <Main />
-        </div>
+        <Main />
+      </div>
       <div>
         <Divider />
         <div id="features">

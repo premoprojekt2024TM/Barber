@@ -4,25 +4,26 @@ export interface AuthenticatedRequest extends FastifyRequest {
   user?: {
     userId: number;
     email: string;
-    role: 'client' | 'worker';
-    username: string;  
+    role: "client" | "worker";
+    username: string;
+    profilePic?: string;
   };
-  
 }
 
 export interface JwtPayload {
   userId: number;
   email: string;
-  role: 'client' | 'worker';
-  username: string; 
+  role: "client" | "worker";
+  username: string;
+  profilePic?: string;
 }
 
 export interface GetUserParams {
-  username: string; 
+  username: string;
 }
 
 export interface ChatroomParams {
-  chatroomId: number; 
+  chatroomId: number;
 }
 
 export interface FriendRequestBody {
@@ -37,11 +38,9 @@ export interface StoreRequestBody {
   postalCode: string;
   phone: string;
   email: string;
-  images: string[];  
-  workers : string;
+  images: string[];
+  workers: string;
 }
-
-
 
 export interface AvailabilityRequest {
   monday?: string[];
@@ -53,17 +52,13 @@ export interface AvailabilityRequest {
   sunday?: string[];
 }
 
-
-
-
 export interface GetIdParams {
-  id: string;  
+  id: string;
 }
-
 
 export interface CreateAppointmentRequestBody {
   storeworkerId: number;
-  timeSlot: string;     
-  notes?: string;   
-  day: string; 
+  timeSlot: string;
+  notes?: string;
+  day: string;
 }

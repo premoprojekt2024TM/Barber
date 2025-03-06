@@ -1,17 +1,17 @@
-// SimpleContainer.tsx
-
-import React, { useState, useRef } from 'react';
-import Grid from '@mui/material/Grid';
-import StoreInformationSection from '../../components/StoreUpload/StoreInformationSection';
-import CircularUploadBoxes from '../../components/StoreUpload/CircularUploadBoxes';
-import ImageAndThumbnailController from '../../components/StoreUpload/ImageAndThumbnailController';
+import React, { useState, useRef } from "react";
+import Grid from "@mui/material/Grid";
+import { StoreInformationSection } from "../../components/StoreUpload/StoreInformationSection";
+import { AddWorker } from "./AddWorker";
+import { Addimage } from "./AddImage";
 
 type FileState = (string | null)[];
 type UploadedState = boolean[];
 
-const SimpleContainer1 = () => {
+export const Store = () => {
   const [files, setFiles] = useState<FileState>(Array(4).fill(null));
-  const [isUploadedFiles, setIsUploadedFiles] = useState<UploadedState>(Array(4).fill(false));
+  const [isUploadedFiles, setIsUploadedFiles] = useState<UploadedState>(
+    Array(4).fill(false),
+  );
   const [currentIndex, setCurrentIndex] = useState<number>(0);
   const [location, setLocation] = useState<any>(null);
 
@@ -22,7 +22,10 @@ const SimpleContainer1 = () => {
     useRef<HTMLInputElement | null>(null),
   ];
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
+  const handleFileChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    index: number,
+  ) => {
     const uploadedFile = e.target.files?.[0];
     if (uploadedFile) {
       const newFiles = [...files];
@@ -49,7 +52,10 @@ const SimpleContainer1 = () => {
 
     // Update the state
     setFiles([...newFiles.slice(0, index), ...shiftFiles]);
-    setIsUploadedFiles([...newUploadedState.slice(0, index), ...shiftUploadedState]);
+    setIsUploadedFiles([
+      ...newUploadedState.slice(0, index),
+      ...shiftUploadedState,
+    ]);
 
     // Update currentIndex
     if (index === currentIndex && currentIndex > 0) {
@@ -64,16 +70,18 @@ const SimpleContainer1 = () => {
       <Grid container item xs={12} spacing={2}>
         <Grid item xs={12} sm={7}>
           {/* Store Information Section */}
-          <StoreInformationSection location={location} setLocation={setLocation} />
+          <StoreInformationSection
+            location={location}
+            setLocation={setLocation}
+          />
 
           {/* Circular Upload Boxes */}
-          <CircularUploadBoxes
-          />
+          <AddWorker />
         </Grid>
 
         <Grid item xs={12} sm={5}>
           {/* Combined Image Upload and Thumbnail Controller */}
-          <ImageAndThumbnailController
+          <Addimage
             files={files}
             currentIndex={currentIndex}
             isUploadedFiles={isUploadedFiles}
@@ -87,5 +95,3 @@ const SimpleContainer1 = () => {
     </Grid>
   );
 };
-
-export default SimpleContainer1;

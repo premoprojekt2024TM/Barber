@@ -135,6 +135,15 @@ export const updateUser = async (
     const userRepository = AppDataSource.getRepository(model.User);
     const user = await userRepository.findOneBy({ userId: userId });
 
+    const checkUsername = await AppDataSource.getRepository(
+      model.User,
+    ).findOneBy({
+      username,
+    });
+    if (checkUsername) {
+      return reply.status(400).send({ message: "Username already exists" });
+    }
+
     if (!user) {
       return reply.status(404).send({ message: "User not found" });
     }

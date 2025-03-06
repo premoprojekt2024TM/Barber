@@ -1,21 +1,23 @@
-import React, { useState } from 'react';
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
-import GooglePlacesAutocomplete from 'react-google-places-autocomplete';
-import {  TextField } from '@mui/material';
+import React, { useState } from "react";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
+import GooglePlacesAutocomplete from "react-google-places-autocomplete";
+import { TextField } from "@mui/material";
 
 type StoreInformationSectionProps = {
   location: any;
   setLocation: React.Dispatch<React.SetStateAction<any>>;
 };
 
-const GOOGLE_MAPS_API_KEY = 'AIzaSyC3aviU6KHXAjoSnxcw6qbOhjnFctbxPkE';
+const GOOGLE_MAPS_API_KEY = "AIzaSyC3aviU6KHXAjoSnxcw6qbOhjnFctbxPkE";
 
-const StoreInformationSection: React.FC<StoreInformationSectionProps> = ({ location, setLocation }) => {
-  const [storeName, setStoreName] = useState('');
-  const [storeDescription, setStoreDescription] = useState('');
-  const [storePhone, setStorePhone] = useState('');
-  const [storeEmail, setStoreEmail] = useState('');
+export const StoreInformationSection = ({
+  location,
+  setLocation,
+}: StoreInformationSectionProps) => {
+  const [storeName, setStoreName] = useState("");
+  const [storePhone, setStorePhone] = useState("");
+  const [storeEmail, setStoreEmail] = useState("");
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setStoreName(e.target.value);
@@ -32,36 +34,34 @@ const StoreInformationSection: React.FC<StoreInformationSectionProps> = ({ locat
   const handleSubmit = () => {
     const storeData = {
       name: storeName,
-      description: storeDescription,
       address: location?.label,
-      city: location?.city,  
-      postalCode: location?.postalCode,  
+      city: location?.city,
+      postalCode: location?.postalCode,
       phone: storePhone,
       email: storeEmail,
     };
-
-    console.log('Store Data Submitted:', storeData);
+    // Handle submission logic (e.g., sending data to an API)
   };
 
   return (
     <Box
       sx={{
-        width: '100%',
-        backgroundColor: '#f5f5f5',
-        borderRadius: '16px',
-        border: '1px solid #e0e0e0',
+        width: "100%",
+        backgroundColor: "#f5f5f5",
+        borderRadius: "16px",
+        border: "1px solid #e0e0e0",
         padding: 3,
-        display: 'flex',
-        flexDirection: 'column',
+        display: "flex",
+        flexDirection: "column",
         gap: 3,
       }}
     >
       <Typography component="h2" variant="h6" sx={{ mb: 2 }}>
-       Bolt információk
+        Bolt információk
       </Typography>
 
       {/* Store Name */}
-      <Box sx={{ width: '100%' }}>
+      <Box sx={{ width: "100%" }}>
         <Typography variant="body1" sx={{ mb: 1 }}>
           Bolt neve
         </Typography>
@@ -73,31 +73,34 @@ const StoreInformationSection: React.FC<StoreInformationSectionProps> = ({ locat
           variant="outlined"
           size="medium"
           sx={{
-            borderRadius: '8px',
-            '& .MuiOutlinedInput-root': {
-              borderRadius: '8px',
+            borderRadius: "8px",
+            "& .MuiOutlinedInput-root": {
+              borderRadius: "8px",
             },
           }}
         />
       </Box>
 
       {/* Google Places Autocomplete */}
-      <Box sx={{ width: '100%' }}>
+      <Box sx={{ width: "100%" }}>
         <Typography variant="body1" sx={{ mb: 1 }}>
           Bolt helye
         </Typography>
         <GooglePlacesAutocomplete
           apiKey={GOOGLE_MAPS_API_KEY}
           selectProps={{
-            placeholder: 'Cím keresése',
+            placeholder: "Cím keresése",
             onChange: (value) => setLocation(value),
-            value: location?.label || '',
+            value: location?.label || "",
+            noOptionsMessage: () => "Nincs találat",
+            loadingMessage: () => "Keresés folyamatban...",
           }}
           debounce={300}
         />
       </Box>
 
-      <Box sx={{ width: '100%' }}>
+      {/* Store Phone */}
+      <Box sx={{ width: "100%" }}>
         <Typography variant="body1" sx={{ mb: 1 }}>
           Bolt telefonszáma
         </Typography>
@@ -109,15 +112,16 @@ const StoreInformationSection: React.FC<StoreInformationSectionProps> = ({ locat
           variant="outlined"
           size="medium"
           sx={{
-            borderRadius: '8px',
-            '& .MuiOutlinedInput-root': {
-              borderRadius: '8px',
+            borderRadius: "8px",
+            "& .MuiOutlinedInput-root": {
+              borderRadius: "8px",
             },
           }}
         />
       </Box>
 
-      <Box sx={{ width: '100%' }}>
+      {/* Store Email */}
+      <Box sx={{ width: "100%" }}>
         <Typography variant="body1" sx={{ mb: 1 }}>
           Bolt email címe
         </Typography>
@@ -129,19 +133,13 @@ const StoreInformationSection: React.FC<StoreInformationSectionProps> = ({ locat
           variant="outlined"
           size="medium"
           sx={{
-            borderRadius: '8px',
-            '& .MuiOutlinedInput-root': {
-              borderRadius: '8px',
+            borderRadius: "8px",
+            "& .MuiOutlinedInput-root": {
+              borderRadius: "8px",
             },
           }}
         />
       </Box>
-
-     
-
-
     </Box>
   );
 };
-
-export default StoreInformationSection;
