@@ -76,7 +76,7 @@ const CircularUploadBoxes: React.FC = () => {
         backgroundColor: '#f5f5f5',
         borderRadius: '16px',
         border: '1px solid #e0e0e0',
-        padding: 1,
+        padding: 2,
         mt: 2,
         pl: { xs: 2, sm: 6 }, // Adjust padding for mobile screens
       }}
@@ -99,6 +99,7 @@ const CircularUploadBoxes: React.FC = () => {
               backgroundSize: 'cover',
               backgroundPosition: 'center',
               cursor: 'pointer', // Indicate that it's clickable
+              transition: 'all 0.3s ease', // Smooth transition on hover
               '&:hover': avatar ? { filter: 'blur(3px)' } : {}, // Apply blur effect on hover
             }}
             onClick={() => {
@@ -148,9 +149,7 @@ const CircularUploadBoxes: React.FC = () => {
       </Box>
 
       {/* Divider between circular boxes and avatar selection */}
-      {activeIndex !== null && (
-        <Divider sx={{ mt: 2, mb: 2 }} />
-      )}
+      {activeIndex !== null && <Divider sx={{ mt: 2, mb: 2 }} />}
 
       {/* Scrollable Avatar Selection */}
       {activeIndex !== null && (
@@ -167,6 +166,16 @@ const CircularUploadBoxes: React.FC = () => {
             maxHeight: '80px',
             marginTop: '16px',
             justifyContent: 'center', // Center avatars on small screens
+            '&::-webkit-scrollbar': {
+              height: '8px',
+            },
+            '&::-webkit-scrollbar-thumb': {
+              backgroundColor: '#bdbdbd',
+              borderRadius: '4px',
+            },
+            '&::-webkit-scrollbar-track': {
+              background: '#f5f5f5',
+            },
           }}
         >
           {availableAvatars.map((avatarUrl, index) => (
