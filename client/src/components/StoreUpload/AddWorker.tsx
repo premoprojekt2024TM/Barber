@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
 import AddIcon from "@mui/icons-material/Add";
 import { Divider, IconButton } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
@@ -12,7 +13,7 @@ const avatars = [
   "https://ui-avatars.com/api/?name=Jeff+Bezos&size=128&font-size=0.33&length=1&rounded=true",
 ];
 
-export const AddWorker = ({}) => {
+export const AddWorker = () => {
   const [selectedAvatars, setSelectedAvatars] = useState<(string | null)[]>(
     Array(4).fill(null),
   );
@@ -119,21 +120,58 @@ export const AddWorker = ({}) => {
       ref={componentRef}
       sx={{
         width: "100%",
-        height: "auto",
-        backgroundColor: "#f5f5f5",
+        background: "rgba(15, 23, 42, 0.5)",
+        backdropFilter: "blur(20px)",
         borderRadius: "16px",
-        padding: 2,
-        mt: 2,
-        pl: { xs: 2, sm: 6 },
-        pr: { xs: 2, sm: 6 },
+        border: "1px solid rgba(255, 255, 255, 1)",
+        boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.15)",
+        padding: 3,
+        display: "flex",
+        flexDirection: "column",
+        gap: 3,
+        transition: "all 0.3s ease",
+        "&:hover": {
+          boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.25)",
+        },
+        overflow: "hidden",
+        position: "relative",
+        "&::before": {
+          content: '""',
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          height: "30%",
+          background:
+            "linear-gradient(180deg, rgba(255,255,255,0.1), rgba(255,255,255,0))",
+          pointerEvents: "none",
+          zIndex: 1,
+        },
       }}
     >
+      <Typography
+        component="h2"
+        variant="h6"
+        sx={{
+          mb: 2,
+          color: "rgba(255, 255, 255, 0.9)",
+          fontWeight: 600,
+          position: "relative",
+          zIndex: 2,
+          textShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+        }}
+      >
+        Dolgozók kiválasztása
+      </Typography>
+
       <Box
         sx={{
           display: "flex",
           gap: { xs: 2, sm: 4 },
           flexWrap: "wrap",
           justifyContent: "center",
+          position: "relative",
+          zIndex: 2,
         }}
       >
         {selectedAvatars.map((avatar, index) => (
@@ -143,7 +181,7 @@ export const AddWorker = ({}) => {
               width: { xs: "60px", sm: "80px" },
               height: { xs: "60px", sm: "80px" },
               borderRadius: "50%",
-              border: avatar ? "none" : "2px dashed #bdbdbd",
+              border: avatar ? "none" : "2px dashed rgba(255, 255, 255, 0.5)",
               display: "flex",
               justifyContent: "center",
               alignItems: "center",
@@ -157,8 +195,8 @@ export const AddWorker = ({}) => {
               "&:hover": avatar
                 ? { transform: "scale(1.05)" }
                 : {
-                    borderColor: "#1976d2",
-                    backgroundColor: "#e3f2fd",
+                    borderColor: "rgba(255, 255, 255, 0.8)",
+                    backgroundColor: "rgba(255, 255, 255, 0.1)",
                   },
             }}
             onClick={() => {
@@ -189,7 +227,7 @@ export const AddWorker = ({}) => {
                   left: "50%",
                   transform: "translate(-50%, -50%)",
                   display: hoveredAvatarIndex === index ? "flex" : "none",
-                  opacity: 0.8,
+                  opacity: 0.9,
                   justifyContent: "center",
                   alignItems: "center",
                 }}
@@ -214,7 +252,10 @@ export const AddWorker = ({}) => {
                 >
                   <CloseIcon
                     sx={{
-                      color: hoveredCloseIndex === index ? "#1976d2" : "#fff",
+                      color:
+                        hoveredCloseIndex === index
+                          ? "#fff"
+                          : "rgba(255, 255, 255, 0.8)",
                       transition: "color 0.3s ease",
                     }}
                   />
@@ -224,7 +265,10 @@ export const AddWorker = ({}) => {
             {!avatar && (
               <AddIcon
                 sx={{
-                  color: hoveredAddIndex === index ? "#1976d2" : "#bdbdbd",
+                  color:
+                    hoveredAddIndex === index
+                      ? "rgba(255, 255, 255, 0.9)"
+                      : "rgba(255, 255, 255, 0.5)",
                   fontSize: { xs: 40, sm: 40 },
                   transition: "color 0.3s ease",
                 }}
@@ -235,7 +279,15 @@ export const AddWorker = ({}) => {
       </Box>
 
       {(showSelection || activeIndex !== null) && (
-        <Divider sx={{ mt: 2, mb: 2 }} />
+        <Divider
+          sx={{
+            mt: 2,
+            mb: 2,
+            backgroundColor: "rgba(255, 255, 255, 0.1)",
+            position: "relative",
+            zIndex: 2,
+          }}
+        />
       )}
 
       {(showSelection || activeIndex !== null) && (
@@ -258,17 +310,26 @@ export const AddWorker = ({}) => {
             marginBottom: "8px",
             justifyContent: "flex-start",
             scrollSnapType: "x mandatory",
+            position: "relative",
+            zIndex: 2,
             "&::-webkit-scrollbar": {
               height: "8px",
             },
             "&::-webkit-scrollbar-thumb": {
-              backgroundColor: "rgba(0,0,0,0.2)",
+              backgroundColor: "rgba(255, 255, 255, 0.2)",
+              borderRadius: "4px",
+            },
+            "&::-webkit-scrollbar-track": {
+              backgroundColor: "rgba(0, 0, 0, 0.1)",
               borderRadius: "4px",
             },
           }}
           onScroll={(e) => {
+            // @ts-ignore - Adding custom property to event target
             if (e.target.scrollLeft % 1 === 0) {
+              // @ts-ignore - Adding custom property to event target
               clearTimeout(e.target.scrollTimeout);
+              // @ts-ignore - Adding custom property to event target
               e.target.scrollTimeout = setTimeout(() => handleScroll(), 150);
             }
           }}
@@ -284,17 +345,19 @@ export const AddWorker = ({}) => {
                 justifyContent: "center",
                 alignItems: "center",
                 position: "relative",
-                backgroundColor: "transparent",
+                backgroundColor: "rgba(255, 255, 255, 0.05)",
                 backgroundSize: "cover",
                 backgroundPosition: "center",
                 cursor: "pointer",
-                transition: "background-color 0.3s, transform 0.3s",
+                transition: "all 0.3s ease",
                 flexShrink: 0,
                 margin: "0 4px",
                 scrollSnapAlign: "center",
+                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
                 "&:hover": {
-                  backgroundColor: "#e3f2fd",
+                  backgroundColor: "rgba(255, 255, 255, 0.1)",
                   transform: "scale(1.03)",
+                  boxShadow: "0 6px 16px rgba(0, 0, 0, 0.15)",
                 },
               }}
               onClick={() => handleAvatarClick(avatarUrl)}
