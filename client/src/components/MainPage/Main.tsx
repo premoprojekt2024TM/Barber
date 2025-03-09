@@ -1,15 +1,42 @@
 import Box from "@mui/material/Box";
 import Grid from "@mui/material/Grid";
 import Typography from "@mui/material/Typography";
+
 export default function Main() {
   return (
     <Box
       id="Main"
       sx={{
-        bgcolor: "grey.900",
+        position: "relative",
         pt: 5,
+        overflow: "hidden",
       }}
     >
+      {/* Video Background */}
+      <Box
+        component="video"
+        autoPlay
+        loop
+        muted
+        sx={{
+          position: "absolute",
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+          zIndex: -1,
+          top: 0,
+          left: 0,
+          transform: "scaleX(-1)", // This line mirrors the video horizontally
+          filter: "blur(2px)",
+        }}
+      >
+        <source
+          src="src/components/MainPage/MainPagePictures/video3.mp4"
+          type="video/mp4"
+        />
+        Your browser does not support the video tag.
+      </Box>
+
       <Grid container spacing={3} alignItems="center">
         <Grid item xs={12} md={6}>
           <Box sx={{ color: "white", pl: 10 }}>
@@ -25,7 +52,6 @@ export default function Main() {
             </Typography>
           </Box>
         </Grid>
-
         <Grid item xs={12} md={6}>
           <Box
             sx={{
