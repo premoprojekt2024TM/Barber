@@ -21,14 +21,14 @@ const FinderPage = () => {
     <Grid container justifyContent="center" alignItems="center" sx={{ minHeight: '100vh', transform: 'scale(0.95)', overflow: 'hidden' }}>
       <Box sx={{ width: '90%', height: '90vh', display: 'flex', gap: '1%', borderRadius: '8px', position: 'relative', flexDirection: 'row' }}>
         <FormControl fullWidth>
-          <TextField id="input-field-1" value={inputValue1} onChange={handleInputChange1} variant="outlined" fullWidth placeholder="Enter something" sx={{ flexShrink: 0 }} />
+          <TextField id="input-field-1" value={inputValue1} onChange={handleInputChange1} variant="outlined" fullWidth placeholder="Keress helyszínt..." sx={{ flexShrink: 0 }} />
         </FormControl>
 
         <Button variant="contained" onClick={handleSubmit} sx={{ padding: '10px 20px', minWidth: 'fit-content' }} aria-label="Search">
           <SearchIcon/>
         </Button>
 
-        <Button variant="outlined" onClick={handleViewSwitch} sx={{ padding: '12px 20px', width: '250px', fontSize: '16px' }}>
+        <Button variant="outlined" onClick={handleViewSwitch} sx={{ padding: '12px 20px', width: '150px', fontSize: '13px' }}>
           {viewMode === 'grid' ? 'Lista nézet' : 'Térkép nézet'}
         </Button>
 

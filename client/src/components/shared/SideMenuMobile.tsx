@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
 import Divider from '@mui/material/Divider';
@@ -8,6 +9,7 @@ import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
 import NotificationsRoundedIcon from '@mui/icons-material/NotificationsRounded';
 import MenuButton from './MenuButton';
 import MenuContent from './MenuContent';
+import { isWorkerAuthenticated, getInfoFromToken } from "../../utils/axiosInstance";
 
 interface SideMenuMobileProps {
   open: boolean | undefined;
@@ -15,6 +17,38 @@ interface SideMenuMobileProps {
 }
 
 export default function SideMenuMobile({ open, toggleDrawer }: SideMenuMobileProps) {
+  const [workerInfo, setWorkerInfo] = useState({
+    username: "",
+    email: "",
+    profilePic: ""
+  });
+  
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  
+  useEffect(() => {
+    const checkAuth = () => {
+      const authenticated = isWorkerAuthenticated();
+      setIsAuthenticated(authenticated);
+      
+      if (authenticated) {
+        const userInfo = getInfoFromToken();
+        if (userInfo) {
+          setWorkerInfo({
+            username: userInfo.username || "Worker",
+            email: userInfo.email || "worker@example.com",
+            profilePic: userInfo.profilePic || "/static/images/avatar/default.jpg"
+          });
+        }
+      }
+    };
+    
+    checkAuth();
+  }, []);
+
+  if (!isAuthenticated) {
+    return null;
+  }
+
   return (
     <Drawer
       anchor="right"
@@ -41,17 +75,14 @@ export default function SideMenuMobile({ open, toggleDrawer }: SideMenuMobilePro
           >
             <Avatar
               sizes="small"
-              alt="Riley Carter"
-              src="/static/images/avatar/7.jpg"
-              sx={{ width: 24, height: 24 }}
+              alt={workerInfo.username}
+              src={workerInfo.profilePic}
+              sx={{ width: 36, height: 36 }}
             />
             <Typography component="p" variant="h6">
-              Riley Carter
+              {workerInfo.username}
             </Typography>
           </Stack>
-          <MenuButton showBadge>
-            <NotificationsRoundedIcon />
-          </MenuButton>
         </Stack>
         <Divider />
         <Stack sx={{ flexGrow: 1 }}>
@@ -60,7 +91,7 @@ export default function SideMenuMobile({ open, toggleDrawer }: SideMenuMobilePro
         </Stack>
         <Stack sx={{ p: 2 }}>
           <Button variant="outlined" fullWidth startIcon={<LogoutRoundedIcon />}>
-            Logout
+            Kijelentkezés
           </Button>
         </Stack>
       </Stack>

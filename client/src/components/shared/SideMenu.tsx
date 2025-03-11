@@ -7,6 +7,8 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import MenuContent from "./MenuContent";
 import OptionsMenu from "./OptionsMenu";
+import { isWorkerAuthenticated, getInfoFromToken } from "../../utils/axiosInstance";
+import { useEffect, useState } from "react";
 
 const drawerWidth = 240;
 
@@ -21,7 +23,39 @@ const Drawer = styled(MuiDrawer)({
   },
 });
 
-export default function SideMenu() {
+export default function WorkerSideMenu() {
+  const [workerInfo, setWorkerInfo] = useState({
+    username: "",
+    email: "",
+    profilePic: ""
+  });
+  
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  
+  useEffect(() => {
+    const checkAuth = () => {
+      const authenticated = isWorkerAuthenticated();
+      setIsAuthenticated(authenticated);
+      
+      if (authenticated) {
+        const userInfo = getInfoFromToken();
+        if (userInfo) {
+          setWorkerInfo({
+            username: userInfo.username || "Worker",
+            email: userInfo.email || "worker@example.com",
+            profilePic: userInfo.profilePic || "/static/images/avatar/default.jpg"
+          });
+        }
+      }
+    };
+    
+    checkAuth();
+  }, []);
+  
+  if (!isAuthenticated) {
+    return null;
+  }
+
   return (
     <Drawer
       variant="permanent"
@@ -62,8 +96,8 @@ export default function SideMenu() {
       >
         <Avatar
           sizes="small"
-          alt="Riley Carter"
-          src="/static/images/avatar/7.jpg"
+          alt={workerInfo.username}
+          src={workerInfo.profilePic}
           sx={{ width: 36, height: 36 }}
         />
         <Box sx={{ mr: "auto" }}>
@@ -71,10 +105,10 @@ export default function SideMenu() {
             variant="body2"
             sx={{ fontWeight: 500, lineHeight: "16px" }}
           >
-            Riley Carter
+            {workerInfo.username}
           </Typography>
-          <Typography variant="caption" sx={{ color: "text.secondary" }}>
-            riley@email.com
+          <Typography variant="caption" sx={{ color: "text.secondary", fontSize: "10px"}}>
+            {workerInfo.email}
           </Typography>
         </Box>
         <OptionsMenu />

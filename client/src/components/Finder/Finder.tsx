@@ -10,7 +10,6 @@ export default function Finder() {
     <AppTheme>
       <CssBaseline enableColorScheme />
       <Box sx={{ display: 'flex' }}>
-        <SideMenu />
         <AppNavbar />
         <Box component="main" sx={{ flexGrow: 1, overflow: 'auto' }}>
           <Stack spacing={2} sx={{ alignItems: 'center', mx: 3, pb: 5, mt: { xs: 8, md: 0 } }}>

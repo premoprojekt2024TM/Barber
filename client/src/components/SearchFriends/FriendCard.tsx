@@ -13,8 +13,6 @@ export interface Friend {
   name: string;
   username: string;
   avatar: string;
-  mutualFriends: number;
-  isOnline: boolean;
 }
 
 interface FriendCardProps {
@@ -36,7 +34,6 @@ export default function FriendCard({ friend }: FriendCardProps) {
         "&:hover": {
           boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.25)",
           transform: "translateY(-2px)",
-          background: "rgba(15, 23, 42, 0.6)",
         },
         overflow: "hidden",
         position: "relative",
@@ -60,7 +57,6 @@ export default function FriendCard({ friend }: FriendCardProps) {
           flexDirection: "column",
           alignItems: "center",
           p: 2,
-          backdropFilter: "blur(20px)",
           position: "relative",
           zIndex: 0,
         }}
@@ -71,9 +67,8 @@ export default function FriendCard({ friend }: FriendCardProps) {
           sx={{
             width: 80,
             height: 80,
-            border: `3px solid "rgba(200, 200, 200, 0.3)`,
-            boxShadow: "0 4px 14px 0 rgba(31, 38, 135, 0.3)",
-            zIndex: 2,
+            boxShadow: "0 4px 14px 0 rgba(106, 107, 114, 0.3)",
+            zIndex: 2, 
           }}
         />
       </Box>

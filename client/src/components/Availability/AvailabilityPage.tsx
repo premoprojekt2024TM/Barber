@@ -1,41 +1,43 @@
 import { DragDropContext, DropResult } from '@hello-pangea/dnd';
 import { useTodos } from './todoStore';
-import { Box, Button, CssBaseline, Grid } from '@mui/material';
+import { Box, Button, CssBaseline, Grid, Stack } from '@mui/material';
 import { ColumnMemo } from './column';
 import AppTheme from '../../shared-theme/AppTheme';
 
-const ListTasksButton = () => {
+const TaskButtonsRow = () => {
   const todos = useTodos((store) => store.todos);
-
+  
   const handleListTasks = () => {
     const taskList = Object.keys(todos).map((day) => {
       const tasks = todos[day];
       const timeSlots = tasks.map((task) => task.title);
       return `${day.charAt(0).toUpperCase() + day.slice(1)}: [${timeSlots.join(', ')}]`;
     });
-
+    
     alert(taskList.join('\n'));
   };
+  
 
+  
   return (
-    <div>
+    <Stack direction="row" spacing={2} justifyContent="space-between" sx={{ mb: 2 }}>
       <Button variant="contained" color="primary" onClick={handleListTasks}>
         List All Tasks
       </Button>
-    </div>
+      <Button variant="contained" color="primary">
+        Elküldöm
+      </Button>
+    </Stack>
   );
 };
-
-
-
-
+  
 const AddPage = () => {
   const orderTask = useTodos((store) => store.moveTaskBetweenCategories);
-
+  
   function handleOnDragEnd(result: DropResult) {
     const { destination, source, draggableId } = result;
     if (!destination) return;
-
+    
     orderTask(
       draggableId,
       source.droppableId,
@@ -43,15 +45,14 @@ const AddPage = () => {
       destination.index
     );
   }
-
+  
   return (
     <AppTheme>
-      <CssBaseline /> 
-
+      <CssBaseline />
       <Grid>
         <Grid>
           <Box sx={{}}>
-            <ListTasksButton />
+            <TaskButtonsRow />
             <DragDropContext onDragEnd={handleOnDragEnd}>
               <Grid container spacing={3}>
                 <Grid item xs={12} sm={6} lg={4}>
@@ -75,7 +76,6 @@ const AddPage = () => {
                 <Grid item xs={12} sm={6} lg={4}>
                   <ColumnMemo variant="sunday" />
                 </Grid>
-
                 <Grid item xs={12} sm={6} lg={4}>
                   <ColumnMemo variant='done' />
                 </Grid>
@@ -83,7 +83,7 @@ const AddPage = () => {
             </DragDropContext>
           </Box>
         </Grid>
-
+        
         <Grid item xs={12} md={12}>
         </Grid>
       </Grid>
