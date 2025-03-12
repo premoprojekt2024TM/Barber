@@ -2,22 +2,27 @@ import { useState, useRef, useEffect } from "react";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import AddIcon from "@mui/icons-material/Add";
-import { Divider, IconButton } from "@mui/material";
+import { Divider, IconButton, CircularProgress } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
+import { axiosInstance } from "../../utils/axiosInstance"; // Adjust path as needed
 
-const avatars = [
-  "https://ui-avatars.com/api/?name=Elon+Musk&size=128&font-size=0.33&length=1&rounded=true",
-  "https://ui-avatars.com/api/?name=Steve+Jobs&size=128&font-size=0.33&length=1&rounded=true",
-  "https://ui-avatars.com/api/?name=Bill+Gates&size=128&font-size=0.33&length=1&rounded=true",
-  "https://ui-avatars.com/api/?name=Mark+Zuckerberg&size=128&font-size=0.33&length=1&rounded=true",
-  "https://ui-avatars.com/api/?name=Jeff+Bezos&size=128&font-size=0.33&length=1&rounded=true",
-];
+interface Friend {
+  userId: number;
+  username: string;
+  profilePic: string | null;
+}
+
+interface SelectedWorker {
+  userId: number;
+  username: string;
+  profilePic: string | null;
+}
 
 export const AddWorker = () => {
-  const [selectedAvatars, setSelectedAvatars] = useState<(string | null)[]>(
-    Array(4).fill(null),
-  );
-  const [availableAvatars, setAvailableAvatars] = useState(avatars);
+  const [selectedWorkers, setSelectedWorkers] = useState<
+    (SelectedWorker | null)[]
+  >(Array(4).fill(null));
+  const [availableFriends, setAvailableFriends] = useState<Friend[]>([]);
   const [showSelection, setShowSelection] = useState(false);
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const [hoveredAvatarIndex, setHoveredAvatarIndex] = useState<number | null>(
@@ -27,54 +32,74 @@ export const AddWorker = () => {
     null,
   );
   const [hoveredAddIndex, setHoveredAddIndex] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const componentRef = useRef<HTMLDivElement | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
 
-  const handleAvatarClick = (avatarUrl: string) => {
+  // Fetch friends data from API
+  useEffect(() => {
+    const fetchFriends = async () => {
+      try {
+        setLoading(true);
+        const response = await axiosInstance.get("/api/v1/getFriends");
+        setAvailableFriends(response.data.friends);
+        setError(null);
+      } catch (err) {
+        console.error("Error fetching friends:", err);
+        setError("Nem sikerült betölteni az ismerősök listáját.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFriends();
+  }, []);
+
+  const handleWorkerSelect = (friend: Friend) => {
     // Find the first empty slot
-    const emptySlotIndex = selectedAvatars.findIndex(
-      (avatar) => avatar === null,
+    const emptySlotIndex = selectedWorkers.findIndex(
+      (worker) => worker === null,
     );
 
     if (emptySlotIndex !== -1) {
       // If there's an empty slot, fill it
-      const newSelectedAvatars = [...selectedAvatars];
-      newSelectedAvatars[emptySlotIndex] = avatarUrl;
+      const newSelectedWorkers = [...selectedWorkers];
+      newSelectedWorkers[emptySlotIndex] = friend;
 
-      setSelectedAvatars(newSelectedAvatars);
-      setAvailableAvatars(
-        availableAvatars.filter((avatar) => avatar !== avatarUrl),
+      setSelectedWorkers(newSelectedWorkers);
+      setAvailableFriends(
+        availableFriends.filter((f) => f.userId !== friend.userId),
       );
     } else if (activeIndex !== null) {
       // If a specific slot is active, replace it
-      const newSelectedAvatars = [...selectedAvatars];
-      const oldAvatar = newSelectedAvatars[activeIndex];
-      newSelectedAvatars[activeIndex] = avatarUrl;
+      const newSelectedWorkers = [...selectedWorkers];
+      const oldWorker = newSelectedWorkers[activeIndex];
+      newSelectedWorkers[activeIndex] = friend;
 
-      setSelectedAvatars(newSelectedAvatars);
+      setSelectedWorkers(newSelectedWorkers);
 
-      // Update available avatars
-      const newAvailableAvatars = availableAvatars.filter(
-        (avatar) => avatar !== avatarUrl,
+      // Update available friends
+      const newAvailableFriends = availableFriends.filter(
+        (f) => f.userId !== friend.userId,
       );
-      if (oldAvatar) {
-        newAvailableAvatars.push(oldAvatar);
+      if (oldWorker) {
+        newAvailableFriends.push(oldWorker);
       }
-      setAvailableAvatars(newAvailableAvatars);
+      setAvailableFriends(newAvailableFriends);
       setActiveIndex(null);
     }
   };
 
-  const handleAssignedAvatarClick = (index: number) => {
-    const avatarToRemove = selectedAvatars[index];
-    if (avatarToRemove) {
-      const newSelectedAvatars = [...selectedAvatars];
-      newSelectedAvatars[index] = null;
+  const handleWorkerRemove = (index: number) => {
+    const workerToRemove = selectedWorkers[index];
+    if (workerToRemove) {
+      const newSelectedWorkers = [...selectedWorkers];
+      newSelectedWorkers[index] = null;
 
-      setAvailableAvatars((prev) => [...prev, avatarToRemove]);
-
-      setSelectedAvatars(newSelectedAvatars);
+      setAvailableFriends((prev) => [...prev, workerToRemove]);
+      setSelectedWorkers(newSelectedWorkers);
     }
   };
 
@@ -113,6 +138,11 @@ export const AddWorker = () => {
         behavior: "smooth",
       });
     }
+  };
+
+  // Helper function to get initials from username
+  const getInitials = (username: string) => {
+    return username.charAt(0).toUpperCase();
   };
 
   return (
@@ -174,25 +204,28 @@ export const AddWorker = () => {
           zIndex: 2,
         }}
       >
-        {selectedAvatars.map((avatar, index) => (
+        {selectedWorkers.map((worker, index) => (
           <Box
             key={index}
             sx={{
               width: { xs: "60px", sm: "80px" },
               height: { xs: "60px", sm: "80px" },
               borderRadius: "50%",
-              border: avatar ? "none" : "2px dashed rgba(255, 255, 255, 0.5)",
+              border: worker ? "none" : "2px dashed rgba(255, 255, 255, 0.5)",
               display: "flex",
               justifyContent: "center",
               alignItems: "center",
               position: "relative",
-              backgroundImage: avatar ? `url(${avatar})` : "transparent",
+              backgroundColor: !worker ? "transparent" : "rgba(0, 0, 0, 0.2)",
+              backgroundImage: worker?.profilePic
+                ? `url(${worker.profilePic})`
+                : "none",
               backgroundSize: "cover",
               backgroundPosition: "center",
               cursor: "pointer",
               transition:
                 "border-color 0.3s, background-color 0.3s, transform 0.3s",
-              "&:hover": avatar
+              "&:hover": worker
                 ? { transform: "scale(1.05)" }
                 : {
                     borderColor: "rgba(255, 255, 255, 0.8)",
@@ -200,26 +233,38 @@ export const AddWorker = () => {
                   },
             }}
             onClick={() => {
-              if (!avatar) {
+              if (!worker) {
                 handleEmptySlotClick(index);
               } else {
-                handleAssignedAvatarClick(index);
+                handleWorkerRemove(index);
               }
             }}
             onMouseEnter={() => {
               setHoveredAvatarIndex(index);
-              if (!avatar) {
+              if (!worker) {
                 setHoveredAddIndex(index);
               }
             }}
             onMouseLeave={() => {
               setHoveredAvatarIndex(null);
-              if (!avatar) {
+              if (!worker) {
                 setHoveredAddIndex(null);
               }
             }}
           >
-            {avatar && (
+            {worker && !worker.profilePic && (
+              <Typography
+                sx={{
+                  fontSize: "24px",
+                  fontWeight: "bold",
+                  color: "white",
+                }}
+              >
+                {getInitials(worker.username)}
+              </Typography>
+            )}
+
+            {worker && (
               <Box
                 sx={{
                   position: "absolute",
@@ -235,7 +280,7 @@ export const AddWorker = () => {
                 <IconButton
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleAssignedAvatarClick(index);
+                    handleWorkerRemove(index);
                   }}
                   sx={{
                     color: "#fff",
@@ -262,7 +307,7 @@ export const AddWorker = () => {
                 </IconButton>
               </Box>
             )}
-            {!avatar && (
+            {!worker && (
               <AddIcon
                 sx={{
                   color:
@@ -278,7 +323,27 @@ export const AddWorker = () => {
         ))}
       </Box>
 
-      {(showSelection || activeIndex !== null) && (
+      {loading && (
+        <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
+          <CircularProgress sx={{ color: "rgba(255, 255, 255, 0.8)" }} />
+        </Box>
+      )}
+
+      {error && (
+        <Typography
+          sx={{
+            color: "error.light",
+            textAlign: "center",
+            mt: 2,
+            position: "relative",
+            zIndex: 2,
+          }}
+        >
+          {error}
+        </Typography>
+      )}
+
+      {(showSelection || activeIndex !== null) && !loading && !error && (
         <Divider
           sx={{
             mt: 2,
@@ -290,91 +355,148 @@ export const AddWorker = () => {
         />
       )}
 
-      {(showSelection || activeIndex !== null) && (
-        <Box
-          ref={scrollContainerRef}
-          sx={{
-            display: "flex",
-            flexDirection: "row",
-            gap: 2,
-            maxWidth: "100%",
-            overflowX: "auto",
-            overflowY: "hidden",
-            scrollbarWidth: "thin",
-            scrollBehavior: "smooth",
-            paddingLeft: "12px",
-            paddingRight: "12px",
-            paddingBottom: "12px",
-            maxHeight: "120px",
-            marginTop: "16px",
-            marginBottom: "8px",
-            justifyContent: "flex-start",
-            scrollSnapType: "x mandatory",
-            position: "relative",
-            zIndex: 2,
-            "&::-webkit-scrollbar": {
-              height: "8px",
-            },
-            "&::-webkit-scrollbar-thumb": {
-              backgroundColor: "rgba(255, 255, 255, 0.2)",
-              borderRadius: "4px",
-            },
-            "&::-webkit-scrollbar-track": {
-              backgroundColor: "rgba(0, 0, 0, 0.1)",
-              borderRadius: "4px",
-            },
-          }}
-          onScroll={(e) => {
-            // @ts-ignore - Adding custom property to event target
-            if (e.target.scrollLeft % 1 === 0) {
+      {(showSelection || activeIndex !== null) && !loading && !error && (
+        <>
+          <Typography
+            variant="body2"
+            sx={{
+              color: "rgba(255, 255, 255, 0.7)",
+              textAlign: "center",
+              position: "relative",
+              zIndex: 2,
+            }}
+          >
+            Válassz ismerőst a hozzáadáshoz
+          </Typography>
+
+          <Box
+            ref={scrollContainerRef}
+            sx={{
+              display: "flex",
+              flexDirection: "row",
+              gap: 2,
+              maxWidth: "100%",
+              overflowX: "auto",
+              overflowY: "hidden",
+              scrollbarWidth: "thin",
+              scrollBehavior: "smooth",
+              paddingLeft: "12px",
+              paddingRight: "12px",
+              paddingBottom: "12px",
+              maxHeight: "120px",
+              marginTop: "8px",
+              marginBottom: "8px",
+              justifyContent:
+                availableFriends.length <= 3 ? "center" : "flex-start",
+              scrollSnapType: "x mandatory",
+              position: "relative",
+              zIndex: 2,
+              "&::-webkit-scrollbar": {
+                height: "8px",
+              },
+              "&::-webkit-scrollbar-thumb": {
+                backgroundColor: "rgba(255, 255, 255, 0.2)",
+                borderRadius: "4px",
+              },
+              "&::-webkit-scrollbar-track": {
+                backgroundColor: "rgba(0, 0, 0, 0.1)",
+                borderRadius: "4px",
+              },
+            }}
+            onScroll={(e) => {
               // @ts-ignore - Adding custom property to event target
-              clearTimeout(e.target.scrollTimeout);
-              // @ts-ignore - Adding custom property to event target
-              e.target.scrollTimeout = setTimeout(() => handleScroll(), 150);
-            }
-          }}
-        >
-          {availableAvatars.map((avatarUrl, index) => (
-            <Box
-              key={index}
-              sx={{
-                width: { xs: "60px", sm: "80px" },
-                height: { xs: "60px", sm: "80px" },
-                borderRadius: "50%",
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                position: "relative",
-                backgroundColor: "rgba(255, 255, 255, 0.05)",
-                backgroundSize: "cover",
-                backgroundPosition: "center",
-                cursor: "pointer",
-                transition: "all 0.3s ease",
-                flexShrink: 0,
-                margin: "0 4px",
-                scrollSnapAlign: "center",
-                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
-                "&:hover": {
-                  backgroundColor: "rgba(255, 255, 255, 0.1)",
-                  transform: "scale(1.03)",
-                  boxShadow: "0 6px 16px rgba(0, 0, 0, 0.15)",
-                },
-              }}
-              onClick={() => handleAvatarClick(avatarUrl)}
-            >
-              <img
-                src={avatarUrl}
-                alt="profile avatar"
-                style={{
-                  width: "70px",
-                  height: "70px",
-                  borderRadius: "40%",
-                  objectFit: "cover",
+              if (e.target.scrollLeft % 1 === 0) {
+                // @ts-ignore - Adding custom property to event target
+                clearTimeout(e.target.scrollTimeout);
+                // @ts-ignore - Adding custom property to event target
+                e.target.scrollTimeout = setTimeout(() => handleScroll(), 150);
+              }
+            }}
+          >
+            {availableFriends.length === 0 ? (
+              <Typography
+                sx={{
+                  color: "rgba(255, 255, 255, 0.7)",
+                  textAlign: "center",
+                  width: "100%",
+                  py: 2,
                 }}
-              />
-            </Box>
-          ))}
-        </Box>
+              >
+                Nincs több elérhető ismerős
+              </Typography>
+            ) : (
+              availableFriends.map((friend) => (
+                <Box
+                  key={friend.userId}
+                  sx={{
+                    width: { xs: "60px", sm: "80px" },
+                    height: { xs: "60px", sm: "80px" },
+                    borderRadius: "50%",
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    position: "relative",
+                    backgroundColor: "rgba(255, 255, 255, 0.05)",
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                    cursor: "pointer",
+                    transition: "all 0.3s ease",
+                    flexShrink: 0,
+                    margin: "0 4px",
+                    scrollSnapAlign: "center",
+                    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
+                    "&:hover": {
+                      backgroundColor: "rgba(255, 255, 255, 0.1)",
+                      transform: "scale(1.03)",
+                      boxShadow: "0 6px 16px rgba(0, 0, 0, 0.15)",
+                    },
+                  }}
+                  onClick={() => handleWorkerSelect(friend)}
+                >
+                  {friend.profilePic ? (
+                    <img
+                      src={friend.profilePic}
+                      alt={friend.username}
+                      style={{
+                        width: "70px",
+                        height: "70px",
+                        borderRadius: "40%",
+                        objectFit: "cover",
+                      }}
+                    />
+                  ) : (
+                    <Typography
+                      sx={{
+                        fontSize: "24px",
+                        fontWeight: "bold",
+                        color: "white",
+                      }}
+                    >
+                      {getInitials(friend.username)}
+                    </Typography>
+                  )}
+                  <Typography
+                    sx={{
+                      position: "absolute",
+                      bottom: "-24px",
+                      left: "50%",
+                      transform: "translateX(-50%)",
+                      fontSize: "12px",
+                      color: "rgba(255, 255, 255, 0.8)",
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      maxWidth: "80px",
+                      textAlign: "center",
+                    }}
+                  >
+                    {friend.username}
+                  </Typography>
+                </Box>
+              ))
+            )}
+          </Box>
+        </>
       )}
     </Box>
   );

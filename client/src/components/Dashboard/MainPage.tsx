@@ -1,11 +1,11 @@
 import Grid from "@mui/material/Grid";
 import Box from "@mui/material/Box";
-import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import CustomizedDataGrid from "../../components/Dashboard/CustomizedDataGrid";
 import SessionsChart from "../../components/Dashboard/SessionsChart";
 import StatCard, { StatCardProps } from "../../components/Dashboard/StatCard";
-import { Card, CardContent, CardHeader, Tab, Tabs } from "@mui/material";
+import FriendsList from "./FriendList"; // Import the new component
+import { Card, CardContent, Tab, Tabs } from "@mui/material";
 import { useState } from "react";
 import { styled } from "@mui/material/styles";
 
@@ -146,11 +146,7 @@ export default function MainPage() {
                   <Typography variant="body1">Kimenő tartalma</Typography>
                 </Box>
               )}
-              {activeTab === 2 && (
-                <Box sx={{ p: 2 }}>
-                  <Typography variant="body1">Ismerősök tartalma</Typography>
-                </Box>
-              )}
+              {activeTab === 2 && <FriendsList />}
             </CardContent>
           </Card>
         </Grid>
