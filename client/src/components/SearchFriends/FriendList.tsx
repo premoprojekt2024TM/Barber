@@ -1,9 +1,12 @@
 import { Box, Typography, Divider } from "@mui/material";
-import FriendCard, { type Friend } from "./FriendCard";
+import FriendCard from "./FriendCard";
+import { Friend } from "./Friend";
+
 interface FriendsListProps {
   friends: Friend[];
   searchQuery: string;
 }
+
 export default function FriendsList({
   friends,
   searchQuery,
@@ -47,6 +50,7 @@ export default function FriendsList({
       </Box>
     );
   }
+
   return (
     <Box sx={{ width: "100%" }}>
       <Box
@@ -61,7 +65,7 @@ export default function FriendsList({
       </Box>
       <Divider sx={{ mb: 3, borderColor: "rgba(255, 255, 255, 0.1)" }} />
       {friends.map((friend) => (
-        <FriendCard key={friend.id} friend={friend} />
+        <FriendCard key={friend.userId} friend={friend} />
       ))}
     </Box>
   );

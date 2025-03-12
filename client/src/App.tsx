@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 import Dashboard from "./components/Dashboard/Dashboard";
 import FinderWithSidebar from "./components/StoreUpload/Store";
 import Finder from "./components/Finder/Finder";
@@ -7,19 +8,106 @@ import SignIn from "./components/Auth/SignIn";
 import Addd from "./components/Availability/Add";
 import MainPage from "./components/MainPage/MainPage";
 import SearchPage from "./components/SearchFriends/SearchPage";
+import {
+  isClientAuthenticated,
+  isWorkerAuthenticated,
+} from "./utils/axiosInstance";
+
+const WorkerRoute = ({ children }) => {
+  const isWorker = isWorkerAuthenticated();
+
+  if (!isWorker) {
+    return (
+      <Navigate to="/login" state={{ message: "Worker access required" }} />
+    );
+  }
+
+  return children;
+};
+
+const ClientRoute = ({ children }) => {
+  const isClient = isClientAuthenticated();
+
+  if (!isClient) {
+    // Redirect to login with a message
+    return (
+      <Navigate to="/login" state={{ message: "Client access required" }} />
+    );
+  }
+
+  return children;
+};
+
+// Protected route for any authenticated user
+const AuthRoute = ({ children }) => {
+  const isAuthenticated = isClientAuthenticated() || isWorkerAuthenticated();
+
+  if (!isAuthenticated) {
+    // Redirect to login with a message
+    return (
+      <Navigate to="/login" state={{ message: "Please login to continue" }} />
+    );
+  }
+
+  return children;
+};
+
 function App() {
   return (
     <div>
       <Routes>
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/store" element={<FinderWithSidebar />} />
-        <Route path="/finder" element={<Finder />} />
+        {/* Worker-only routes */}
+        <Route
+          path="/dashboard"
+          element={
+            <WorkerRoute>
+              <Dashboard />
+            </WorkerRoute>
+          }
+        />
+
+        {/* Client-only routes */}
+        <Route
+          path="/search"
+          element={
+            <WorkerRoute>
+              <SearchPage />
+            </WorkerRoute>
+          }
+        />
+
+        {/* Routes for any authenticated user (worker or client) */}
+        <Route
+          path="/store"
+          element={
+            <AuthRoute>
+              <FinderWithSidebar />
+            </AuthRoute>
+          }
+        />
+
+        <Route
+          path="/finder"
+          element={
+            <AuthRoute>
+              <Finder />
+            </AuthRoute>
+          }
+        />
+
+        <Route
+          path="/add"
+          element={
+            <AuthRoute>
+              <Addd />
+            </AuthRoute>
+          }
+        />
+
+        {/* Public routes */}
         <Route path="/register" element={<SignUp />} />
         <Route path="/login" element={<SignIn />} />
-        <Route path="/add" element={<Addd />} />
         <Route path="/main" element={<MainPage />} />
-        <Route path="/search" element={<SearchPage />} />
-
         <Route path="/" element={<Navigate to="/main" />} />
         <Route path="*" element={<Navigate to="/main" />} />
       </Routes>

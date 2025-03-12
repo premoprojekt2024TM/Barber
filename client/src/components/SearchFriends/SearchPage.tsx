@@ -1,64 +1,69 @@
 import { useState, useEffect } from "react";
-import { CssBaseline, Box, Stack, Container, Pagination } from "@mui/material";
+import {
+  CssBaseline,
+  Box,
+  Stack,
+  Container,
+  Pagination,
+  CircularProgress,
+  Typography,
+} from "@mui/material";
 import AppTheme from "../../shared-theme/AppTheme";
 import SideMenu from "../Shared/SideMenu";
 import AppNavbar from "../Shared/AppNavbar";
-import Header from "../../components/Shared/Header";
 import SearchBar from "./SearchBar";
 import FriendsList from "./FriendList";
-import type { Friend } from "./FriendCard";
+import { axiosInstance } from "../../utils/axiosInstance";
+import { Friend } from "./Friend"; // Import from centralized type
 
-const mockFriends: Friend[] = [
-  {
-    id: "1",
-    name: "Alex Johnson",
-    username: "alexj",
-    avatar: "/placeholder.svg?height=200&width=200",
-    mutualFriends: 12,
-    isOnline: true,
-  },
-  {
-    id: "2",
-    name: "Samantha Williams",
-    username: "samw",
-    avatar: "/placeholder.svg?height=200&width=200",
-    mutualFriends: 8,
-    isOnline: false,
-  },
-  {
-    id: "3",
-    name: "Michael Brown",
-    username: "mikeb",
-    avatar: "/placeholder.svg?height=200&width=200",
-    mutualFriends: 5,
-    isOnline: true,
-  },
-  {
-    id: "4",
-    name: "Emily Davis",
-    username: "emilyd",
-    avatar: "/placeholder.svg?height=200&width=200",
-    mutualFriends: 15,
-    isOnline: false,
-  },
-  {
-    id: "5",
-    name: "David Wilson",
-    username: "davidw",
-    avatar: "/placeholder.svg?height=200&width=200",
-    mutualFriends: 3,
-    isOnline: true,
-  },
-];
+// Function to transform API data to match Friend type
+const transformWorkerToFriend = (worker: any): Friend => {
+  // Use first and last name if available, otherwise fall back to username
+  const fullName =
+    worker.firstName && worker.lastName
+      ? `${worker.firstName} ${worker.lastName}`
+      : worker.username;
+
+  return {
+    userId: worker.userId.toString(), // Convert to string but keep as userId
+    name: fullName,
+    username: worker.username,
+    avatar: worker.profilePic || "/placeholder.svg?height=200&width=200",
+  };
+};
 
 export default function SearchPage() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [filteredFriends, setFilteredFriends] = useState<Friend[]>([]);
+  const [workers, setWorkers] = useState<Friend[]>([]);
+  const [filteredWorkers, setFilteredWorkers] = useState<Friend[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const friendsPerPage = 4;
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const workersPerPage = 4;
 
+  // Fetch workers from API
   useEffect(() => {
-    setFilteredFriends(mockFriends);
+    const fetchWorkers = async () => {
+      try {
+        setLoading(true);
+        const response = await axiosInstance.get("/api/v1/list");
+
+        if (response.data && response.data.data) {
+          const transformedWorkers = response.data.data.map(
+            transformWorkerToFriend,
+          );
+          setWorkers(transformedWorkers);
+          setFilteredWorkers(transformedWorkers);
+        }
+      } catch (err: any) {
+        console.error("Error fetching workers:", err);
+        setError(err.response?.data?.message || "Failed to load workers");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchWorkers();
   }, []);
 
   const handleSearch = (query: string) => {
@@ -66,25 +71,25 @@ export default function SearchPage() {
     setCurrentPage(1);
 
     if (!query.trim()) {
-      setFilteredFriends(mockFriends);
+      setFilteredWorkers(workers);
       return;
     }
 
-    const filtered = mockFriends.filter(
-      (friend) =>
-        friend.name.toLowerCase().includes(query.toLowerCase()) ||
-        friend.username.toLowerCase().includes(query.toLowerCase()),
+    const filtered = workers.filter(
+      (worker) =>
+        worker.name.toLowerCase().includes(query.toLowerCase()) ||
+        worker.username.toLowerCase().includes(query.toLowerCase()),
     );
 
-    setFilteredFriends(filtered);
+    setFilteredWorkers(filtered);
   };
 
-  const totalPages = Math.ceil(filteredFriends.length / friendsPerPage);
-  const indexOfLastFriend = currentPage * friendsPerPage;
-  const indexOfFirstFriend = indexOfLastFriend - friendsPerPage;
-  const currentFriends = filteredFriends.slice(
-    indexOfFirstFriend,
-    indexOfLastFriend,
+  const totalPages = Math.ceil(filteredWorkers.length / workersPerPage);
+  const indexOfLastWorker = currentPage * workersPerPage;
+  const indexOfFirstWorker = indexOfLastWorker - workersPerPage;
+  const currentWorkers = filteredWorkers.slice(
+    indexOfFirstWorker,
+    indexOfLastWorker,
   );
 
   const handlePageChange = (
@@ -119,7 +124,6 @@ export default function SearchPage() {
               mt: { xs: 8, md: 2 },
             }}
           >
-            <Header />
             <Container
               maxWidth="md"
               sx={{
@@ -139,21 +143,43 @@ export default function SearchPage() {
             >
               <SearchBar onSearch={handleSearch} />
               <Box sx={{ mt: 4 }}>
-                <FriendsList
-                  friends={currentFriends}
-                  searchQuery={searchQuery}
-                />
-                {totalPages > 1 && (
+                {loading ? (
                   <Box
-                    sx={{ display: "flex", justifyContent: "center", mt: 4 }}
+                    sx={{ display: "flex", justifyContent: "center", my: 4 }}
                   >
-                    <Pagination
-                      count={totalPages}
-                      page={currentPage}
-                      onChange={handlePageChange}
-                      color="primary"
-                    />
+                    <CircularProgress />
                   </Box>
+                ) : error ? (
+                  <Typography color="error" align="center" sx={{ my: 4 }}>
+                    {error}
+                  </Typography>
+                ) : filteredWorkers.length === 0 ? (
+                  <Typography align="center" sx={{ my: 4 }}>
+                    Nem található ilyen nevű felhasználó.Próbáld máshogy.
+                  </Typography>
+                ) : (
+                  <>
+                    <FriendsList
+                      friends={currentWorkers}
+                      searchQuery={searchQuery}
+                    />
+                    {totalPages > 1 && (
+                      <Box
+                        sx={{
+                          display: "flex",
+                          justifyContent: "center",
+                          mt: 4,
+                        }}
+                      >
+                        <Pagination
+                          count={totalPages}
+                          page={currentPage}
+                          onChange={handlePageChange}
+                          color="primary"
+                        />
+                      </Box>
+                    )}
+                  </>
                 )}
               </Box>
             </Container>

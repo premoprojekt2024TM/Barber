@@ -26,7 +26,7 @@ export default function Main() {
           zIndex: -1,
           top: 0,
           left: 0,
-          transform: "scaleX(-1)", // This line mirrors the video horizontally
+          transform: "scaleX(-1)",
           filter: "blur(2px)",
         }}
       >

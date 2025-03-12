@@ -3,6 +3,7 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import { AppDataSource } from "../config/dbconfig";
 import { generateToken } from "../middlewares/authMiddleware";
 import * as model from "../models/index";
+import { Not } from "typeorm";
 import {
   loginSchema,
   registerSchema,
@@ -190,5 +191,39 @@ export const deleteUser = async (
     return reply
       .status(500)
       .send({ message: "An error occurred while deleting user" });
+  }
+};
+
+export const listAllWorkers = async (
+  request: AuthenticatedRequest,
+  reply: FastifyReply,
+) => {
+  try {
+    const currentUserId = request.user?.userId;
+    const userRepository = AppDataSource.getRepository(model.User);
+
+    // Find all workers except the current user
+    const workers = await userRepository.find({
+      where: {
+        role: "worker",
+        // Exclude current user if authenticated
+        ...(currentUserId ? { userId: Not(currentUserId) } : {}),
+      },
+      select: ["userId", "username", "profilePic", "firstName", "lastName"],
+    });
+
+    if (!workers || workers.length === 0) {
+      return reply.status(404).send({ message: "No workers found" });
+    }
+
+    return reply.status(200).send({
+      message: "Workers retrieved successfully",
+      data: workers,
+    });
+  } catch (error) {
+    console.error("Error fetching workers:", error);
+    return reply
+      .status(500)
+      .send({ message: "An error occurred while fetching workers" });
   }
 };
