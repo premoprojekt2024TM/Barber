@@ -81,7 +81,7 @@ export default function FAQ() {
             id="panel2d-header"
           >
             <Typography component="span" variant="subtitle2">
-              Can I return the product if it doesn&apos;t meet my expectations?
+              Letudom mondani a lefoglalt időpontomat?
             </Typography>
           </AccordionSummary>
           <AccordionDetails>

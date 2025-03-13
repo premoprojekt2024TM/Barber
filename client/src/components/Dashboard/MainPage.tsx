@@ -106,8 +106,7 @@ export default function MainPage() {
             </Grid>
           </Grid>
         </Grid>
-
-        {/* Right Column: Project Status with Tabs */}
+        
         <Grid item xs={12} md={6}>
           <Card
             sx={{

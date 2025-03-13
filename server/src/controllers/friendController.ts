@@ -224,6 +224,7 @@ export const rejectFriendRequest = async (
   }
 };
 
+
 export const getFriends = async (
   request: AuthenticatedRequest,
   reply: FastifyReply,
@@ -235,14 +236,16 @@ export const getFriends = async (
       model.Friendship,
     ).find({
       where: [
-        { user: { userId: userId }, status: "accepted" },
-        { friend: { userId: userId }, status: "accepted" },
+        { user: { userId }, status: "accepted" },
+        { friend: { userId }, status: "accepted" },
       ],
+      relations: ["user", "friend"], 
     });
 
     if (friendships.length === 0) {
       return reply.status(404).send({ message: "You have no friends" });
     }
+
     const friends = friendships.map((friendship) => {
       return friendship.user.userId === userId
         ? friendship.friend
@@ -257,6 +260,8 @@ export const getFriends = async (
       .send({ message: "An error occurred while fetching friends" });
   }
 };
+
+
 
 export const getPendingFriendRequests = async (
   request: AuthenticatedRequest,
