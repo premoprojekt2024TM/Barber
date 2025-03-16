@@ -1,8 +1,7 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
-import { StoreWorker } from './StoreWorker';
-import { StorePictures } from './StorePictures';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from "typeorm";
+import { StoreWorker } from "./StoreWorker";
 
-@Entity('Store')
+@Entity("Store")
 export class Store {
   @PrimaryGeneratedColumn()
   storeId!: number;
@@ -10,8 +9,8 @@ export class Store {
   @Column()
   name!: string;
 
-  @Column()
-  description!: string;
+  @Column({ nullable: true })
+  description?: string;
 
   @Column()
   address!: string;
@@ -28,15 +27,15 @@ export class Store {
   @Column()
   email!: string;
 
-  @Column({ type: 'float' })
+  @Column({ type: "float" })
   latitude!: number;
 
-  @Column({ type: 'float' })
+  @Column({ type: "float" })
   longitude!: number;
+
+  @Column()
+  picture?: string;
 
   @OneToMany(() => StoreWorker, (storeWorker) => storeWorker.store)
   storeWorkers!: StoreWorker[];
-
-  @OneToMany(() => StorePictures, (storePictures) => storePictures.store)
-  storePictures!: StorePictures[];
 }

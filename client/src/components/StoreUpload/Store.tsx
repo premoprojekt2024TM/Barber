@@ -5,7 +5,7 @@ import AppNavbar from "../Shared/AppNavbar";
 import Header from "../Shared/Header";
 import { Store } from "./StorePage";
 
-export default function FinderWithSidebar() {
+export default function StoreUpload() {
   return (
     <AppTheme>
       <CssBaseline enableColorScheme />

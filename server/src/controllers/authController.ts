@@ -58,16 +58,6 @@ export const registerUser = async (
     newUser.role = role;
     newUser.profilePic = generateProfilepic;
     await AppDataSource.getRepository(model.User).save(newUser);
-
-    if (role === "worker") {
-      const newExtendedWorker = new model.ExtendedWorker();
-      newExtendedWorker.user = newUser;
-      newExtendedWorker.description = "";
-      await AppDataSource.getRepository(model.ExtendedWorker).save(
-        newExtendedWorker,
-      );
-    }
-
     return reply.status(201).send({ message: "User created successfully" });
   } catch (error) {
     console.error("Error during user registration:", error);
@@ -202,11 +192,9 @@ export const listAllWorkers = async (
     const currentUserId = request.user?.userId;
     const userRepository = AppDataSource.getRepository(model.User);
 
-    // Find all workers except the current user
     const workers = await userRepository.find({
       where: {
         role: "worker",
-        // Exclude current user if authenticated
         ...(currentUserId ? { userId: Not(currentUserId) } : {}),
       },
       select: ["userId", "username", "profilePic", "firstName", "lastName"],

@@ -1,7 +1,7 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import Dashboard from "./components/Dashboard/Dashboard";
-import FinderWithSidebar from "./components/StoreUpload/Store";
+import StoreUpload from "./components/StoreUpload/Store";
 import Finder from "./components/Finder/Finder";
 import SignUp from "./components/Auth/SignUp";
 import SignIn from "./components/Auth/SignIn";
@@ -81,7 +81,7 @@ function App() {
           path="/store"
           element={
             <AuthRoute>
-              <FinderWithSidebar />
+              <StoreUpload />
             </AuthRoute>
           }
         />

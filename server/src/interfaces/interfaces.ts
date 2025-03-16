@@ -1,4 +1,5 @@
 import { FastifyRequest } from "fastify/types/request";
+import { File } from "multer";
 
 export interface AuthenticatedRequest extends FastifyRequest {
   user?: {
@@ -8,6 +9,7 @@ export interface AuthenticatedRequest extends FastifyRequest {
     username: string;
     profilePic?: string;
   };
+  file?: File;
 }
 
 export interface JwtPayload {

@@ -3,21 +3,17 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import GooglePlacesAutocomplete from "react-google-places-autocomplete";
 import { TextField } from "@mui/material";
+import { axiosInstance } from "../../utils/axiosInstance";
 
-type StoreInformationSectionProps = {
-  location: any;
-  setLocation: React.Dispatch<React.SetStateAction<any>>;
-};
+const GOOGLE_MAPS_API_KEY = "AIzaSyCSJN2Qzyjhv-AFd1I2LVLD30hX7-lZhRE";
 
-const GOOGLE_MAPS_API_KEY = "AIzaSyC3aviU6KHXAjoSnxcw6qbOhjnFctbxPkE";
-
-export const StoreInformationSection = ({
-  location,
-  setLocation,
-}: StoreInformationSectionProps) => {
+export const StoreInformationSection = () => {
   const [storeName, setStoreName] = useState("");
   const [storePhone, setStorePhone] = useState("");
   const [storeEmail, setStoreEmail] = useState("");
+  const [location, setLocation] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setStoreName(e.target.value);
@@ -31,15 +27,24 @@ export const StoreInformationSection = ({
     setStoreEmail(e.target.value);
   };
 
-  const handleSubmit = () => {
-    const storeData = {
-      name: storeName,
-      address: location?.label,
-      city: location?.city,
-      postalCode: location?.postalCode,
-      phone: storePhone,
-      email: storeEmail,
-    };
+  const customStyles = {
+    control: (provided: any) => ({
+      ...provided,
+      borderRadius: "8px",
+    }),
+    menu: (provided: any) => ({
+      ...provided,
+      zIndex: 9999,
+      position: "absolute",
+    }),
+    menuPortal: (provided: any) => ({
+      ...provided,
+      zIndex: 9999,
+    }),
+    option: (provided: any) => ({
+      ...provided,
+      zIndex: 9999,
+    }),
   };
 
   return (
@@ -59,7 +64,7 @@ export const StoreInformationSection = ({
         "&:hover": {
           boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.25)",
         },
-        overflow: "hidden",
+        overflow: "visible",
         position: "relative",
         "&::before": {
           content: '""',
@@ -91,20 +96,10 @@ export const StoreInformationSection = ({
       </Typography>
 
       {/* Store Name */}
-      <Box
-        sx={{
-          width: "100%",
-          position: "relative",
-          zIndex: 2,
-        }}
-      >
+      <Box sx={{ width: "100%" }}>
         <Typography
           variant="body1"
-          sx={{
-            mb: 1,
-            color: "rgba(255, 255, 255, 0.8)",
-            fontWeight: 500,
-          }}
+          sx={{ mb: 1, color: "rgba(255, 255, 255, 0.8)", fontWeight: 500 }}
         >
           Bolt neve
         </Typography>
@@ -115,48 +110,35 @@ export const StoreInformationSection = ({
           placeholder="Bolt neve"
           variant="outlined"
           size="medium"
-          sx={{
-            borderRadius: "8px",
-            "& .MuiOutlinedInput-root": {
-              borderRadius: "8px",
-            },
-          }}
+          sx={{ borderRadius: "8px" }}
         />
       </Box>
 
       {/* Google Places Autocomplete */}
-      <Box
-        sx={{
-          width: "100%",
-          position: "relative",
-          zIndex: 2,
-        }}
-      >
+      <Box sx={{ width: "100%" }}>
         <Typography
           variant="body1"
-          sx={{
-            mb: 1,
-            color: "rgba(255, 255, 255, 0.8)",
-            fontWeight: 500,
-          }}
+          sx={{ mb: 1, color: "rgba(255, 255, 255, 0.8)", fontWeight: 500 }}
         >
           Bolt helye
         </Typography>
-        <Box
-          sx={{
-            "& > div": {
-              borderRadius: "8px",
-            },
-          }}
-        >
+        <Box sx={{ "& > div": { borderRadius: "8px" } }}>
           <GooglePlacesAutocomplete
             apiKey={GOOGLE_MAPS_API_KEY}
             selectProps={{
               placeholder: "Cím keresése",
               onChange: (value) => setLocation(value),
-              value: location?.label || "",
+              value: location,
               noOptionsMessage: () => "Nincs találat",
               loadingMessage: () => "Keresés folyamatban...",
+              styles: customStyles,
+              menuPortalTarget: document.body,
+              menuPosition: "fixed",
+            }}
+            autocompletionRequest={{
+              componentRestrictions: {
+                country: ["hu"],
+              },
             }}
             debounce={300}
           />
@@ -164,20 +146,10 @@ export const StoreInformationSection = ({
       </Box>
 
       {/* Store Phone */}
-      <Box
-        sx={{
-          width: "100%",
-          position: "relative",
-          zIndex: 2,
-        }}
-      >
+      <Box sx={{ width: "100%" }}>
         <Typography
           variant="body1"
-          sx={{
-            mb: 1,
-            color: "rgba(255, 255, 255, 0.8)",
-            fontWeight: 500,
-          }}
+          sx={{ mb: 1, color: "rgba(255, 255, 255, 0.8)", fontWeight: 500 }}
         >
           Bolt telefonszáma
         </Typography>
@@ -188,30 +160,15 @@ export const StoreInformationSection = ({
           placeholder="telefonszám"
           variant="outlined"
           size="medium"
-          sx={{
-            borderRadius: "8px",
-            "& .MuiOutlinedInput-root": {
-              borderRadius: "8px",
-            },
-          }}
+          sx={{ borderRadius: "8px" }}
         />
       </Box>
 
       {/* Store Email */}
-      <Box
-        sx={{
-          width: "100%",
-          position: "relative",
-          zIndex: 2,
-        }}
-      >
+      <Box sx={{ width: "100%" }}>
         <Typography
           variant="body1"
-          sx={{
-            mb: 1,
-            color: "rgba(255, 255, 255, 0.8)",
-            fontWeight: 500,
-          }}
+          sx={{ mb: 1, color: "rgba(255, 255, 255, 0.8)", fontWeight: 500 }}
         >
           Bolt email címe
         </Typography>
@@ -222,14 +179,14 @@ export const StoreInformationSection = ({
           placeholder="email cím"
           variant="outlined"
           size="medium"
-          sx={{
-            borderRadius: "8px",
-            "& .MuiOutlinedInput-root": {
-              borderRadius: "8px",
-            },
-          }}
+          sx={{ borderRadius: "8px" }}
         />
       </Box>
+
+      {/* Error Message */}
+      {error && (
+        <Typography sx={{ color: "red", marginTop: 2 }}>{error}</Typography>
+      )}
     </Box>
   );
 };
