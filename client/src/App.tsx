@@ -1,5 +1,4 @@
 import { Routes, Route, Navigate } from "react-router-dom";
-import { useEffect, useState } from "react";
 import Dashboard from "./components/Dashboard/Dashboard";
 import StoreUpload from "./components/StoreUpload/Store";
 import Finder from "./components/Finder/Finder";
@@ -8,6 +7,7 @@ import SignIn from "./components/Auth/SignIn";
 import Addd from "./components/Availability/Add";
 import MainPage from "./components/MainPage/MainPage";
 import SearchPage from "./components/SearchFriends/SearchPage";
+import BookingSystem from "./components/Booking/Booking";
 import {
   isClientAuthenticated,
   isWorkerAuthenticated,
@@ -86,14 +86,9 @@ function App() {
           }
         />
 
-        <Route
-          path="/finder"
-          element={
-            <AuthRoute>
-              <Finder />
-            </AuthRoute>
-          }
-        />
+        <Route path="/booking" element={<BookingSystem />} />
+
+        <Route path="/finder" element={<Finder />} />
 
         <Route
           path="/add"

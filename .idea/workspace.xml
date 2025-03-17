@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="6f9c95c3-e8f9-427c-b991-e525137d9f25" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/client/src/components/Finder/Finder.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/components/Finder/Finder.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/src/components/Finder/FinderPage.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/components/Finder/FinderPage.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/src/components/Finder/Map.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/components/Finder/Map.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/src/components/Finder/cities.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/components/Finder/cities.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/src/utils/axiosInstance.ts" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/utils/axiosInstance.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/routes/storeRoutes.ts" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/routes/storeRoutes.ts" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "customColor": "",
+  "associatedIndex": 5
+}]]></component>
+  <component name="ProjectId" id="2uOWjlphl6EGaqZ74W4I4GgYEs4" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.OpenDatabaseViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "git-widget-placeholder": "main",
+    "last_opened_file_path": "/Users/marcell"
+  },
+  "keyToStringList": {
+    "DatabaseDriversLRU": [
+      "postgresql"
+    ]
+  }
+}]]></component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+</project>

@@ -1,63 +1,63 @@
+import { axiosInstance } from "../../utils/axiosInstance";
+
 interface Store {
-    id: number;
-    name: string;
-    description: string;
-    address: string;
-    city: string;
-    postalCode: string;
-    phone: string;
-    email: string;
-    latitude: number;
-    longitude: number;
-  }
-  
-  interface StoreApiResponse {
-    message: string;
-    stores: Store[];
-  }
-  
-  let hungarianPoints: any = null;
-  
-  async function fetchStoreData(): Promise<void> {
-    try {
-      const response = await fetch('http://localhost:8080/api/Store');
-  
-      if (!response.ok) {
-        throw new Error('Failed to fetch store data');
-      }
-  
-      const data: StoreApiResponse = await response.json();
-      const stores = data.stores;
-      
+  storeId: number;
+  name: string;
+  description: string;
+  address: string;
+  city: string;
+  postalCode: string;
+  phone: string;
+  email: string;
+  latitude: number;
+  longitude: number;
+  picture: string;
+}
+
+interface StoreApiResponse {
+  message: string;
+  stores: Store[];
+}
+
+let hungarianPoints: any = null;
+
+async function fetchStoreData(): Promise<void> {
+  try {
+    const response = await axiosInstance.get<StoreApiResponse>("/api/v1/Store");
+
+    if (response.status === 200) {
+      const stores = response.data.stores;
+
       const geoJsonFeatures = stores.map((store) => {
         return {
-          type: 'Feature',
+          type: "Feature",
           properties: {
-            title: store.city,
-            description: store.description, 
+            id: store.storeId, // Store ID
+            title: store.name, // Store name
+            city: store.city, // City// Description
+            address: store.address, // Address
+            phone: store.phone, // Phone number
+            email: store.email, // Email address
+            pictureUrl: store.picture, // Store picture URL
+            location: `${store.latitude.toFixed(4)}, ${store.longitude.toFixed(4)}`, // Location
           },
           geometry: {
-            type: 'Point',
-            coordinates: [store.longitude, store.latitude], 
+            type: "Point",
+            coordinates: [store.longitude, store.latitude], // [longitude, latitude]
           },
         };
       });
-  
+
       hungarianPoints = {
-        type: 'FeatureCollection',
+        type: "FeatureCollection",
         features: geoJsonFeatures,
       };
-  
-    } catch (error) {
-      console.error('Error fetching store data:', error);
     }
+  } catch (error) {
+    console.error("Error fetching store data", error);
   }
-  
-  fetchStoreData().then(() => {
-    if (hungarianPoints) {
-      console.log('Hungarian Points:', JSON.stringify(hungarianPoints, null, 2));
-    }
-  });
-  
-  export { hungarianPoints };
-  
+}
+
+fetchStoreData();
+
+export { hungarianPoints };

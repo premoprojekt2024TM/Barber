@@ -10,12 +10,11 @@ export const axiosInstance = axios.create({
   },
 });
 
-// Add request interceptor to include JWT token in all requests
 axiosInstance.interceptors.request.use(
   (config) => {
     const token = getJWTToken();
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+      config.headers!.Authorization = `Bearer ${token}`;
     }
     return config;
   },
@@ -24,7 +23,6 @@ axiosInstance.interceptors.request.use(
   },
 );
 
-// Check for 401/403 responses and handle them
 axiosInstance.interceptors.response.use(
   (response) => {
     return response;
@@ -34,7 +32,6 @@ axiosInstance.interceptors.response.use(
       error.response &&
       (error.response.status === 401 || error.response.status === 403)
     ) {
-      // Handle unauthorized access - could redirect to login or clear token
       Cookies.remove("jwt_token");
     }
     return Promise.reject(error);
