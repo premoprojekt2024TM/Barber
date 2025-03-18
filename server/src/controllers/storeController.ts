@@ -7,16 +7,10 @@ import axios from "axios";
 import * as dotenv from "dotenv";
 import AWS from "aws-sdk";
 
-// AWS S3 configuration with hardcoded credentials
-const s3 = new AWS.S3({
-  accessKeyId: "AKIATQPD7NC52ERRJLDI", // Hardcoded AWS Access Key
-  secretAccessKey: "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", // Hardcoded AWS Secret Key
-  region: "eu-north-1", // Hardcoded AWS region
-});
+const s3 = new AWS.S3({});
 
-const BUCKET_NAME = "10barberimages"; // Hardcoded bucket name
+const BUCKET_NAME = ;
 
-// Utility function to upload base64 image to S3
 const uploadBase64ImageToS3 = async (
   base64Image: string,
   filename: string,
