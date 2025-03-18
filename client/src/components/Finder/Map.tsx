@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
-import { Button, Box, Container, Paper, Typography } from "@mui/material";
+import { Button, Box, Container } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
-import CloseIcon from "@mui/icons-material/Close";
 import { hungarianPoints } from "./cities";
+import Popover from "./Popover";
 
 const MAPBOX_TOKEN =
   "pk.eyJ1IjoibWFyY2VsbHRlbWxlaXRuZXIiLCJhIjoiY201MWVycDVtMW52ZTJpcXc5aGJpMDJkaCJ9.z3ZnN8MWLZo5F8KbrjYYlw";
@@ -22,7 +22,7 @@ const MAX_BOUNDS = [
 const setupMapClustering = (
   map: mapboxgl.Map,
   pointsData: GeoJSON.FeatureCollection,
-  setPopoverInfo: (info: any) => void,
+  setPopoverInfo: (info: any) => void
 ) => {
   map.addSource("points", {
     type: "geojson",
@@ -41,11 +41,11 @@ const setupMapClustering = (
       "circle-color": [
         "step",
         ["get", "point_count"],
-        "#51bbd6",
+        "#ffffff",
         5,
-        "#f1f075",
+        "#ffffff",
         10,
-        "#f28cb1",
+        "#ffffff",
       ],
       "circle-radius": ["step", ["get", "point_count"], 20, 5, 25, 10, 30],
     },
@@ -59,7 +59,7 @@ const setupMapClustering = (
     layout: {
       "text-field": "{point_count_abbreviated}",
       "text-font": ["DIN Offc Pro Medium", "Arial Unicode MS Bold"],
-      "text-size": 12,
+      "text-size": 15,
     },
   });
 
@@ -69,8 +69,8 @@ const setupMapClustering = (
     source: "points",
     filter: ["!", ["has", "point_count"]],
     paint: {
-      "circle-color": "#11b4da",
-      "circle-radius": 6,
+      "circle-color": "#fff",
+      "circle-radius": 20,
       "circle-stroke-width": 1,
       "circle-stroke-color": "#fff",
     },
@@ -86,7 +86,7 @@ const setupMapClustering = (
       features[0].geometry.type === "Point"
         ? ((features[0].geometry as GeoJSON.Point).coordinates.slice() as [
             number,
-            number,
+            number
           ])
         : DEFAULT_CENTER;
 
@@ -96,12 +96,10 @@ const setupMapClustering = (
       ).getClusterExpansionZoom(clusterId, (err, zoom) => {
         if (err) return;
         const newZoom = zoom ?? map.getZoom() + 1;
-
-        // Center the map on the clicked cluster when zooming in
         map.easeTo({
           center: coordinates,
           zoom: newZoom,
-          duration: 500, // Animation duration in milliseconds
+          duration: 500, 
         });
       });
     }
@@ -114,7 +112,6 @@ const setupMapClustering = (
       const coordinates = geometry.coordinates;
       const properties = e.features![0].properties || {};
 
-      // Use the actual properties from the feature
       setPopoverInfo({
         title: properties.name || "Store",
         description: properties.description || "Store description.",
@@ -135,7 +132,6 @@ const setupMapClustering = (
     }
   });
 
-  // Improve cursor interaction feedback
   map.on("mouseenter", "clusters", () => {
     map.getCanvas().style.cursor = "pointer";
   });
@@ -164,6 +160,7 @@ const Map = () => {
     id: "",
     visible: false,
     location: "",
+    city: "",
   });
 
   const handleZoomIn = () => map.current?.zoomIn();
@@ -268,83 +265,7 @@ const Map = () => {
         }}
       />
 
-      {popoverInfo.visible && (
-        <Paper
-          elevation={3}
-          sx={{
-            position: "absolute",
-            left: "20px",
-            top: "20px",
-            width: "350px",
-            maxWidth: "90%",
-            zIndex: 1000,
-            overflow: "hidden",
-            borderRadius: "4px",
-            pointerEvents: "auto",
-          }}
-        >
-          <Box sx={{ position: "relative" }}>
-            <img
-              src={popoverInfo.imageUrl}
-              alt={popoverInfo.title}
-              style={{
-                width: "100%",
-                height: "200px",
-                objectFit: "cover",
-              }}
-            />
-            <Button
-              size="small"
-              sx={{
-                position: "absolute",
-                top: "10px",
-                right: "10px",
-                minWidth: "30px",
-                width: "30px",
-                height: "30px",
-                padding: 0,
-                backgroundColor: "white",
-                color: "black",
-                "&:hover": {
-                  backgroundColor: "#f5f5f5",
-                },
-              }}
-              onClick={handleClosePopover}
-            >
-              <CloseIcon fontSize="small" />
-            </Button>
-          </Box>
-
-          <Box sx={{ p: 2 }}>
-            <Typography variant="h5" component="h2" sx={{ fontWeight: "bold" }}>
-              {popoverInfo.city}
-            </Typography>
-            <Typography variant="body1" sx={{ mb: 2 }}>
-              {popoverInfo.address}
-            </Typography>
-            <Typography variant="body2" sx={{ color: "gray" }}>
-              Address: {popoverInfo.address}
-            </Typography>
-            <Typography variant="body2" sx={{ color: "gray" }}>
-              Phone: {popoverInfo.phone}
-            </Typography>
-            <Typography variant="body2" sx={{ color: "gray", mb: 2 }}>
-              Email: {popoverInfo.email}
-            </Typography>
-
-            <Button
-              variant="contained"
-              fullWidth
-              sx={{
-                mt: 3,
-                mb: 1,
-              }}
-            >
-              Időpont foglalása
-            </Button>
-          </Box>
-        </Paper>
-      )}
+      <Popover popoverInfo={popoverInfo} handleClose={handleClosePopover} />
 
       <Box
         sx={{
