@@ -3,28 +3,42 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import GooglePlacesAutocomplete from "react-google-places-autocomplete";
 import { TextField } from "@mui/material";
-import { axiosInstance } from "../../utils/axiosInstance";
 
 const GOOGLE_MAPS_API_KEY = "AIzaSyCSJN2Qzyjhv-AFd1I2LVLD30hX7-lZhRE";
 
-export const StoreInformationSection = () => {
+interface StoreInformationProps {
+  onStoreInfoChange: (
+    name: string,
+    phone: string,
+    email: string,
+    location: any,
+  ) => void;
+}
+
+export const StoreInformationSection = ({
+  onStoreInfoChange,
+}: StoreInformationProps) => {
   const [storeName, setStoreName] = useState("");
   const [storePhone, setStorePhone] = useState("");
   const [storeEmail, setStoreEmail] = useState("");
   const [location, setLocation] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setStoreName(e.target.value);
+    const name = e.target.value;
+    setStoreName(name);
+    onStoreInfoChange(name, storePhone, storeEmail, location); // Send updated info to parent
   };
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setStorePhone(e.target.value);
+    const phone = e.target.value;
+    setStorePhone(phone);
+    onStoreInfoChange(storeName, phone, storeEmail, location); // Send updated info to parent
   };
 
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setStoreEmail(e.target.value);
+    const email = e.target.value;
+    setStoreEmail(email);
+    onStoreInfoChange(storeName, storePhone, email, location); // Send updated info to parent
   };
 
   const customStyles = {
@@ -127,7 +141,10 @@ export const StoreInformationSection = () => {
             apiKey={GOOGLE_MAPS_API_KEY}
             selectProps={{
               placeholder: "Cím keresése",
-              onChange: (value) => setLocation(value),
+              onChange: (value) => {
+                setLocation(value);
+                onStoreInfoChange(storeName, storePhone, storeEmail, value); // Send updated info to parent
+              },
               value: location,
               noOptionsMessage: () => "Nincs találat",
               loadingMessage: () => "Keresés folyamatban...",
@@ -182,11 +199,6 @@ export const StoreInformationSection = () => {
           sx={{ borderRadius: "8px" }}
         />
       </Box>
-
-      {/* Error Message */}
-      {error && (
-        <Typography sx={{ color: "red", marginTop: 2 }}>{error}</Typography>
-      )}
     </Box>
   );
 };

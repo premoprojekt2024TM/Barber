@@ -2,7 +2,7 @@ import { FastifyInstance, FastifyReply } from "fastify";
 import {
   createStore,
   getAllStores,
-  addStoreWorker,
+  getStoreById,
 } from "../controllers/storeController";
 import { RateLimiterMemory } from "rate-limiter-flexible";
 import { authenticateJwt } from "../middlewares/authMiddleware";
@@ -12,7 +12,7 @@ export const storeRoutes = async (fastify: FastifyInstance) => {
     points: 100,
     duration: 10 * 60,
   });
-
+  fastify.get("/store/:storeId", getStoreById);
   fastify.get("/Store", getAllStores);
   fastify.post(
     "/createStore",
@@ -27,10 +27,5 @@ export const storeRoutes = async (fastify: FastifyInstance) => {
           .send({ message: "Too many requests, please try again later." });
       }
     },
-  );
-  fastify.post(
-    "/addStoreWorker",
-    { preHandler: authenticateJwt },
-    addStoreWorker,
   );
 };

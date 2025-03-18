@@ -10,6 +10,7 @@ import { friendRoutes } from "./routes/friendRoutes";
 import { storeRoutes } from "./routes/storeRoutes";
 import { availRoutes } from "./routes/availRoutes";
 import { appointmentRoutes } from "./routes/appointmentRoutes";
+import fastifyMultipart from "fastify-multipart";
 
 dotenv.config();
 

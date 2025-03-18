@@ -18,12 +18,15 @@ interface SelectedWorker {
   profilePic: string | null;
 }
 
-// Define the API response type
 interface FriendsResponse {
   friends: Friend[];
 }
 
-export const AddWorker = () => {
+interface AddWorkerProps {
+  onWorkerSelect: (workerId: number) => void; // Callback to pass the selected worker's ID
+}
+
+export const AddWorker = ({ onWorkerSelect }: AddWorkerProps) => {
   const [selectedWorkers, setSelectedWorkers] = useState<
     (SelectedWorker | null)[]
   >(Array(4).fill(null));
@@ -66,17 +69,16 @@ export const AddWorker = () => {
       setAvailableFriends(
         availableFriends.filter((f) => f.userId !== friend.userId),
       );
+      onWorkerSelect(friend.userId); // Notify the parent with the worker ID
     } else if (activeIndex !== null) {
       const previousWorker = selectedWorkers[activeIndex];
       updatedWorkers[activeIndex] = friend;
       setSelectedWorkers(updatedWorkers);
 
-      // Remove the selected friend from available friends
       const newAvailableFriends = availableFriends.filter(
         (f) => f.userId !== friend.userId,
       );
 
-      // Add back the previously selected worker if it's not null
       if (previousWorker) {
         newAvailableFriends.push({
           userId: previousWorker.userId,
@@ -209,9 +211,7 @@ export const AddWorker = () => {
                   opacity: 0,
                   transition: "opacity 0.2s ease",
                 }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                }}
+                onClick={(e) => e.stopPropagation()}
               >
                 <IconButton
                   onClick={(e) => {
@@ -221,9 +221,7 @@ export const AddWorker = () => {
                   sx={{
                     color: "white",
                     fontSize: { xs: 22, sm: 28 },
-                    "&:hover": {
-                      backgroundColor: "rgba(255, 255, 255, 0.2)",
-                    },
+                    "&:hover": { backgroundColor: "rgba(255, 255, 255, 0.2)" },
                   }}
                 >
                   <CloseIcon fontSize="inherit" />

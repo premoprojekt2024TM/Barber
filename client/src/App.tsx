@@ -13,7 +13,12 @@ import {
   isWorkerAuthenticated,
 } from "./utils/axiosInstance";
 
-const WorkerRoute = ({ children }) => {
+// Typing the WorkerRoute component using a regular function
+interface WorkerRouteProps {
+  children: React.ReactNode;
+}
+
+function WorkerRoute({ children }: WorkerRouteProps) {
   const isWorker = isWorkerAuthenticated();
 
   if (!isWorker) {
@@ -22,35 +27,42 @@ const WorkerRoute = ({ children }) => {
     );
   }
 
-  return children;
-};
+  return <>{children}</>;
+}
 
-const ClientRoute = ({ children }) => {
+// Typing the ClientRoute component using a regular function
+interface ClientRouteProps {
+  children: React.ReactNode;
+}
+
+function ClientRoute({ children }: ClientRouteProps) {
   const isClient = isClientAuthenticated();
 
   if (!isClient) {
-    // Redirect to login with a message
     return (
       <Navigate to="/login" state={{ message: "Client access required" }} />
     );
   }
 
-  return children;
-};
+  return <>{children}</>;
+}
 
-// Protected route for any authenticated user
-const AuthRoute = ({ children }) => {
+// Typing the AuthRoute component using a regular function
+interface AuthRouteProps {
+  children: React.ReactNode;
+}
+
+function AuthRoute({ children }: AuthRouteProps) {
   const isAuthenticated = isClientAuthenticated() || isWorkerAuthenticated();
 
   if (!isAuthenticated) {
-    // Redirect to login with a message
     return (
       <Navigate to="/login" state={{ message: "Please login to continue" }} />
     );
   }
 
-  return children;
-};
+  return <>{children}</>;
+}
 
 function App() {
   return (
@@ -70,9 +82,9 @@ function App() {
         <Route
           path="/search"
           element={
-            <WorkerRoute>
+            <ClientRoute>
               <SearchPage />
-            </WorkerRoute>
+            </ClientRoute>
           }
         />
 

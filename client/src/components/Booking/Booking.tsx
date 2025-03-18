@@ -1,5 +1,3 @@
-"use client";
-
 import { useState } from "react";
 import AppTheme from "../../shared-theme/AppTheme";
 import {
@@ -26,7 +24,6 @@ import {
   Phone,
 } from "@mui/icons-material";
 
-// Sample data for service providers
 const serviceProviders = [
   {
     id: 1,
@@ -60,14 +57,13 @@ const serviceProviders = [
   },
 ];
 
-// Sample availability data
 const availabilityData = {
-  Monday: ["9:10", "9:20", "9:40", "10:15", "11:30", "14:00"],
-  Tuesday: ["9:40", "10:30", "11:00", "15:45"],
-  Wednesday: ["9:00", "10:00", "11:00", "13:30", "14:45"],
-  Thursday: ["9:30", "10:45", "12:15", "16:00"],
-  Friday: ["9:15", "10:30", "11:45", "14:30", "15:30"],
-  Saturday: ["10:00", "11:15", "12:30"],
+  Hétfő: ["9:10", "9:20", "9:40", "10:15", "11:30", "14:00"],
+  Kedd: ["9:40", "10:30", "11:00", "15:45"],
+  Szerda: ["9:00", "10:00", "11:00", "13:30", "14:45"],
+  Csütörtök: ["9:30", "10:45", "12:15", "16:00"],
+  Péntek: ["9:15", "10:30", "11:45", "14:30", "15:30"],
+  Szombat: ["10:00", "11:15", "12:30"],
 };
 
 export default function BookingSystem() {
@@ -97,7 +93,6 @@ export default function BookingSystem() {
 
   return (
     <AppTheme>
-      {/* One large Box wrapping the entire content */}
       <Box
         sx={{
           bgcolor: "background.default",
@@ -107,11 +102,9 @@ export default function BookingSystem() {
           justifyContent: "center",
         }}
       >
-        {/* Content wrapped inside a container with max width */}
         <Box sx={{ width: "100%", maxWidth: 1200 }}>
           <Container maxWidth="lg">
             <Grid container spacing={3}>
-              {/* Store Information - Left Side */}
               <Grid item xs={12} md={6}>
                 <Card elevation={2}>
                   <CardMedia
@@ -173,16 +166,14 @@ export default function BookingSystem() {
               <Grid item xs={12} md={6}>
                 <Paper elevation={2} sx={{ p: 3 }}>
                   <Typography variant="h5" gutterBottom>
-                    Book an Appointment
+                    Foglalj időpontot
                   </Typography>
                   <Typography variant="body2" color="text.secondary" paragraph>
-                    Select a specialist to see available time slots
+                    Válasszon egy szakembert az elérhető időpontok
+                    megtekintéséhez
                   </Typography>
 
                   <Box sx={{ mb: 4 }}>
-                    <Typography variant="subtitle2" gutterBottom>
-                      Choose a Specialist
-                    </Typography>
                     <Grid container spacing={2} justifyContent="flex-start">
                       {serviceProviders.map((provider) => (
                         <Grid item key={provider.id}>
@@ -203,12 +194,8 @@ export default function BookingSystem() {
                                 height: 64,
                                 border:
                                   selectedProvider === provider.id
-                                    ? "2px solid #000"
+                                    ? "1px solid #000"
                                     : "1px solid transparent",
-                                transition: "all 0.2s",
-                                "&:hover": {
-                                  borderColor: "rgba(0, 0, 0, 0.2)",
-                                },
                               }}
                             />
                             <Typography
@@ -216,12 +203,6 @@ export default function BookingSystem() {
                               sx={{ mt: 1, fontWeight: 500 }}
                             >
                               {provider.name}
-                            </Typography>
-                            <Typography
-                              variant="caption"
-                              color="text.secondary"
-                            >
-                              {provider.role}
                             </Typography>
                           </Box>
                         </Grid>
@@ -236,8 +217,11 @@ export default function BookingSystem() {
                         sx={{ mb: 2, display: "flex", alignItems: "center" }}
                       >
                         <CalendarMonth fontSize="small" sx={{ mr: 1 }} />
-                        <Typography variant="subtitle2">
-                          Available Time Slots
+                        <Typography
+                          variant="subtitle2"
+                          sx={{ display: "inline-flex" }}
+                        >
+                          Elérhető időpontok
                         </Typography>
                       </Box>
 
@@ -290,14 +274,13 @@ export default function BookingSystem() {
                             fullWidth
                             onClick={handleOpenDialog}
                           >
-                            Book for {selectedDay} at {selectedTime}
+                            Foglalás {selectedDay} {selectedTime}
                           </Button>
                         </Box>
                       )}
                     </>
                   )}
 
-                  {/* Confirmation Dialog */}
                   <Dialog open={openDialog} onClose={handleCloseDialog}>
                     <DialogTitle>Confirm Your Booking</DialogTitle>
                     <DialogContent>

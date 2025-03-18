@@ -4,22 +4,47 @@ import { IconButton } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 
-export const AddImage = () => {
-  const [file, setFile] = useState<string | null>(null);
+interface AddImageProps {
+  onImageChange: (
+    base64Image: string | null,
+    previewUrl: string | null,
+  ) => void;
+}
+
+export const AddImage: React.FC<AddImageProps> = ({ onImageChange }) => {
+  const [filePreview, setFilePreview] = useState<string | null>(null);
   const [isUploaded, setIsUploaded] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const convertToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const uploadedFile = e.target.files?.[0];
     if (uploadedFile) {
-      setFile(URL.createObjectURL(uploadedFile));
-      setIsUploaded(true);
+      try {
+        const fileUrl = URL.createObjectURL(uploadedFile);
+        const base64String = await convertToBase64(uploadedFile);
+
+        setFilePreview(fileUrl);
+        setIsUploaded(true);
+        onImageChange(base64String, fileUrl); // Pass base64 string and URL to parent
+      } catch (error) {
+        console.error("Error converting file to base64:", error);
+      }
     }
   };
 
   const handleDelete = () => {
-    setFile(null);
+    setFilePreview(null);
     setIsUploaded(false);
+    onImageChange(null, null); // Notify parent when image is deleted
   };
 
   return (
@@ -64,7 +89,7 @@ export const AddImage = () => {
         }}
         onClick={() => !isUploaded && fileInputRef.current?.click()}
       >
-        {!file && (
+        {!filePreview && (
           <AddIcon
             sx={{
               fontSize: 100,
@@ -84,7 +109,7 @@ export const AddImage = () => {
           disabled={isUploaded}
         />
 
-        {file && (
+        {filePreview && (
           <Box
             sx={{
               position: "absolute",
@@ -92,7 +117,7 @@ export const AddImage = () => {
               left: 0,
               right: 0,
               bottom: 0,
-              backgroundImage: `url(${file})`,
+              backgroundImage: `url(${filePreview})`,
               backgroundSize: "cover",
               backgroundPosition: "center",
               borderRadius: "8px",

@@ -51,14 +51,6 @@ export const loginSchema = z.object({
   password: z.string().min(6, "Password should be at least 6 characters long"),
 });
 
-export const addStoreWorkerSchema = z.object({
-  storeId: z.number().int().min(1, "Store ID must be a valid positive integer"),
-  workerId: z
-    .number()
-    .int()
-    .min(1, "Worker ID must be a valid positive integer"),
-});
-
 export const updateSchema = z.object({
   username: z
     .string()
@@ -72,61 +64,28 @@ export const updateSchema = z.object({
     .optional(),
 });
 
-export const storeSchema = z
-  .object({
-    name: z
-      .string()
-      .min(3, "Store name should be at least 3 characters long")
-      .max(100, "Store name should be at most 100 characters long"),
+export const storeSchema = z.object({
+  name: z
+    .string()
+    .min(3, "Store name should be at least 3 characters long")
+    .max(100, "Store name should be at most 100 characters long"),
 
-    description: z
-      .string()
-      .min(10, "Description should be at least 10 characters long")
-      .max(500, "Description should be at most 500 characters long"),
+  workerId: z
+    .number()
+    .int()
+    .min(1, "Worker ID must be a valid positive integer"),
 
-    address: z
-      .string()
-      .min(3, "Address should be at least 3 characters long")
-      .max(100, "Address should be at most 100 characters long"),
+  address: z
+    .string()
+    .min(3, "Address should be at least 3 characters long")
+    .max(100, "Address should be at most 100 characters long"),
 
-    city: z
-      .string()
-      .min(3, "City should be at least 3 characters long")
-      .max(50, "City should be at most 50 characters long"),
+  phone: z
+    .string()
+    .min(10, "Phone number should be at least 10 characters long")
+    .max(15, "Phone number should be at most 15 characters long"),
 
-    postalCode: z.string().refine((val) => postalCodes.includes(val), {
-      message: "Invalid postal code",
-    }),
+  email: z.string().email("Invalid email format"),
 
-    phone: z
-      .string()
-      .min(10, "Phone number should be at least 10 characters long")
-      .max(15, "Phone number should be at most 15 characters long"),
-
-    email: z.string().email("Invalid email format"),
-
-    images: z
-      .array(z.string().url("Invalid image URL"))
-      .min(1, "At least one image URL is required"),
-  })
-  .superRefine((data, ctx) => {
-    const { postalCode, city } = data;
-
-    const expectedCity = postalCodeToPlaceName[postalCode];
-    if (expectedCity && expectedCity !== city) {
-      ctx.addIssue({
-        path: ["postalCode"],
-        message: `Postal code ${postalCode} does not correspond to the city ${city}`,
-        code: z.ZodIssueCode.custom,
-      });
-    }
-
-    const expectedPostalCode = placeNameToPostalCode[city];
-    if (expectedPostalCode && expectedPostalCode !== postalCode) {
-      ctx.addIssue({
-        path: ["city"],
-        message: `City ${city} does not correspond to the postal code ${postalCode}`,
-        code: z.ZodIssueCode.custom,
-      });
-    }
-  });
+  picture: z.string(),
+});

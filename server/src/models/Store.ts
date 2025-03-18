@@ -33,7 +33,7 @@ export class Store {
   @Column({ type: "float" })
   longitude!: number;
 
-  @Column()
+  @Column({ nullable: true })
   picture?: string;
 
   @OneToMany(() => StoreWorker, (storeWorker) => storeWorker.store)

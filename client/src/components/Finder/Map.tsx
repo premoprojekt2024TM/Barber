@@ -1,16 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
-import { Button, Box, Container } from "@mui/material";
-import AddIcon from "@mui/icons-material/Add";
-import RemoveIcon from "@mui/icons-material/Remove";
+import { Box, Container } from "@mui/material";
 import { hungarianPoints } from "./cities";
 import Popover from "./Popover";
+import ZoomControls from "./ZoomControls";
 
 const MAPBOX_TOKEN =
   "pk.eyJ1IjoibWFyY2VsbHRlbWxlaXRuZXIiLCJhIjoiY201MWVycDVtMW52ZTJpcXc5aGJpMDJkaCJ9.z3ZnN8MWLZo5F8KbrjYYlw";
 const STYLE_URL = `https://api.mapbox.com/styles/v1/marcelltemleitner/cm51gxg7l00cb01qyhqgdd01i?access_token=${MAPBOX_TOKEN}`;
-
 const DEFAULT_CENTER = [19.513, 47] as [number, number];
 const DEFAULT_ZOOM = 12;
 const MIN_ZOOM = 6;
@@ -22,7 +20,7 @@ const MAX_BOUNDS = [
 const setupMapClustering = (
   map: mapboxgl.Map,
   pointsData: GeoJSON.FeatureCollection,
-  setPopoverInfo: (info: any) => void
+  setPopoverInfo: (info: any) => void,
 ) => {
   map.addSource("points", {
     type: "geojson",
@@ -84,10 +82,7 @@ const setupMapClustering = (
 
     const coordinates =
       features[0].geometry.type === "Point"
-        ? ((features[0].geometry as GeoJSON.Point).coordinates.slice() as [
-            number,
-            number
-          ])
+        ? (features[0].geometry as GeoJSON.Point).coordinates.slice()
         : DEFAULT_CENTER;
 
     if (clusterId) {
@@ -96,22 +91,16 @@ const setupMapClustering = (
       ).getClusterExpansionZoom(clusterId, (err, zoom) => {
         if (err) return;
         const newZoom = zoom ?? map.getZoom() + 1;
-        map.easeTo({
-          center: coordinates,
-          zoom: newZoom,
-          duration: 500, 
-        });
+        map.easeTo({ center: coordinates, zoom: newZoom, duration: 500 });
       });
     }
   });
 
   map.on("click", "unclustered-point", (e) => {
     const geometry = e.features![0].geometry;
-
     if (geometry.type === "Point") {
       const coordinates = geometry.coordinates;
       const properties = e.features![0].properties || {};
-
       setPopoverInfo({
         title: properties.name || "Store",
         description: properties.description || "Store description.",
@@ -166,24 +155,17 @@ const Map = () => {
   const handleZoomIn = () => map.current?.zoomIn();
   const handleZoomOut = () => map.current?.zoomOut();
   const handleReset = () => {
-    map.current?.fitBounds(MAX_BOUNDS, {
-      padding: 50,
-      animate: true,
-    });
+    map.current?.fitBounds(MAX_BOUNDS, { padding: 50, animate: true });
   };
 
   const handleClosePopover = () => {
-    setPopoverInfo({
-      ...popoverInfo,
-      visible: false,
-    });
+    setPopoverInfo({ ...popoverInfo, visible: false });
   };
 
   useEffect(() => {
     if (!mapContainer.current) return;
 
     mapboxgl.accessToken = MAPBOX_TOKEN;
-
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: STYLE_URL,
@@ -212,36 +194,6 @@ const Map = () => {
     };
   }, []);
 
-  const buttons = [
-    <Button
-      key="zoomIn"
-      variant="contained"
-      color="primary"
-      onClick={handleZoomIn}
-      sx={{ minWidth: "25px", height: "30px", padding: "0 5px" }}
-    >
-      <AddIcon fontSize="small" />
-    </Button>,
-    <Button
-      key="zoomOut"
-      variant="contained"
-      color="primary"
-      onClick={handleZoomOut}
-      sx={{ minWidth: "25px", height: "30px", padding: "0 5px" }}
-    >
-      <RemoveIcon fontSize="small" />
-    </Button>,
-    <Button
-      key="reset"
-      variant="contained"
-      color="primary"
-      onClick={handleReset}
-      sx={{ minWidth: "25px", height: "30px", padding: "0 5px" }}
-    >
-      Reset
-    </Button>,
-  ];
-
   return (
     <Container
       sx={{
@@ -264,9 +216,7 @@ const Map = () => {
           bottom: 0,
         }}
       />
-
       <Popover popoverInfo={popoverInfo} handleClose={handleClosePopover} />
-
       <Box
         sx={{
           position: "absolute",
@@ -278,7 +228,11 @@ const Map = () => {
           gap: "8px",
         }}
       >
-        {buttons}
+        <ZoomControls
+          onZoomIn={handleZoomIn}
+          onZoomOut={handleZoomOut}
+          onReset={handleReset}
+        />
       </Box>
     </Container>
   );
