@@ -1,6 +1,4 @@
-import { CssBaseline, Box, Stack } from "@mui/material";
-import AppNavbar from "../Shared/AppNavbar";
-import Header from "../Shared/Header";
+import { CssBaseline, Box } from "@mui/material";
 import FinderGrid from "./FinderPage";
 import AppTheme from "../../shared-theme/AppTheme";
 

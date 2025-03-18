@@ -15,7 +15,6 @@ import {
   ListItemIcon,
   ListItemText,
 } from "@mui/material";
-import Logo from "./MainPagePictures/logo-icon.svg";
 import { Link as RouterLink } from "react-router-dom";
 import MenuIcon from "@mui/icons-material/Menu";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
@@ -26,6 +25,9 @@ import {
   isClientAuthenticated,
   getInfoFromToken,
 } from "../../utils/axiosInstance";
+
+const logoUrl =
+  "https://10barberimages.s3.eu-north-1.amazonaws.com/Static/logocircle.svg";
 
 interface UserInfo {
   userId: string | null;
@@ -95,7 +97,7 @@ export default function AppAppBar() {
 
   React.useEffect(() => {
     const userInformation = getInfoFromToken();
-    setUserInfo(userInformation); // userInfo will either be null or an object that matches UserInfo
+    setUserInfo(userInformation);
   }, []);
 
   return (
@@ -127,7 +129,7 @@ export default function AppAppBar() {
                   },
                 }}
               >
-                <StyledLogo src={Logo} alt="Logo" />
+                <StyledLogo src={logoUrl} alt="Logo" />
               </Button>
             </Link>
             <Box

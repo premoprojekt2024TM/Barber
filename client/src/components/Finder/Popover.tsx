@@ -1,5 +1,6 @@
 import { Paper, Box, Typography, Button } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
+import { useNavigate } from "react-router-dom";
 
 interface PopoverProps {
   popoverInfo: {
@@ -8,8 +9,8 @@ interface PopoverProps {
     address: string;
     phone: string;
     email: string;
-    imageUrl: string;
-    id: string;
+    picture: string;
+    storeId: string;
     visible: boolean;
     location: string;
     city: string;
@@ -18,7 +19,14 @@ interface PopoverProps {
 }
 
 function Popover({ popoverInfo, handleClose }: PopoverProps) {
+  const navigate = useNavigate();
+
   if (!popoverInfo.visible) return null;
+
+  const handleBookAppointment = () => {
+    // Navigate to booking page with storeId
+    navigate(`/booking/${popoverInfo.storeId}`);
+  };
 
   return (
     <Paper
@@ -37,7 +45,7 @@ function Popover({ popoverInfo, handleClose }: PopoverProps) {
     >
       <Box sx={{ position: "relative" }}>
         <img
-          src={popoverInfo.imageUrl}
+          src={popoverInfo.picture}
           alt={popoverInfo.title}
           style={{
             width: "100%",
@@ -91,6 +99,7 @@ function Popover({ popoverInfo, handleClose }: PopoverProps) {
             mt: 3,
             mb: 1,
           }}
+          onClick={handleBookAppointment}
         >
           Időpont foglalása
         </Button>

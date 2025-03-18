@@ -1,7 +1,7 @@
 import { axiosInstance } from "../../utils/axiosInstance";
 
 interface Store {
-  storeId: number;
+  storeId: string;
   name: string;
   description: string;
   address: string;
@@ -32,13 +32,13 @@ async function fetchStoreData(): Promise<void> {
         return {
           type: "Feature",
           properties: {
-            id: store.storeId, // Store ID
+            storeId: store.storeId, // Store ID
             title: store.name, // Store name
             city: store.city, // City// Description
             address: store.address, // Address
             phone: store.phone, // Phone number
             email: store.email, // Email address
-            pictureUrl: store.picture, // Store picture URL
+            picture: store.picture, // Store picture URL
             location: `${store.latitude.toFixed(4)}, ${store.longitude.toFixed(4)}`, // Location
           },
           geometry: {

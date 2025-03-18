@@ -108,13 +108,8 @@ const setupMapClustering = (
         phone: properties.phone || "No phone",
         email: properties.email || "No email",
         city: properties.city || "No city",
-        imageUrl:
-          properties.picture ||
-          "https://api.bwnet.hu/media/salons/2215/header/62ce959d1cd4c.jpg",
-        id:
-          properties.storeId ||
-          e.features![0].id ||
-          Math.random().toString(36).substring(2, 9),
+        picture: properties.picture || "No city",
+        storeId: properties.storeId || "No Id",
         visible: true,
         location: `${coordinates[1].toFixed(4)}, ${coordinates[0].toFixed(4)}`,
       });
@@ -145,8 +140,8 @@ const Map = () => {
     address: "",
     phone: "",
     email: "",
-    imageUrl: "https://api.bwnet.hu/media/salons/2215/header/62ce959d1cd4c.jpg",
-    id: "",
+    picture: "",
+    storeId: "",
     visible: false,
     location: "",
     city: "",

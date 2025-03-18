@@ -5,39 +5,9 @@ import { AuthenticatedRequest, GetStoreId } from "../interfaces/interfaces";
 import { storeSchema } from "../shared/validation/userValidation";
 import axios from "axios";
 import * as dotenv from "dotenv";
-import AWS from "aws-sdk";
+import { uploadStoreImage } from "../config/awsconfig";
 
-const s3 = new AWS.S3({});
-
-const BUCKET_NAME = ;
-
-const uploadBase64ImageToS3 = async (
-  base64Image: string,
-  filename: string,
-  contentType: string,
-): Promise<string> => {
-  // Remove data URL prefix if present
-  const base64Data = base64Image.replace(/^data:image\/\w+;base64,/, "");
-
-  // Convert base64 to buffer
-  const buffer = Buffer.from(base64Data, "base64");
-
-  const params = {
-    Bucket: BUCKET_NAME,
-    Key: `${Date.now()}-${filename}`, // The file name in S3
-    Body: buffer,
-    ContentType: contentType,
-    ACL: "public-read", // Publicly accessible
-  };
-
-  try {
-    const data = await s3.upload(params).promise();
-    return data.Location; // Returns the URL of the uploaded image
-  } catch (error) {
-    console.error("Error uploading image to S3:", error);
-    throw new Error("Image upload failed");
-  }
-};
+dotenv.config();
 
 export const createStore = async (
   request: AuthenticatedRequest,
@@ -66,7 +36,6 @@ export const createStore = async (
       return reply.status(404).send({ message: "User not found" });
     }
 
-    // Check if the creator already owns a store
     const existingOwnerStore = await AppDataSource.getRepository(
       model.StoreWorker,
     ).findOne({
@@ -90,10 +59,9 @@ export const createStore = async (
 
     let pictureUrl = undefined;
     if (image) {
-      // Parse image data to get content type
       const contentType =
         image.match(/^data:([A-Za-z-+\/]+);base64,/)?.[1] || "image/jpeg";
-      pictureUrl = await uploadBase64ImageToS3(
+      pictureUrl = await uploadStoreImage(
         image,
         "store-image.jpg",
         contentType,
@@ -186,8 +154,8 @@ const geocodeAddress = async (
   country: string;
 } | null> => {
   try {
-    // Hardcoded Google Maps API key
-    const apiKey = "AIzaSyCSJN2Qzyjhv-AFd1I2LVLD30hX7-lZhRE";
+    // Use API key from environment variables
+    const apiKey = process.env.GOOGLE_MAPS_API_KEY;
     const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${apiKey}`;
 
     const response = await axios.get(geocodeUrl);
@@ -281,6 +249,9 @@ export const getStoreById = async (
       return {
         workerId: user.userId,
         workerName: user.username,
+        workerImage: user.profilePic,
+        WorkerLastName: user.lastName,
+        WorkerFirstName: user.firstName,
         availability: availabilityTimes.map((availability) => ({
           day: availability.day,
           timeSlot: availability.timeSlot,
@@ -299,6 +270,7 @@ export const getStoreById = async (
         postalCode: store.postalCode,
         phone: store.phone,
         email: store.email,
+        picture: store.picture,
         workers: workersWithAvailability,
       },
     });

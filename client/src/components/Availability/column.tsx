@@ -48,7 +48,9 @@ export const Column = React.forwardRef<HTMLDivElement, ColumnProps>(
     const todos = useTodos((store) => store.todos[variant]);
     const [isAddingTodo, setIsAddingTodo] = React.useState(false);
 
-    const { control, handleSubmit, reset, formState, setFocus } = useForm<z.infer<typeof formSchema>>({
+    const { control, handleSubmit, reset, formState, setFocus } = useForm<
+      z.infer<typeof formSchema>
+    >({
       resolver: zodResolver(formSchema),
       defaultValues: { task: "" },
     });
@@ -110,12 +112,22 @@ export const Column = React.forwardRef<HTMLDivElement, ColumnProps>(
               }}
             >
               {todos.map((task, index) => (
-                <Task index={index} key={task.id} id={task.id} state={variant} />
+                <Task
+                  index={index}
+                  key={task.id}
+                  id={task.id}
+                  state={variant}
+                />
               ))}
               {provided.placeholder}
 
               {variant !== "done" && (
-                <div style={{ padding: "1rem", display: isAddingTodo ? "block" : "none" }}>
+                <div
+                  style={{
+                    padding: "1rem",
+                    display: isAddingTodo ? "block" : "none",
+                  }}
+                >
                   <form
                     onSubmit={handleSubmit(onSubmit)}
                     onBlur={() => setIsAddingTodo(false)}
@@ -157,7 +169,7 @@ export const Column = React.forwardRef<HTMLDivElement, ColumnProps>(
         </Droppable>
       </Card>
     );
-  }
+  },
 );
 
 export const ColumnMemo = React.memo(Column);

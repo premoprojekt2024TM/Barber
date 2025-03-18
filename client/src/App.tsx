@@ -98,7 +98,7 @@ function App() {
           }
         />
 
-        <Route path="/booking" element={<BookingSystem />} />
+        <Route path="/booking/:storeId" element={<BookingSystem />} />
 
         <Route path="/finder" element={<Finder />} />
 
