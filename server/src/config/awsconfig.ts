@@ -12,7 +12,7 @@ export const BUCKET_NAME = process.env.AWS_BUCKET_NAME;
 
 if (!BUCKET_NAME) {
   throw new Error(
-    "AWS_BUCKET_NAME is not defined in the environment variables",
+    "AWS_BUCKET_NAME nincs definiálva",
   );
 }
 
@@ -40,7 +40,6 @@ export const uploadStoreImage = async (
     const data = await s3.upload(params).promise();
     return data.Location;
   } catch (error) {
-    console.error("Error uploading image to S3:", error);
     throw new Error("Image upload failed");
   }
 };
