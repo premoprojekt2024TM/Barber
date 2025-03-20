@@ -1,55 +1,9 @@
 import { nanoid } from "nanoid";
 import { create } from "zustand";
-import { TaskVariant } from "./types";
+import { TodoStore, AvailabilityResponse, CreateAvailabilityResponse, Todos } from "../Types/type";
 import { persist } from "zustand/middleware";
-import { axiosInstance } from "../../utils/axiosInstance"; // Importing your axios instance
+import { axiosInstance } from "../../utils/axiosInstance"; 
 
-interface Task {
-  title: string;
-  state: TaskVariant | string;
-  id: string;
-  order: number;
-}
-
-interface Todos {
-  [category: string]: Task[];
-}
-
-// Define API response structure
-interface AvailabilityResponse {
-  message: string;
-  availability: {
-    [day: string]: string[];
-  };
-}
-
-interface CreateAvailabilityResponse {
-  message: string;
-  appointment?: any;
-}
-
-type TodoStore = {
-  todos: Todos;
-  counter: number;
-  loading: boolean;
-  error: string | null;
-  setCounter: (id: string, newOrder: number) => void;
-  resetCounter: (counter: number) => void;
-  fetchAvailability: () => Promise<void>;
-  addTodos: (title: string, state: TaskVariant) => void;
-  deleteTodos: (id: string, state: TaskVariant) => void;
-  editTodo: (taskId: string, newTitle: string) => void;
-  moveTaskBetweenCategories: (
-    taskId: string,
-    sourceCategory: string,
-    targetCategory: string,
-    targetIndex: number,
-  ) => void;
-  saveAvailability: () => Promise<void>;
-  createAvailability: () => Promise<CreateAvailabilityResponse>;
-};
-
-// Define the store
 const useTodos = create<TodoStore>()(
   persist(
     (set, get) => ({
@@ -67,15 +21,14 @@ const useTodos = create<TodoStore>()(
       loading: false,
       error: null,
 
-      resetCounter: (counter) => set({ counter }),
+      resetCounter: (counter: number) => set({ counter }),
 
-      setCounter: (id, newOrder) => {
+      setCounter: (id: string, newOrder: number) => {
         set((store) => {
           const { todos } = store;
           for (const category in todos) {
             const tasks = todos[category];
             const taskToEdit = tasks.find((task) => task.id === id);
-            // If the task is found, update its order and break out of the loop
             if (taskToEdit) {
               taskToEdit.order = newOrder;
               break;
@@ -88,12 +41,9 @@ const useTodos = create<TodoStore>()(
       fetchAvailability: async () => {
         set({ loading: true, error: null });
         try {
-          const response = await axiosInstance.get<AvailabilityResponse>(
-            "/api/v1/getMyAvailability",
-          );
+          const response = await axiosInstance.get<AvailabilityResponse>("/api/v1/getMyAvailability");
           const availabilityData = response.data.availability;
 
-          // Initialize new todos object
           const newTodos: Todos = {
             done: [],
             monday: [],
@@ -105,18 +55,15 @@ const useTodos = create<TodoStore>()(
             sunday: [],
           };
 
-          // Convert API data to our task format
           let counter = 1;
           for (const day in availabilityData) {
             if (availabilityData[day] && Array.isArray(availabilityData[day])) {
-              newTodos[day.toLowerCase()] = availabilityData[day].map(
-                (time: string) => ({
-                  id: nanoid(),
-                  title: time,
-                  state: day.toLowerCase(),
-                  order: counter++,
-                }),
-              );
+              newTodos[day.toLowerCase()] = availabilityData[day].map((time: string) => ({
+                id: nanoid(),
+                title: time,
+                state: day.toLowerCase(),
+                order: counter++,
+              }));
             }
           }
 
@@ -127,23 +74,19 @@ const useTodos = create<TodoStore>()(
         }
       },
 
-      addTodos: (title, state) => {
+      addTodos: (title: string, state: keyof Todos) => {
         set((prev) => {
           const newTask = { title, state, id: nanoid(), order: prev.counter++ };
-
-          // Log the new task to the console
-          console.log("New task added:", newTask);
-
           return {
             todos: {
               ...prev.todos,
-              [state]: [...prev.todos[state as keyof Todos], newTask],
+              [state]: [...prev.todos[state], newTask],
             },
           };
         });
       },
 
-      deleteTodos: (id, state) => {
+      deleteTodos: (id: string, state: keyof Todos) => {
         set((prev) => {
           return {
             todos: {
@@ -160,7 +103,6 @@ const useTodos = create<TodoStore>()(
           for (const category in todos) {
             const tasks = todos[category];
             const taskToEdit = tasks.find((task) => task.id === taskId);
-            // If the task is found, update its title and break out of the loop
             if (taskToEdit) {
               taskToEdit.title = newTitle;
               break;
@@ -172,24 +114,17 @@ const useTodos = create<TodoStore>()(
 
       moveTaskBetweenCategories: (
         taskId: string,
-        sourceCategory: string,
-        targetCategory: string,
-        targetIndex: number,
+        sourceCategory: keyof Todos,
+        targetCategory: keyof Todos,
+        targetIndex: number
       ) =>
         set((store: TodoStore) => {
           const { todos } = store;
           const sourceTasks = todos[sourceCategory];
           const targetTasks = todos[targetCategory];
-          const taskToMoveIndex = sourceTasks.findIndex(
-            (task) => task.id === taskId,
-          );
-          if (
-            taskToMoveIndex === -1 ||
-            targetIndex < 0 ||
-            targetIndex > targetTasks.length
-          ) {
-            // Invalid indices or categories, do nothing
-            return store; // Return the original store to avoid the error
+          const taskToMoveIndex = sourceTasks.findIndex((task) => task.id === taskId);
+          if (taskToMoveIndex === -1 || targetIndex < 0 || targetIndex > targetTasks.length) {
+            return store; 
           }
           const taskToMove = sourceTasks.splice(taskToMoveIndex, 1)[0];
           targetTasks.splice(targetIndex, 0, {
@@ -199,36 +134,11 @@ const useTodos = create<TodoStore>()(
           return { todos: { ...todos } };
         }),
 
-      saveAvailability: async () => {
-        set({ loading: true, error: null });
-        try {
-          const { todos } = get();
-
-          // Convert todos to the format expected by the API
-          const availability: Record<string, string[]> = {};
-
-          for (const day in todos) {
-            if (day === "done") continue; // Skip 'done' category
-
-            availability[day] = todos[day].map((task) => task.title);
-          }
-
-          await axiosInstance.post("/api/v1/saveAvailability", {
-            availability,
-          });
-          set({ loading: false });
-        } catch (error) {
-          console.error("Error saving availability:", error);
-          set({ loading: false, error: "Failed to save availability" });
-        }
-      },
-
       createAvailability: async () => {
         set({ loading: true, error: null });
         try {
           const { todos } = get();
 
-          // Create the direct format expected by the API
           const monday = todos.monday.map((task) => task.title);
           const tuesday = todos.tuesday.map((task) => task.title);
           const wednesday = todos.wednesday.map((task) => task.title);
@@ -237,18 +147,15 @@ const useTodos = create<TodoStore>()(
           const saturday = todos.saturday.map((task) => task.title);
           const sunday = todos.sunday.map((task) => task.title);
 
-          const response = await axiosInstance.post<CreateAvailabilityResponse>(
-            "/api/v1/createAvailability",
-            {
-              monday,
-              tuesday,
-              wednesday,
-              thursday,
-              friday,
-              saturday,
-              sunday,
-            },
-          );
+          const response = await axiosInstance.post<CreateAvailabilityResponse>("/api/v1/createAvailability", {
+            monday,
+            tuesday,
+            wednesday,
+            thursday,
+            friday,
+            saturday,
+            sunday,
+          });
 
           console.log("Availability created:", response.data);
           set({ loading: false });
@@ -260,7 +167,7 @@ const useTodos = create<TodoStore>()(
         }
       },
     }),
-    { name: "availability" },
+    { name: "availability" }
   ),
 );
 
