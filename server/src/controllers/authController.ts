@@ -22,7 +22,7 @@ export const registerUser = async (
       .send({ message: "Validation failed", errors: result.error.errors });
   }
 
-  const { username, email, password, role } = result.data;
+  const { username, email, password, role,firstName,lastName } = result.data;
 
   if (role !== "client" && role !== "worker") {
     return reply
@@ -57,6 +57,8 @@ export const registerUser = async (
     newUser.password = hashedPassword;
     newUser.role = role;
     newUser.profilePic = generateProfilepic;
+    newUser.lastName = lastName;
+    newUser.firstName = firstName;
     await AppDataSource.getRepository(model.User).save(newUser);
     return reply.status(201).send({ message: "User created successfully" });
   } catch (error) {

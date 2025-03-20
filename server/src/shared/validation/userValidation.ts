@@ -42,6 +42,8 @@ export const registerSchema = z.object({
     .max(12, "Username should be at most 12 characters long")
     .refine((val) => !/\s/.test(val), "Username should not contain spaces"),
   email: z.string().email("Invalid email format"),
+  firstName: z.string(),
+  lastName: z.string(),
   password: z.string().min(6, "Password should be at least 6 characters long"),
   role: z.enum(["client", "worker"]),
 });

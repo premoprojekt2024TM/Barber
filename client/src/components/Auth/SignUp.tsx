@@ -72,6 +72,8 @@ export default function SignUp() {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [lastName , setlastName] = useState("");
+  const [firstName, setfirstName] = useState("");
   const [role, setRole] = useState<"client" | "hairdresser">("client");
   const [passwordErrorMessage, setPasswordErrorMessage] = useState<string>("");
 
@@ -86,6 +88,8 @@ export default function SignUp() {
       email,
       password,
       role,
+      lastName,
+      firstName
     };
 
     try {
@@ -149,6 +153,37 @@ export default function SignUp() {
                 onChange={(e) => setUsername(e.target.value)}
               />
             </FormControl>
+
+            
+            <FormControl>
+              <FormLabel htmlFor="lastName">Vezetéknév</FormLabel>
+              <TextField
+                name="lastName"
+                required
+                fullWidth
+                id="lastName"
+                placeholder="Vezetéknév"
+                value={lastName}
+                onChange={(e) => setlastName(e.target.value)}
+              />
+            </FormControl>
+
+
+            
+            <FormControl>
+              <FormLabel htmlFor="firstName">Keresztnév</FormLabel>
+              <TextField
+                name="firstName"
+                required
+                fullWidth
+                id="firstName"
+                placeholder="Keresztnév"
+                value={firstName}
+                onChange={(e) => setfirstName(e.target.value)}
+              />
+            </FormControl>
+
+
             <FormControl>
               <FormLabel htmlFor="email">Email</FormLabel>
               <TextField
