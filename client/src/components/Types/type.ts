@@ -45,3 +45,37 @@ export type TodoStore = {
   saveAvailability: () => Promise<void>;
   createAvailability: () => Promise<CreateAvailabilityResponse>;
 };
+
+
+
+export interface Availability {
+  day: string;
+  timeSlot: string;
+  status: string;
+}
+
+export interface Worker {
+  workerId: number;
+  workerName: string;
+  workerImage: string;
+  WorkerFirstName: string;
+  WorkerLastName: string;
+  availability: Availability[];
+}
+
+export interface Store {
+  storeId: number;
+  name: string;
+  address: string;
+  city: string;
+  postalCode: string;
+  phone: string;
+  email: string;
+  picture: string;
+  workers: Worker[];
+}
+
+export interface StoreResponse {
+  message: string;
+  store: Store;
+}

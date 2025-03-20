@@ -22,47 +22,15 @@ import {
 } from "@mui/material";
 import {
   CalendarMonth,
-  AccessTime,
   LocationOn,
   Phone,
   Email,
 } from "@mui/icons-material";
 import { axiosInstance } from "../../utils/axiosInstance";
 
-// Define types for the API response
-interface Availability {
-  day: string;
-  timeSlot: string;
-  status: string;
-}
 
-interface Worker {
-  workerId: number;
-  workerName: string;
-  workerImage: string;
-  WorkerFirstName: string;
-  WorkerLastName: string;
-  availability: Availability[];
-}
+import { Store,StoreResponse } from "../Types/type";
 
-interface Store {
-  storeId: number;
-  name: string;
-  address: string;
-  city: string;
-  postalCode: string;
-  phone: string;
-  email: string;
-  picture: string;
-  workers: Worker[];
-}
-
-interface StoreResponse {
-  message: string;
-  store: Store;
-}
-
-// Day translation mapping
 const dayTranslations: { [key: string]: string } = {
   monday: "Hétfő",
   tuesday: "Kedd",
@@ -74,7 +42,7 @@ const dayTranslations: { [key: string]: string } = {
 };
 
 export default function BookingSystem() {
-  const { storeId } = useParams(); // Move this inside the component function
+  const { storeId } = useParams<{ storeId: string }>();
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [storeData, setStoreData] = useState<Store | null>(null);
@@ -91,31 +59,27 @@ export default function BookingSystem() {
       try {
         setLoading(true);
         const response = await axiosInstance.get<StoreResponse>(
-          `/api/v1/store/${storeId}`,
+          `/api/v1/store/${storeId}`
         );
         setStoreData(response.data.store);
         setError(null);
       } catch (err) {
-        console.error("Error fetching store data:", err);
         setError("Failed to load salon data. Please try again later.");
       } finally {
         setLoading(false);
       }
     };
-
-    // Fetch data only if storeId is present
     if (storeId) {
       fetchStoreData();
     }
-  }, [storeId]); // Add storeId as dependency
+  }, [storeId]);
 
   useEffect(() => {
     if (selectedWorker && storeData) {
       const worker = storeData.workers.find(
-        (w) => w.workerId === selectedWorker,
+        (w) => w.workerId === selectedWorker
       );
       if (worker) {
-        // Organize availability by day
         const availByDay: Record<string, string[]> = {};
 
         worker.availability.forEach((slot) => {
@@ -156,30 +120,12 @@ export default function BookingSystem() {
 
   const handleBooking = async () => {
     try {
-      // Here you would implement the booking API call
-      // Example:
-      /*
-      await axiosInstance.post("/api/v1/booking", {
-        workerId: selectedWorker,
-        day: selectedDay,
-        timeSlot: selectedTime,
-        // Add any other required data
-      });
-      */
-
-      // For now, just close the dialog
+      // Your booking logic goes here
       handleCloseDialog();
-
-      // Reset selection
       setSelectedTime(null);
       setSelectedDay(null);
-
-      // Show success message (you might want to implement this)
-      // setSuccessMessage("Booking confirmed successfully!");
     } catch (err) {
-      console.error("Error making booking:", err);
-      // Handle error (you might want to implement this)
-      // setBookingError("Failed to confirm booking. Please try again.");
+      console.error("Booking error:", err);
     }
   };
 
@@ -308,7 +254,6 @@ export default function BookingSystem() {
                 </Card>
               </Grid>
 
-              {/* Booking Interface - Right Side */}
               <Grid item xs={12} md={6}>
                 <Paper elevation={2} sx={{ p: 3 }}>
                   <Typography variant="h5" gutterBottom>
@@ -340,7 +285,7 @@ export default function BookingSystem() {
                                 height: 64,
                                 border:
                                   selectedWorker === worker.workerId
-                                    ? "2px solid #000"
+                                    ? "1px solid #000"
                                     : "1px solid transparent",
                               }}
                             />
@@ -348,7 +293,7 @@ export default function BookingSystem() {
                               variant="body2"
                               sx={{ mt: 1, fontWeight: 500 }}
                             >
-                              {worker.WorkerFirstName} {worker.WorkerLastName}
+                              {worker.WorkerLastName} {worker.WorkerFirstName}
                             </Typography>
                           </Box>
                         </Grid>
@@ -412,7 +357,7 @@ export default function BookingSystem() {
                                   ))}
                                 </Box>
                               </Box>
-                            ),
+                            )
                           )
                         ) : (
                           <Alert severity="info">
@@ -447,14 +392,12 @@ export default function BookingSystem() {
                           </Grid>
                           <Grid item xs={8}>
                             <Typography variant="body2">
+                              {storeData.workers.find(
+                                (w) => w.workerId === selectedWorker
+                              )?.WorkerFirstName}{" "}
                               {
                                 storeData.workers.find(
-                                  (w) => w.workerId === selectedWorker,
-                                )?.WorkerFirstName
-                              }{" "}
-                              {
-                                storeData.workers.find(
-                                  (w) => w.workerId === selectedWorker,
+                                  (w) => w.workerId === selectedWorker
                                 )?.WorkerLastName
                               }
                             </Typography>

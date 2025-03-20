@@ -18,7 +18,7 @@ const FeatureCards = [
     image:
       "https://10barberimages.s3.eu-north-1.amazonaws.com/Static/Main/Feature2.jpg",
     text: "Térkép",
-    linkGoto: "https://www.example.com",
+    linkGoto: "/finder",
   },
   {
     image:
@@ -206,7 +206,6 @@ export default function Features() {
                       </Typography>
                       <a
                         href={feature.linkGoto}
-                        target="_blank"
                         rel="noopener noreferrer"
                         style={{
                           color: "white",

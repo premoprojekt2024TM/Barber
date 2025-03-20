@@ -5,6 +5,8 @@ import { Box, Container } from "@mui/material";
 import { hungarianPoints } from "./cities";
 import Popover from "./Popover";
 import ZoomControls from "./ZoomControls";
+import BackButton from "./BackButton";  // Import the new BackButton component
+import { useNavigate } from 'react-router-dom';
 
 const MAPBOX_TOKEN =
   "pk.eyJ1IjoibWFyY2VsbHRlbWxlaXRuZXIiLCJhIjoiY201MWVycDVtMW52ZTJpcXc5aGJpMDJkaCJ9.z3ZnN8MWLZo5F8KbrjYYlw";
@@ -147,6 +149,8 @@ const Map = () => {
     city: "",
   });
 
+  const navigate = useNavigate();  // Correctly place the useNavigate hook inside the component
+
   const handleZoomIn = () => map.current?.zoomIn();
   const handleZoomOut = () => map.current?.zoomOut();
   const handleReset = () => {
@@ -155,6 +159,10 @@ const Map = () => {
 
   const handleClosePopover = () => {
     setPopoverInfo({ ...popoverInfo, visible: false });
+  };
+
+  const handleBackButtonClick = () => {
+    navigate(-1); // Navigate to the previous page in the browser history
   };
 
   useEffect(() => {
@@ -215,7 +223,7 @@ const Map = () => {
       <Box
         sx={{
           position: "absolute",
-          top: "20px",
+          top: "20px", // Adjusted to top
           right: "20px",
           zIndex: 1,
           display: "flex",
@@ -228,6 +236,16 @@ const Map = () => {
           onZoomOut={handleZoomOut}
           onReset={handleReset}
         />
+      </Box>
+      <Box
+        sx={{
+          position: "absolute",
+          top: "20px", // Adjusted to top
+          left: "20px",
+          zIndex: 1, // Ensure it's above the map
+        }}
+      >
+        <BackButton onClick={handleBackButtonClick} />
       </Box>
     </Container>
   );
