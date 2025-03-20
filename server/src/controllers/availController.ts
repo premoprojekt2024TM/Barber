@@ -90,7 +90,7 @@ export const getAvailabilitybyId = async (
 
     if (availability.length === 0) {
       return reply
-        .status(404)
+        .status(200)
         .send({ message: "No available slots found for this user" });
     }
 
@@ -138,7 +138,7 @@ export const getMyAvailability = async (
       .getMany();
 
     if (availability.length === 0) {
-      return reply.status(404).send({
+      return reply.status(200).send({
         message: "No available slots found for your account",
       });
     }
