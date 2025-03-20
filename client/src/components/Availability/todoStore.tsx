@@ -1,8 +1,13 @@
 import { nanoid } from "nanoid";
 import { create } from "zustand";
-import { TodoStore, AvailabilityResponse, CreateAvailabilityResponse, Todos } from "../Types/type";
+import {
+  TodoStore,
+  AvailabilityResponse,
+  CreateAvailabilityResponse,
+  Todos,
+} from "../Types/type";
 import { persist } from "zustand/middleware";
-import { axiosInstance } from "../../utils/axiosInstance"; 
+import { axiosInstance } from "../../utils/axiosInstance";
 
 const useTodos = create<TodoStore>()(
   persist(
@@ -41,7 +46,9 @@ const useTodos = create<TodoStore>()(
       fetchAvailability: async () => {
         set({ loading: true, error: null });
         try {
-          const response = await axiosInstance.get<AvailabilityResponse>("/api/v1/getMyAvailability");
+          const response = await axiosInstance.get<AvailabilityResponse>(
+            "/api/v1/getMyAvailability",
+          );
           const availabilityData = response.data.availability;
 
           const newTodos: Todos = {
@@ -58,12 +65,14 @@ const useTodos = create<TodoStore>()(
           let counter = 1;
           for (const day in availabilityData) {
             if (availabilityData[day] && Array.isArray(availabilityData[day])) {
-              newTodos[day.toLowerCase()] = availabilityData[day].map((time: string) => ({
-                id: nanoid(),
-                title: time,
-                state: day.toLowerCase(),
-                order: counter++,
-              }));
+              newTodos[day.toLowerCase()] = availabilityData[day].map(
+                (time: string) => ({
+                  id: nanoid(),
+                  title: time,
+                  state: day.toLowerCase(),
+                  order: counter++,
+                }),
+              );
             }
           }
 
@@ -76,6 +85,17 @@ const useTodos = create<TodoStore>()(
 
       addTodos: (title: string, state: keyof Todos) => {
         set((prev) => {
+          // Check if the time already exists for the given day (state)
+          const existingTask = prev.todos[state].find(
+            (task) => task.title === title,
+          );
+
+          if (existingTask) {
+            // If the time already exists, prevent adding a duplicate
+            console.error(`The time '${title}' already exists for ${state}`);
+            return prev; // Return the store unchanged
+          }
+
           const newTask = { title, state, id: nanoid(), order: prev.counter++ };
           return {
             todos: {
@@ -116,15 +136,21 @@ const useTodos = create<TodoStore>()(
         taskId: string,
         sourceCategory: keyof Todos,
         targetCategory: keyof Todos,
-        targetIndex: number
+        targetIndex: number,
       ) =>
         set((store: TodoStore) => {
           const { todos } = store;
           const sourceTasks = todos[sourceCategory];
           const targetTasks = todos[targetCategory];
-          const taskToMoveIndex = sourceTasks.findIndex((task) => task.id === taskId);
-          if (taskToMoveIndex === -1 || targetIndex < 0 || targetIndex > targetTasks.length) {
-            return store; 
+          const taskToMoveIndex = sourceTasks.findIndex(
+            (task) => task.id === taskId,
+          );
+          if (
+            taskToMoveIndex === -1 ||
+            targetIndex < 0 ||
+            targetIndex > targetTasks.length
+          ) {
+            return store;
           }
           const taskToMove = sourceTasks.splice(taskToMoveIndex, 1)[0];
           targetTasks.splice(targetIndex, 0, {
@@ -147,15 +173,18 @@ const useTodos = create<TodoStore>()(
           const saturday = todos.saturday.map((task) => task.title);
           const sunday = todos.sunday.map((task) => task.title);
 
-          const response = await axiosInstance.post<CreateAvailabilityResponse>("/api/v1/createAvailability", {
-            monday,
-            tuesday,
-            wednesday,
-            thursday,
-            friday,
-            saturday,
-            sunday,
-          });
+          const response = await axiosInstance.post<CreateAvailabilityResponse>(
+            "/api/v1/createAvailability",
+            {
+              monday,
+              tuesday,
+              wednesday,
+              thursday,
+              friday,
+              saturday,
+              sunday,
+            },
+          );
 
           console.log("Availability created:", response.data);
           set({ loading: false });
@@ -167,7 +196,7 @@ const useTodos = create<TodoStore>()(
         }
       },
     }),
-    { name: "availability" }
+    { name: "availability" },
   ),
 );
 

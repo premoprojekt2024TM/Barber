@@ -19,11 +19,12 @@ interface SelectedWorker {
 }
 
 interface FriendsResponse {
-  friends: Friend[];
+  friends?: Friend[];
+  message?: string;
 }
 
 interface AddWorkerProps {
-  onWorkerSelect: (workerId: number) => void; // Callback to pass the selected worker's ID
+  onWorkerSelect: (workerId: number) => void;
 }
 
 export const AddWorker = ({ onWorkerSelect }: AddWorkerProps) => {
@@ -35,6 +36,7 @@ export const AddWorker = ({ onWorkerSelect }: AddWorkerProps) => {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [noFriends, setNoFriends] = useState(false);
   const componentRef = useRef<HTMLDivElement | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
 
@@ -44,8 +46,16 @@ export const AddWorker = ({ onWorkerSelect }: AddWorkerProps) => {
         setLoading(true);
         const response =
           await axiosInstance.get<FriendsResponse>("/api/v1/getFriends");
-        setAvailableFriends(response.data.friends);
-        setError(null);
+
+        if (response.data.message === "You have no friends") {
+          setNoFriends(true);
+          setAvailableFriends([]);
+        } else if (response.data.friends) {
+          setAvailableFriends(response.data.friends);
+          setNoFriends(false);
+        } else {
+          setError("Invalid response format from server.");
+        }
       } catch (err) {
         console.error("Error fetching friends:", err);
         setError("Failed to load friends.");
@@ -69,7 +79,7 @@ export const AddWorker = ({ onWorkerSelect }: AddWorkerProps) => {
       setAvailableFriends(
         availableFriends.filter((f) => f.userId !== friend.userId),
       );
-      onWorkerSelect(friend.userId); // Notify the parent with the worker ID
+      onWorkerSelect(friend.userId);
     } else if (activeIndex !== null) {
       const previousWorker = selectedWorkers[activeIndex];
       updatedWorkers[activeIndex] = friend;
@@ -178,7 +188,11 @@ export const AddWorker = ({ onWorkerSelect }: AddWorkerProps) => {
                 opacity: 1,
               },
             }}
-            onClick={() => (worker ? null : setActiveIndex(index))}
+            onClick={() => {
+              if (!worker && !noFriends) {
+                setActiveIndex(index);
+              }
+            }}
           >
             {worker && !worker.profilePic && (
               <Typography
@@ -191,7 +205,7 @@ export const AddWorker = ({ onWorkerSelect }: AddWorkerProps) => {
                 {getInitials(worker.username)}
               </Typography>
             )}
-            {!worker && (
+            {!worker && !noFriends && (
               <AddIcon sx={{ color: "white", fontSize: { xs: 30, sm: 40 } }} />
             )}
             {worker && (
@@ -234,70 +248,86 @@ export const AddWorker = ({ onWorkerSelect }: AddWorkerProps) => {
 
       {loading && <CircularProgress sx={{ color: "white", marginTop: 2 }} />}
       {error && <Typography sx={{ color: "red", mt: 2 }}>{error}</Typography>}
-
-      {(showSelection || activeIndex !== null) && !loading && !error && (
-        <>
-          <Divider
-            sx={{ mt: 2, backgroundColor: "rgba(255, 255, 255, 0.1)" }}
-          />
-
-          <Box
-            ref={scrollContainerRef}
-            sx={{
-              display: "flex",
-              gap: { xs: 1, sm: 2 },
-              overflowX: "auto",
-              paddingTop: 2,
-              pb: 1,
-            }}
-          >
-            {availableFriends.map((friend) => (
-              <Box
-                key={friend.userId}
-                sx={{
-                  width: { xs: "60px", sm: "80px" },
-                  height: { xs: "60px", sm: "80px" },
-                  borderRadius: "50%",
-                  backgroundColor: "rgba(255, 255, 255, 0.05)",
-                  cursor: "pointer",
-                  overflow: "hidden",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexShrink: 0,
-                  aspectRatio: "1/1",
-                }}
-                onClick={() => handleWorkerSelect(friend)}
-              >
-                {friend.profilePic ? (
-                  <img
-                    src={friend.profilePic}
-                    alt={friend.username}
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "cover",
-                    }}
-                  />
-                ) : (
-                  <Typography
-                    sx={{
-                      fontSize: { xs: "18px", sm: "24px" },
-                      fontWeight: "bold",
-                      color: "white",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    {getInitials(friend.username)}
-                  </Typography>
-                )}
-              </Box>
-            ))}
-          </Box>
-        </>
+      {noFriends && !loading && !error && (
+        <Typography
+          sx={{
+            color: "white",
+            mt: 2,
+            textAlign: "center",
+            fontStyle: "italic",
+            opacity: 0.8,
+          }}
+        >
+          Önnek még nincsenek ismerősei
+        </Typography>
       )}
+
+      {(showSelection || activeIndex !== null) &&
+        !loading &&
+        !error &&
+        !noFriends && (
+          <>
+            <Divider
+              sx={{ mt: 2, backgroundColor: "rgba(255, 255, 255, 0.1)" }}
+            />
+
+            <Box
+              ref={scrollContainerRef}
+              sx={{
+                display: "flex",
+                gap: { xs: 1, sm: 2 },
+                overflowX: "auto",
+                paddingTop: 2,
+                pb: 1,
+              }}
+            >
+              {availableFriends.map((friend) => (
+                <Box
+                  key={friend.userId}
+                  sx={{
+                    width: { xs: "60px", sm: "80px" },
+                    height: { xs: "60px", sm: "80px" },
+                    borderRadius: "50%",
+                    backgroundColor: "rgba(255, 255, 255, 0.05)",
+                    cursor: "pointer",
+                    overflow: "hidden",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                    aspectRatio: "1/1",
+                  }}
+                  onClick={() => handleWorkerSelect(friend)}
+                >
+                  {friend.profilePic ? (
+                    <img
+                      src={friend.profilePic}
+                      alt={friend.username}
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                      }}
+                    />
+                  ) : (
+                    <Typography
+                      sx={{
+                        fontSize: { xs: "18px", sm: "24px" },
+                        fontWeight: "bold",
+                        color: "white",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      {getInitials(friend.username)}
+                    </Typography>
+                  )}
+                </Box>
+              ))}
+            </Box>
+          </>
+        )}
     </Box>
   );
 };

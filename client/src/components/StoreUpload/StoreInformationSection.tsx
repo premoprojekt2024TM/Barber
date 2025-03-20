@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import GooglePlacesAutocomplete from "react-google-places-autocomplete";
-import { TextField } from "@mui/material";
+import { TextField, InputAdornment } from "@mui/material";
 
 const GOOGLE_MAPS_API_KEY = "AIzaSyCSJN2Qzyjhv-AFd1I2LVLD30hX7-lZhRE";
 
@@ -26,19 +26,41 @@ export const StoreInformationSection = ({
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const name = e.target.value;
     setStoreName(name);
-    onStoreInfoChange(name, storePhone, storeEmail, location); // Send updated info to parent
+    onStoreInfoChange(name, storePhone, storeEmail, location);
   };
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const phone = e.target.value;
-    setStorePhone(phone);
-    onStoreInfoChange(storeName, phone, storeEmail, location); // Send updated info to parent
+    const inputValue = e.target.value;
+    const digitsOnly = inputValue.replace(/\D/g, "");
+
+    let formattedPhone = "";
+    if (digitsOnly.length > 0) {
+      const groups = [2, 3, 4];
+      let currentPosition = 0;
+
+      for (
+        let i = 0;
+        i < groups.length && currentPosition < digitsOnly.length;
+        i++
+      ) {
+        const group = digitsOnly.substring(
+          currentPosition,
+          currentPosition + groups[i],
+        );
+        formattedPhone += group;
+        currentPosition += groups[i];
+        if (currentPosition < digitsOnly.length) formattedPhone += " ";
+      }
+    }
+
+    setStorePhone(formattedPhone);
+    onStoreInfoChange(storeName, "+36 " + formattedPhone, storeEmail, location);
   };
 
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const email = e.target.value;
     setStoreEmail(email);
-    onStoreInfoChange(storeName, storePhone, email, location); // Send updated info to parent
+    onStoreInfoChange(storeName, storePhone, email, location);
   };
 
   const customStyles = {
@@ -60,6 +82,20 @@ export const StoreInformationSection = ({
       zIndex: 9999,
     }),
   };
+
+  // Hungarian flag mini-SVG
+  const hungarianFlag = (
+    <svg
+      width="24"
+      height="16"
+      viewBox="0 0 24 16"
+      style={{ marginRight: "4px" }}
+    >
+      <rect width="24" height="5.33" fill="#ce2b37" />
+      <rect y="5.33" width="24" height="5.33" fill="#fff" />
+      <rect y="10.66" width="24" height="5.33" fill="#008c45" />
+    </svg>
+  );
 
   return (
     <Box
@@ -143,7 +179,7 @@ export const StoreInformationSection = ({
               placeholder: "Cím keresése",
               onChange: (value) => {
                 setLocation(value);
-                onStoreInfoChange(storeName, storePhone, storeEmail, value); // Send updated info to parent
+                onStoreInfoChange(storeName, storePhone, storeEmail, value);
               },
               value: location,
               noOptionsMessage: () => "Nincs találat",
@@ -162,7 +198,7 @@ export const StoreInformationSection = ({
         </Box>
       </Box>
 
-      {/* Store Phone */}
+      {/* Phone Number with Hungarian Flag and +36 prefix */}
       <Box sx={{ width: "100%" }}>
         <Typography
           variant="body1"
@@ -174,14 +210,28 @@ export const StoreInformationSection = ({
           fullWidth
           value={storePhone}
           onChange={handlePhoneChange}
-          placeholder="telefonszám"
+          placeholder="XX XXX XXXX"
           variant="outlined"
           size="medium"
           sx={{ borderRadius: "8px" }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start" sx={{ mr: 0.5 }}>
+                {hungarianFlag}
+                <Typography
+                  sx={{ fontSize: "0.9rem", color: "text.secondary", mr: 0.5 }}
+                >
+                  +36
+                </Typography>
+              </InputAdornment>
+            ),
+          }}
+          inputProps={{
+            maxLength: 12, // Limit input to XX XXX XXXX format with spaces
+          }}
         />
       </Box>
 
-      {/* Store Email */}
       <Box sx={{ width: "100%" }}>
         <Typography
           variant="body1"

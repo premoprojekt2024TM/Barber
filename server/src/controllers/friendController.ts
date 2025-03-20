@@ -224,7 +224,6 @@ export const rejectFriendRequest = async (
   }
 };
 
-
 export const getFriends = async (
   request: AuthenticatedRequest,
   reply: FastifyReply,
@@ -239,11 +238,11 @@ export const getFriends = async (
         { user: { userId }, status: "accepted" },
         { friend: { userId }, status: "accepted" },
       ],
-      relations: ["user", "friend"], 
+      relations: ["user", "friend"],
     });
 
     if (friendships.length === 0) {
-      return reply.status(404).send({ message: "You have no friends" });
+      return reply.status(200).send({ message: "You have no friends" });
     }
 
     const friends = friendships.map((friendship) => {
@@ -260,8 +259,6 @@ export const getFriends = async (
       .send({ message: "An error occurred while fetching friends" });
   }
 };
-
-
 
 export const getPendingFriendRequests = async (
   request: AuthenticatedRequest,
@@ -362,10 +359,8 @@ export const getSentFriendRequests = async (
     return reply.status(200).send({ sentFriendRequestIds: friendIds });
   } catch (error) {
     console.error("Error fetching sent friend requests:", error);
-    return reply
-      .status(500)
-      .send({
-        message: "An error occurred while fetching sent friend requests",
-      });
+    return reply.status(500).send({
+      message: "An error occurred while fetching sent friend requests",
+    });
   }
 };

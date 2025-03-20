@@ -2,7 +2,6 @@ import { CssBaseline, Box, Stack } from "@mui/material";
 import AppTheme from "../../shared-theme/AppTheme";
 import SideMenu from "../Shared/SideMenu";
 import AppNavbar from "../Shared/AppNavbar";
-import Header from "../Shared/Header";
 import { Store } from "./StorePage";
 
 export default function StoreUpload() {
@@ -29,7 +28,6 @@ export default function StoreUpload() {
               mt: { xs: 8, md: 0 },
             }}
           >
-            <Header />
             <Store />
           </Stack>
         </Box>

@@ -1,6 +1,14 @@
 // types.ts
 
-export type TaskVariant = "done" | "monday" | "tuesday" | "wednesday" | "thursday" | "friday" | "saturday" | "sunday";
+export type TaskVariant =
+  | "done"
+  | "monday"
+  | "tuesday"
+  | "wednesday"
+  | "thursday"
+  | "friday"
+  | "saturday"
+  | "sunday";
 
 export interface Task {
   title: string;
@@ -42,11 +50,8 @@ export type TodoStore = {
     targetCategory: string,
     targetIndex: number,
   ) => void;
-  saveAvailability: () => Promise<void>;
   createAvailability: () => Promise<CreateAvailabilityResponse>;
 };
-
-
 
 export interface Availability {
   day: string;

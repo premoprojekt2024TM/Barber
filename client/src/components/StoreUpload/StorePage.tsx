@@ -58,26 +58,23 @@ export const Store = () => {
     setAlert({ ...alert, open: false });
   };
 
-  // Form submission handler
   const handleSubmit = async () => {
     const missingFields = [];
-    if (!storeName) missingFields.push("Store Name");
-    if (!storePhone) missingFields.push("Phone Number");
+    if (!storeName) missingFields.push("Bolt neve");
+    if (!storePhone) missingFields.push("Telefonszám");
     if (!storeEmail) missingFields.push("Email");
-    if (!location) missingFields.push("Location");
-    if (!selectedWorkerId) missingFields.push("Worker");
-    if (!imageBase64) missingFields.push("Store Image");
+    if (!location) missingFields.push("Cím");
+    if (!selectedWorkerId) missingFields.push("Munkatárs");
+    if (!imageBase64) missingFields.push("Kép");
 
     if (missingFields.length > 0) {
       setAlert({
         open: true,
-        message: `Please provide the following: ${missingFields.join(", ")}`,
+        message: `Kérem töltse ki a kitöltetlen mezőket: ${missingFields.join(", ")}`,
         severity: "warning",
       });
       return;
     }
-
-    // Create request payload with base64 image
     const payload = {
       name: storeName,
       address: location?.label || "",
@@ -102,7 +99,7 @@ export const Store = () => {
 
       setAlert({
         open: true,
-        message: "Store created successfully!",
+        message: "Bolt sikeresen létrehozva!",
         severity: "success",
       });
     } catch (error: any) {
@@ -110,7 +107,7 @@ export const Store = () => {
         open: true,
         message:
           error.response?.data?.message ||
-          "There was an error creating the store.",
+          "Hiba történt a bolt létrehozása közben.",
         severity: "error",
       });
     } finally {
@@ -131,63 +128,6 @@ export const Store = () => {
         <Grid item xs={12} sm={5}>
           <AddImage onImageChange={handleImageChange} />
         </Grid>
-      </Grid>
-
-      <Grid item xs={12}>
-        <Box
-          sx={{
-            border: "1px solid #e0e0e0",
-            borderRadius: 1,
-            p: 2,
-            mt: 2,
-            backgroundColor: "#f9f9f9",
-          }}
-        >
-          <Typography variant="h6" gutterBottom>
-            Store Preview
-          </Typography>
-          <Grid container spacing={2}>
-            <Grid item xs={12} md={6}>
-              <Typography variant="body1">
-                Store Name: {storeName || "Not Provided"}
-              </Typography>
-              <Typography variant="body1">
-                Phone: {storePhone || "Not Provided"}
-              </Typography>
-              <Typography variant="body1">
-                Email: {storeEmail || "Not Provided"}
-              </Typography>
-              <Typography variant="body1">
-                Location: {location ? location.label : "Not Provided"}
-              </Typography>
-              {selectedWorkerId && (
-                <Typography variant="body1">
-                  Worker ID: {selectedWorkerId}
-                </Typography>
-              )}
-            </Grid>
-            <Grid
-              item
-              xs={12}
-              md={6}
-              sx={{ display: "flex", justifyContent: "center" }}
-            >
-              {imagePreviewUrl && (
-                <img
-                  src={imagePreviewUrl}
-                  alt="Store"
-                  style={{
-                    maxWidth: "100%",
-                    maxHeight: "200px",
-                    objectFit: "contain",
-                    border: "1px solid #ddd",
-                    borderRadius: "4px",
-                  }}
-                />
-              )}
-            </Grid>
-          </Grid>
-        </Box>
       </Grid>
 
       <Grid

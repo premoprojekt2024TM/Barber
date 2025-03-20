@@ -173,7 +173,7 @@ const AddPage = () => {
         <Grid item xs={12}>
           <Box sx={{ p: 3 }}>
             <Typography variant="h4" component="h1" gutterBottom>
-              Manage Your Availability
+              Kezeld az időpontjaidat
             </Typography>
 
             <TaskButtonsRow />
