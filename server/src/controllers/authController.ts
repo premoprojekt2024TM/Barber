@@ -22,7 +22,7 @@ export const registerUser = async (
       .send({ message: "Validation failed", errors: result.error.errors });
   }
 
-  const { username, email, password, role,firstName,lastName } = result.data;
+  const { username, email, password, role, firstName, lastName } = result.data;
 
   if (role !== "client" && role !== "worker") {
     return reply
@@ -36,14 +36,16 @@ export const registerUser = async (
     },
   );
   if (existingEmail) {
-    return reply.status(400).send({ message: "Email already exists" });
+    return reply.status(400).send({ message: "Ez az email cím már létezik" });
   }
 
   const existingUser = await AppDataSource.getRepository(model.User).findOneBy({
     username,
   });
   if (existingUser) {
-    return reply.status(400).send({ message: "Username already exists" });
+    return reply
+      .status(400)
+      .send({ message: "Ez a felhasználónév már létezik" });
   }
 
   const generateProfilepic = `https://ui-avatars.com/api/?name=${username[0]}&size=128`;
@@ -86,12 +88,16 @@ export const loginUser = async (
     });
 
     if (!user) {
-      return reply.status(400).send({ message: "Invalid credentials" });
+      return reply
+        .status(400)
+        .send({ message: "Érvénytelen hitelesítő adatok" });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return reply.status(400).send({ message: "Invalid credentials" });
+      return reply
+        .status(400)
+        .send({ message: "Érvénytelen hitelesítő adatok" });
     }
 
     const token = generateToken(user);
