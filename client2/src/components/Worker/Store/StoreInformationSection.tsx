@@ -1,3 +1,5 @@
+"use client";
+
 import type React from "react";
 import { useState, useEffect, useRef } from "react";
 import GooglePlacesAutocomplete from "react-google-places-autocomplete";
@@ -26,7 +28,6 @@ export const StoreInformationSection = ({
   const [isTyping, setIsTyping] = useState(false);
   const placesRef = useRef<any>(null);
 
-  // When location object changes, update the address text
   useEffect(() => {
     if (location && !isTyping) {
       setAddressText(location.label || location.value?.description || "");
@@ -78,7 +79,6 @@ export const StoreInformationSection = ({
     setAddressText(address);
     setIsTyping(true);
 
-    // Create a location object from the manual text input
     const locationObj = {
       label: address,
       value: {
@@ -117,7 +117,7 @@ export const StoreInformationSection = ({
     control: (provided: any, state: any) => ({
       ...provided,
       borderRadius: "8px",
-      backgroundColor: "rgba(255, 255, 255, 0.9)",
+      backgroundColor: "white",
       border: "1px solid rgba(0, 0, 0, 0.2)",
       boxShadow: state.isFocused ? "0 0 0 2px rgba(0, 0, 0, 0.2)" : "none",
       borderColor: state.isFocused ? "#000" : "rgba(0, 0, 0, 0.2)",
@@ -134,7 +134,7 @@ export const StoreInformationSection = ({
       ...provided,
       zIndex: 9999,
       position: "absolute",
-      backgroundColor: "rgba(255, 255, 255, 0.9)",
+      backgroundColor: "white",
       backdropFilter: "blur(10px)",
       border: "1px solid rgba(0, 0, 0, 0.2)",
     }),
@@ -167,19 +167,17 @@ export const StoreInformationSection = ({
     </svg>
   );
 
-  // Common input class with darker border and black focus style
   const inputClass =
-    "w-full px-4 py-2.5 bg-white/90 backdrop-blur-md rounded-lg border border-gray-400 focus:outline-none focus:ring-2 focus:ring-black focus:border-black";
+    "w-full px-4 py-2.5 bg-white rounded-lg border border-gray-400 focus:outline-none focus:ring-2 focus:ring-black focus:border-black";
 
   return (
-    <div className="w-full bg-white/50 backdrop-blur-xl rounded-2xl border border-white shadow-lg p-6 flex flex-col gap-6 transition-all hover:shadow-xl relative overflow-visible">
+    <div className="w-full bg-white backdrop-blur-xl rounded-2xl border border-white shadow-lg p-6 flex flex-col gap-6 transition-all hover:shadow-xl relative overflow-visible">
       <div className="absolute top-0 left-0 right-0 h-[30%] bg-gradient-to-b from-white/10 to-transparent pointer-events-none z-[1]"></div>
 
       <h2 className="text-xl font-semibold text-black/80 mb-2 relative z-[2]">
         Bolt információk
       </h2>
 
-      {/* Store Name */}
       <div className="w-full">
         <label className="block mb-2 text-black/80 font-medium">
           Bolt neve
@@ -193,13 +191,11 @@ export const StoreInformationSection = ({
         />
       </div>
 
-      {/* Address Section with both Autocomplete and Manual Editing */}
       <div className="w-full">
         <label className="block mb-2 text-black/80 font-medium">
           Bolt helye
         </label>
 
-        {/* Google Places component */}
         <div className={isManualInput ? "hidden" : "block"}>
           <GooglePlacesAutocomplete
             ref={placesRef}
@@ -224,7 +220,6 @@ export const StoreInformationSection = ({
           />
         </div>
 
-        {/* Manual input field */}
         <div className={isManualInput ? "block relative" : "hidden"}>
           <input
             type="text"
@@ -245,7 +240,6 @@ export const StoreInformationSection = ({
         </div>
       </div>
 
-      {/* Phone Number with Hungarian Flag and +36 prefix (improved contrast) */}
       <div className="w-full">
         <label className="block mb-2 text-black/80 font-medium">
           Bolt telefonszáma
@@ -259,14 +253,13 @@ export const StoreInformationSection = ({
             type="text"
             value={storePhone}
             onChange={handlePhoneChange}
-            placeholder="XX XXX XXXX"
+            placeholder="12 345 6789"
             className={`${inputClass} pl-20`}
             maxLength={12}
           />
         </div>
       </div>
 
-      {/* Email */}
       <div className="w-full">
         <label className="block mb-2 text-black/80 font-medium">
           Bolt email címe

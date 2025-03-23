@@ -7,8 +7,6 @@ import {
 import { useEffect, useState } from "react";
 import Register from "./components/shared/Auth/register";
 import BookingSystem from "./components/Client/Booking/Booking";
-import AppBar from "./components/Client/Main/AppBar";
-import Main from "./components/Client/Main/Main";
 import MainPage from "./components/Client/Main/MainPage";
 import Map from "./components/Client/Map/Map";
 import AvailabilityPage from "./components/Worker/Availability/avpage";
@@ -17,6 +15,8 @@ import FriendsPage from "./components/Worker/Friend/friendpage";
 import Sidebar from "./components/Worker/sidebar";
 import { Store } from "./components/Worker/Store/Store";
 import Login from "./components/shared/Auth/Login";
+import NoEditRightsPage from "./components/Worker/404/noedit";
+import NotInStorePage from "./components/Worker/404/nointhestore";
 import {
   isClientAuthenticated,
   isWorkerAuthenticated,
@@ -196,13 +196,31 @@ function App() {
           }
         />
 
+        <Route
+          path="/noedit"
+          element={
+            <WorkerRoute>
+              <NoEditRightsPage />
+            </WorkerRoute>
+          }
+        />
+
+        <Route
+          path="/nostore"
+          element={
+            <WorkerRoute>
+              <NotInStorePage />
+            </WorkerRoute>
+          }
+        />
+
         {/* Route for any authenticated user */}
         <Route
           path="/search"
           element={
-            <AuthenticatedRoute>
+            <WorkerRoute>
               <FriendsPage />
-            </AuthenticatedRoute>
+            </WorkerRoute>
           }
         />
 

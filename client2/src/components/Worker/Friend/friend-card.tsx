@@ -1,61 +1,31 @@
-import { useState, useEffect } from "react";
-import { UserPlus } from "lucide-react";
+import { useState } from "react";
+import { UserPlus, Check, Clock, UserMinus, UserX } from "lucide-react";
 import axios from "axios";
 import Cookies from "js-cookie";
 import type { Friend } from "./friends";
 
 interface FriendCardProps {
   friend: Friend;
+  onFriendStatusChange?: () => void;
 }
 
-export default function FriendCard({ friend }: FriendCardProps) {
+export default function FriendCard({
+  friend,
+  onFriendStatusChange,
+}: FriendCardProps) {
   const [loading, setLoading] = useState(false);
-  const [requestSent, setRequestSent] = useState(false);
   const [notification, setNotification] = useState({
     open: false,
     message: "",
     severity: "success" as "success" | "error",
   });
 
-  useEffect(() => {
-    const checkSentRequests = async () => {
-      try {
-        const token = Cookies.get("jwt_token");
-        const response = await axios.get(
-          "http://localhost:8080/api/v1/getSentFriendRequests",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          },
-        );
-
-        if (
-          response.data &&
-          response.data.sentFriendRequestIds &&
-          response.data.sentFriendRequestIds.includes(
-            Number.parseInt(friend.userId),
-          )
-        ) {
-          setRequestSent(true);
-        }
-      } catch (error) {
-        console.error("Error checking sent friend requests:", error);
-      }
-    };
-
-    checkSentRequests();
-  }, [friend.userId]);
-
   const handleSendFriendRequest = async () => {
     try {
       setLoading(true);
-
-      // Get JWT token from cookies
       const token = Cookies.get("jwt_token");
 
-      // Send request directly to backend endpoint
-      const response = await axios.post(
+      await axios.post(
         "http://localhost:8080/api/v1/sendFriendRequest",
         { friendId: friend.userId },
         {
@@ -66,18 +36,94 @@ export default function FriendCard({ friend }: FriendCardProps) {
         },
       );
 
-      setRequestSent(true);
       setNotification({
         open: true,
-        message: "Friend request sent successfully",
+        message: "Baráti kérelem elküldve",
         severity: "success",
       });
+
+      if (onFriendStatusChange) {
+        onFriendStatusChange();
+      }
     } catch (error: any) {
       console.error("Error sending friend request:", error);
       setNotification({
         open: true,
         message:
-          error.response?.data?.message || "Failed to send friend request",
+          error.response?.data?.message || "Nem sikerült elküldeni a kérelmet",
+        severity: "error",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAcceptFriendRequest = async () => {
+    try {
+      setLoading(true);
+      const token = Cookies.get("jwt_token");
+
+      await axios.post(
+        "http://localhost:8080/api/v1/acceptFriendRequest",
+        { friendId: friend.userId },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      setNotification({
+        open: true,
+        message: "Baráti kérelem elfogadva",
+        severity: "success",
+      });
+
+      if (onFriendStatusChange) {
+        onFriendStatusChange();
+      }
+    } catch (error: any) {
+      console.error("Error accepting friend request:", error);
+      setNotification({
+        open: true,
+        message:
+          error.response?.data?.message || "Nem sikerült elfogadni a kérelmet",
+        severity: "error",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteFriendship = async () => {
+    try {
+      setLoading(true);
+      const token = Cookies.get("jwt_token");
+
+      await axios.delete("http://localhost:8080/api/v1/deleteFriendship", {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        data: { friendId: friend.userId },
+      });
+
+      setNotification({
+        open: true,
+        message: "Barátság törölve",
+        severity: "success",
+      });
+
+      if (onFriendStatusChange) {
+        onFriendStatusChange();
+      }
+    } catch (error: any) {
+      console.error("Error deleting friendship:", error);
+      setNotification({
+        open: true,
+        message:
+          error.response?.data?.message || "Nem sikerült törölni a barátságot",
         severity: "error",
       });
     } finally {
@@ -87,6 +133,76 @@ export default function FriendCard({ friend }: FriendCardProps) {
 
   const handleCloseNotification = () => {
     setNotification({ ...notification, open: false });
+  };
+
+  const renderFriendshipButton = () => {
+    switch (friend.friendshipStatus) {
+      case "pending_sent":
+        return (
+          <button
+            className="px-4 py-2 text-sm font-medium rounded-full bg-slate-200 text-slate-700 mt-1.5 opacity-70 flex items-center gap-2"
+            disabled
+          >
+            <Clock className="w-4 h-4" />
+            Kérelem elküldve
+          </button>
+        );
+      case "pending_received":
+        return (
+          <div className="flex gap-2 mt-1.5">
+            <button
+              className="px-3 py-2 text-sm font-medium rounded-full bg-black hover:bg-slate-800 text-white flex items-center gap-1 transition-colors"
+              onClick={handleAcceptFriendRequest}
+              disabled={loading}
+            >
+              <Check className="w-4 h-4" />
+              Elfogad
+            </button>
+            <button
+              className="px-3 py-2 text-sm font-medium rounded-full bg-slate-200 hover:bg-slate-300 text-slate-700 flex items-center gap-1 transition-colors"
+              onClick={handleDeleteFriendship}
+              disabled={loading}
+            >
+              <UserX className="w-4 h-4" />
+              Elutasít
+            </button>
+          </div>
+        );
+      case "accepted":
+        return (
+          <button
+            className="px-4 py-2 text-sm font-medium rounded-full bg-green-100 hover:bg-red-100 text-green-700 hover:text-red-700 mt-1.5 flex items-center gap-2 transition-all"
+            onClick={handleDeleteFriendship}
+            disabled={loading}
+          >
+            <UserMinus className="w-4 h-4 transition-all" />
+            <span className="transition-all">Barátság megszüntetése</span>
+          </button>
+        );
+      case "rejected":
+        return (
+          <button
+            className="px-5 py-2 text-sm font-medium rounded-full bg-black hover:bg-slate-800 text-white mt-1.5 flex items-center gap-2 transition-colors"
+            onClick={handleSendFriendRequest}
+            disabled={loading}
+          >
+            <UserPlus className="w-4 h-4" />
+            Újra küldés
+          </button>
+        );
+      case "none":
+      default:
+        return (
+          <button
+            className="px-5 py-2 text-sm font-medium rounded-full bg-black hover:bg-slate-800 text-white mt-1.5 flex items-center gap-2 transition-colors"
+            onClick={handleSendFriendRequest}
+            disabled={loading}
+          >
+            <UserPlus className="w-4 h-4" />
+            Barát hozzáadása
+          </button>
+        );
+    }
   };
 
   return (
@@ -120,23 +236,7 @@ export default function FriendCard({ friend }: FriendCardProps) {
           </div>
 
           <div className="flex items-center pl-1 pb-2 gap-1">
-            {requestSent ? (
-              <button
-                className="px-4 py-2 text-sm font-medium rounded-full bg-slate-200 text-slate-700 mt-1.5 opacity-70"
-                disabled
-              >
-                Kérelem elküldve
-              </button>
-            ) : (
-              <button
-                className="px-5 py-2 text-sm font-medium rounded-full bg-black hover:bg-slate-800 text-white mt-1.5 flex items-center gap-2 transition-colors"
-                onClick={handleSendFriendRequest}
-                disabled={loading}
-              >
-                <UserPlus className="w-4 h-4" />
-                Barát hozzáadása
-              </button>
-            )}
+            {renderFriendshipButton()}
           </div>
         </div>
       </div>

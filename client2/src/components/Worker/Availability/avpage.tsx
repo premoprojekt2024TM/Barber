@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { DragDropContext, type DropResult } from "@hello-pangea/dnd";
 import { useTodos } from "./todo-store";
 import { ColumnMemo } from "./column";
@@ -11,23 +11,25 @@ export default function AvailabilityPageWithSidebar() {
   const fetchAvailability = useTodos((store) => store.fetchAvailability);
   const loading = useTodos((store) => store.loading);
   const error = useTodos((store) => store.error);
-  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     fetchAvailability();
-    const checkIfMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-
-    checkIfMobile();
-    window.addEventListener("resize", checkIfMobile);
-
-    return () => window.removeEventListener("resize", checkIfMobile);
   }, [fetchAvailability]);
 
   function handleOnDragEnd(result: DropResult) {
     const { destination, source, draggableId } = result;
     if (!destination) return;
+
+    if (destination.droppableId === "done") {
+      return;
+    }
+    if (
+      source.droppableId === destination.droppableId &&
+      source.index === destination.index
+    ) {
+      return;
+    }
+
     orderTask(
       draggableId,
       source.droppableId as any,
@@ -38,10 +40,7 @@ export default function AvailabilityPageWithSidebar() {
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-gray-50">
-      {/* Sidebar */}
       <Sidebar />
-
-      {/* Main content */}
       <div className="flex-1 overflow-x-hidden">
         <div className="container mx-auto p-6">
           <h1 className="text-2xl font-bold mb-6">Kezeld az időpontjaidat</h1>

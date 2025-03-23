@@ -13,15 +13,18 @@ export default function FAQPage() {
   };
 
   return (
-    <div
-      className="min-h-screen bg-cover bg-center bg-no-repeat"
-      style={{
-        backgroundImage:
-          "url(https://pub-f0fa5b4b544643998cb832c3f9d449bc.r2.dev/static/authbg.png)",
-      }}
-    >
-      <div className="container mx-auto px-4">
-        <div className="w-full max-w-3xl mx-auto py-12 md:py-16 px-4 relative flex flex-col items-center gap-6">
+    <div className="relative py-12">
+      <div
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat z-0"
+        style={{
+          backgroundImage:
+            "url(https://pub-f0fa5b4b544643998cb832c3f9d449bc.r2.dev/static/authbg.png)",
+          maxHeight: "100%",
+        }}
+      />
+
+      <div className="container mx-auto px-4 relative z-10">
+        <div className="w-full max-w-3xl mx-auto py-8 md:py-12 px-4 flex flex-col items-center gap-6">
           <div className="bg-white/80 backdrop-blur-md rounded-xl shadow-lg p-8 w-full">
             <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-8 text-center">
               Gyakran ismételt kérdések

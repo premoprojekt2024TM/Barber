@@ -1,15 +1,16 @@
-"use client";
 import FriendCard from "./friend-card";
 import type { Friend } from "./friends";
 
 interface FriendsListProps {
   friends: Friend[];
   searchQuery: string;
+  onFriendStatusChange?: () => void;
 }
 
 export default function FriendsList({
   friends,
   searchQuery,
+  onFriendStatusChange,
 }: FriendsListProps) {
   if (friends.length === 0) {
     return (
@@ -33,7 +34,11 @@ export default function FriendsList({
       <div className="mb-3 border-t border-slate-200" />
       <div className="space-y-2">
         {friends.map((friend) => (
-          <FriendCard key={friend.userId} friend={friend} />
+          <FriendCard
+            key={friend.userId}
+            friend={friend}
+            onFriendStatusChange={onFriendStatusChange}
+          />
         ))}
       </div>
     </div>

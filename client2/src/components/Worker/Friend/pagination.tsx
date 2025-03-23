@@ -1,17 +1,9 @@
-"use client";
-
-interface PaginationProps {
-  currentPage: number;
-  totalPages: number;
-  onPageChange: (page: number) => void;
-}
-
+import { PaginationProps } from "./friends";
 export default function Pagination({
   currentPage,
   totalPages,
   onPageChange,
 }: PaginationProps) {
-  // Generate array of page numbers
   const pageNumbers = Array.from({ length: totalPages }, (_, i) => i + 1);
 
   return (

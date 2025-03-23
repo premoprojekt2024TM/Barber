@@ -8,7 +8,7 @@ import {
   mapUserTypeToRole,
   type RegisterFormData,
 } from "../../../../../server/src/shared/registervalidation";
-import Snackbar from "../snackbar";
+import Snackbar from "../Snackbar";
 
 type UserType = "kliens" | "fodrasz";
 type SnackbarSeverity = "success" | "error" | "info" | "warning";

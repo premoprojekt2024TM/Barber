@@ -2,33 +2,63 @@ import { useState, useEffect } from "react";
 import {
   Home,
   Calendar,
-  Users,
-  Settings,
-  HelpCircle,
+  Search,
+  CirclePlus,
   X,
   ChevronRight,
   ChevronLeft,
   LogOut,
   ChevronDown,
+  Store,
 } from "lucide-react";
 import {
   getInfoFromToken,
-  isClientAuthenticated,
   isWorkerAuthenticated,
 } from "../../utils/axiosinstance";
-import { UserInfo } from "../types/type";
+
+type UserInfo = {
+  username: string;
+  email: string;
+  profilePic?: string;
+};
+
+type MenuItem = {
+  name: string;
+  icon: any;
+  path: string;
+};
 
 export default function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [activeItem, setActiveItem] = useState("Irányitópult");
+  const [activeItem, setActiveItem] = useState("Dashboard");
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [userInfo, setUserInfo] = useState(null);
+  const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+  const [isWorker, setIsWorker] = useState(false);
+
+  // Define menuItems outside the useEffect but inside the component
+  const menuItems: MenuItem[] = [
+    { name: "Dashboard", icon: Home, path: "/dashboard" },
+    { name: "Add", icon: CirclePlus, path: "/add" },
+    { name: "Appointments", icon: Calendar, path: "/appointments" },
+    { name: "Search", icon: Search, path: "/search" },
+    { name: "Store", icon: Store, path: "/store" },
+  ];
 
   useEffect(() => {
     const info = getInfoFromToken();
     setUserInfo(info);
+
+    const workerAuth = isWorkerAuthenticated();
+    setIsWorker(workerAuth);
+
+    // Set active item based on current path
+    const path = window.location.pathname;
+    const currentItem = menuItems.find((item) => path.includes(item.path));
+    if (currentItem) {
+      setActiveItem(currentItem.name);
+    }
 
     const checkIfMobile = () => {
       setIsMobile(window.innerWidth < 768);
@@ -38,35 +68,9 @@ export default function Sidebar() {
     return () => window.removeEventListener("resize", checkIfMobile);
   }, []);
 
-  const getMenuItems = () => {
-    const baseItems = [
-      { name: "Irányitópult", icon: Home },
-      { name: "Appointments", icon: Calendar },
-    ];
-
-    if (isWorkerAuthenticated()) {
-      return [
-        ...baseItems,
-        { name: "Clients", icon: Users },
-        { name: "Settings", icon: Settings },
-        { name: "Help", icon: HelpCircle },
-      ];
-    } else if (isClientAuthenticated()) {
-      return [
-        ...baseItems,
-        { name: "Settings", icon: Settings },
-        { name: "Help", icon: HelpCircle },
-      ];
-    }
-
-    return [
-      ...baseItems,
-      { name: "Settings", icon: Settings },
-      { name: "Help", icon: HelpCircle },
-    ];
-  };
-
-  const menuItems = getMenuItems();
+  if (!isWorker) {
+    return null;
+  }
 
   const getUserInitials = () => {
     if (!userInfo || !userInfo.username) return "?";
@@ -75,6 +79,11 @@ export default function Sidebar() {
       return `${nameParts[0][0]}${nameParts[1][0]}`.toUpperCase();
     }
     return userInfo.username.substring(0, 2).toUpperCase();
+  };
+
+  const handleNavigation = (path: string, name: string) => {
+    setActiveItem(name);
+    window.location.href = path;
   };
 
   const handleLogout = () => {
@@ -93,11 +102,9 @@ export default function Sidebar() {
               return (
                 <button
                   key={item.name}
-                  onClick={() => setActiveItem(item.name)}
+                  onClick={() => handleNavigation(item.path, item.name)}
                   className={`flex flex-col items-center justify-center p-2 ${
-                    activeItem === item.name
-                      ? "text-indigo-600"
-                      : "text-gray-500"
+                    activeItem === item.name ? "text-gray-700" : "text-gray-500"
                   }`}
                 >
                   <Icon size={20} />
@@ -116,7 +123,7 @@ export default function Sidebar() {
                   className="h-6 w-6 rounded-full object-cover"
                 />
               ) : (
-                <div className="h-6 w-6 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-semibold text-xs">
+                <div className="h-6 w-6 rounded-full bg-gray-200 flex items-center justify-center text-gray-700 font-semibold text-xs">
                   {getUserInitials()}
                 </div>
               )}
@@ -144,7 +151,7 @@ export default function Sidebar() {
                     className="h-12 w-12 rounded-full object-cover"
                   />
                 ) : (
-                  <div className="h-12 w-12 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-semibold">
+                  <div className="h-12 w-12 rounded-full bg-gray-200 flex items-center justify-center text-gray-700 font-semibold">
                     {getUserInitials()}
                   </div>
                 )}
@@ -218,10 +225,10 @@ export default function Sidebar() {
             return (
               <li key={item.name}>
                 <button
-                  onClick={() => setActiveItem(item.name)}
+                  onClick={() => handleNavigation(item.path, item.name)}
                   className={`flex items-center w-full rounded-md p-2 transition-colors duration-200 ${
                     activeItem === item.name
-                      ? "bg-indigo-50 text-indigo-600"
+                      ? "bg-gray-100 text-gray-700"
                       : "text-gray-700 hover:bg-gray-100"
                   }`}
                 >
@@ -252,7 +259,7 @@ export default function Sidebar() {
                   className="h-10 w-10 rounded-full object-cover"
                 />
               ) : (
-                <div className="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-semibold">
+                <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-700 font-semibold">
                   {getUserInitials()}
                 </div>
               )}

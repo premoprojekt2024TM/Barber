@@ -134,7 +134,6 @@ export const getMyAvailability = async (
       .createQueryBuilder("availability")
       .leftJoinAndSelect("availability.user", "user")
       .where("user.userId = :userId", { userId: user.userId })
-      .andWhere("availability.status = :status", { status: "available" })
       .getMany();
 
     if (availability.length === 0) {
@@ -144,9 +143,15 @@ export const getMyAvailability = async (
     }
 
     const availabilityByDay = availability.reduce(
-      (acc: { [key: string]: string[] }, curr) => {
+      (
+        acc: { [key: string]: { timeSlot: string; status: string }[] },
+        curr,
+      ) => {
         if (!acc[curr.day]) acc[curr.day] = [];
-        acc[curr.day].push(curr.timeSlot);
+        acc[curr.day].push({
+          timeSlot: curr.timeSlot,
+          status: curr.status,
+        });
         return acc;
       },
       {},

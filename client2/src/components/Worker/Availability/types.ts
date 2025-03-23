@@ -8,11 +8,28 @@ export type TaskVariant =
   | "saturday"
   | "sunday";
 
+export interface ColumnProps {
+  variant: TaskVariant;
+  className?: string;
+}
+
+export interface TaskProps {
+  id: string;
+  index: number;
+  state: TaskVariant;
+}
+
+export interface Todo {
+  id: string;
+  text: string;
+}
 export interface Task {
   id: string;
   title: string;
   state: TaskVariant;
   order: number;
+  originalDay: string;
+  status: string;
 }
 
 export interface Todos {

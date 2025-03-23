@@ -1,4 +1,4 @@
-"use client";
+import type React from "react";
 
 import { useState, useRef, useCallback } from "react";
 import { CloudUpload, Trash2 } from "lucide-react";
@@ -104,18 +104,14 @@ export const AddImage = ({ onImageChange }: AddImageProps) => {
   );
 
   return (
-    <div className="w-full h-[700px] bg-white/50 backdrop-blur-xl rounded-2xl border border-white shadow-lg p-6 flex flex-col justify-center items-center transition-all hover:shadow-xl overflow-hidden relative">
+    <div className="w-full h-[700px] bg-white backdrop-blur-xl rounded-2xl border border-white shadow-lg p-6 flex flex-col justify-center items-center transition-all hover:shadow-xl overflow-hidden relative">
       <div
         className={`w-full h-4/5 ${
           isUploaded
             ? "border-none"
             : `border-2 border-dashed ${isDragging ? "border-black/30" : "border-black/10"}`
         } rounded-lg flex flex-col items-center justify-center ${
-          isUploaded
-            ? "bg-transparent"
-            : isDragging
-              ? "bg-white/70"
-              : "bg-white/40"
+          isUploaded ? "bg-transparent" : isDragging ? "bg-white" : "bg-white"
         } ${isUploaded ? "cursor-default" : "cursor-pointer"} relative transition-all backdrop-blur-md`}
         onClick={() => !isUploaded && fileInputRef.current?.click()}
         onDragEnter={handleDragEnter}
@@ -156,7 +152,7 @@ export const AddImage = ({ onImageChange }: AddImageProps) => {
             <div className="absolute top-3 right-3">
               <button
                 onClick={handleDelete}
-                className="bg-white/70 backdrop-blur-md rounded-full p-2 shadow-lg transition-all hover:bg-white hover:scale-105"
+                className="bg-white backdrop-blur-md rounded-full p-2 shadow-lg transition-all hover:bg-white hover:scale-105"
               >
                 <Trash2 className="h-5 w-5 text-black/70" />
               </button>

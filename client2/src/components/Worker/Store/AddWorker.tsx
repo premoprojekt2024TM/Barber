@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Plus, X } from "lucide-react";
-import { axiosInstance } from "../../../utils/axiosinstance"; // Update the import path as needed
+import { axiosInstance } from "../../../utils/axiosinstance";
 
 interface Friend {
   userId: number;
@@ -135,7 +135,7 @@ export const AddWorker = ({ onWorkerSelect }: AddWorkerProps) => {
   return (
     <div
       ref={componentRef}
-      className="w-full p-4 sm:p-6 bg-white/50 backdrop-blur-xl rounded-2xl border border-white mt-10"
+      className="w-full p-4 sm:p-6 bg-white backdrop-blur-xl rounded-2xl border border-white mt-10"
     >
       <h2 className="text-xl font-semibold text-black/80 mb-4">
         Munkatárs kiválasztása
@@ -219,7 +219,7 @@ export const AddWorker = ({ onWorkerSelect }: AddWorkerProps) => {
               {availableFriends.map((friend) => (
                 <div
                   key={friend.userId}
-                  className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-white/40 cursor-pointer overflow-hidden flex items-center justify-center flex-shrink-0 hover:shadow-md transition-shadow duration-200"
+                  className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-white cursor-pointer overflow-hidden flex items-center justify-center flex-shrink-0 hover:shadow-md transition-shadow duration-200"
                   style={{ aspectRatio: "1/1" }}
                   onClick={() => handleWorkerSelect(friend)}
                 >

@@ -1,15 +1,8 @@
-"use client";
 import React from "react";
 import { Draggable } from "@hello-pangea/dnd";
 import { useTodos } from "./todo-store";
-import type { TaskVariant } from "./types";
-import { X } from "lucide-react";
-
-interface TaskProps {
-  id: string;
-  index: number;
-  state: TaskVariant;
-}
+import type { TaskProps } from "./types";
+import { X, Lock } from "lucide-react";
 
 const Task = React.memo(function Task({ id, index, state }: TaskProps) {
   const todo = useTodos((store) =>
@@ -19,38 +12,66 @@ const Task = React.memo(function Task({ id, index, state }: TaskProps) {
 
   if (!todo) return null;
 
+  const isDone = state === "done";
+
+  const hungarianDays: Record<string, string> = {
+    monday: "Hétfő",
+    tuesday: "Kedd",
+    wednesday: "Szerda",
+    thursday: "Csütörtök",
+    friday: "Péntek",
+    saturday: "Szombat",
+    sunday: "Vasárnap",
+  };
+
+  const formatDay = (day: string) => {
+    return hungarianDays[day] || day.charAt(0).toUpperCase() + day.slice(1);
+  };
+
   return (
-    <Draggable index={index} draggableId={todo?.id}>
+    <Draggable index={index} draggableId={todo?.id} isDragDisabled={isDone}>
       {(provided, snapshot) => (
         <div
-          {...provided.draggableProps}
-          {...provided.dragHandleProps}
+          {...(isDone ? {} : provided.draggableProps)}
+          {...(isDone ? {} : provided.dragHandleProps)}
           ref={provided.innerRef}
-          className={`bg-white border rounded-xl p-4 mb-3 relative group cursor-move transition-all duration-200 ${
-            snapshot.isDragging
-              ? "border-indigo-400 shadow-lg scale-105"
-              : "border-gray-200 shadow-sm hover:shadow-md hover:border-indigo-200"
+          className={`bg-white border rounded-xl p-4 mb-3 relative group transition-all duration-200 ${
+            isDone ? "border-gray-200 shadow-sm cursor-default" : "cursor-move"
+          } ${
+            !isDone && snapshot.isDragging
+              ? "border-black shadow-lg scale-105"
+              : "border-gray-200 shadow-sm hover:shadow-md hover:border-black"
           }`}
         >
           <div className="flex flex-col w-full">
             <p
               className={`text-gray-700 whitespace-pre-wrap break-words ${
-                state === "done" ? "line-through text-gray-400" : ""
+                isDone ? "line-through text-gray-400" : ""
               }`}
             >
               {todo.title}
             </p>
-
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                deleteTodo(id, state);
-              }}
-              className="absolute top-2 right-2 text-gray-300 hover:text-red-500 transition-colors duration-200 p-1 rounded-full hover:bg-red-50"
-              aria-label="Delete task"
-            >
-              <X size={16} />
-            </button>
+            {isDone && todo.originalDay && (
+              <p className="text-xs text-gray-400 mt-1">
+                {formatDay(todo.originalDay)}
+              </p>
+            )}
+            {isDone ? (
+              <div className="absolute top-2 right-2 text-gray-300 p-1">
+                <Lock size={16} />
+              </div>
+            ) : (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  deleteTodo(id, state);
+                }}
+                className="absolute top-2 right-2 text-gray-300 hover:text-red-500 transition-colors duration-200 p-1 rounded-full hover:bg-red-50"
+                aria-label="Feladat törlése"
+              >
+                <X size={16} />
+              </button>
+            )}
           </div>
         </div>
       )}

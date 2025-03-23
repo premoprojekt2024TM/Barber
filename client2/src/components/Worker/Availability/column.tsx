@@ -1,5 +1,3 @@
-"use client";
-
 import * as React from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, Controller } from "react-hook-form";
@@ -9,21 +7,22 @@ import { Plus } from "lucide-react";
 import Task from "./task";
 import { DayBadge } from "./day-badge";
 import { useTodos } from "./todo-store";
+import { TaskVariant, ColumnProps } from "./types";
 
-// Schema for form validation
 const formSchema = z.object({
-  task: z.string().min(1, { message: "Task is required" }),
+  task: z
+    .string()
+    .min(1, { message: "Időpont szükséges" })
+    .regex(/^([0-1][0-9]|2[0-3]):[0-5][0-9]$/, {
+      message: "Az időnek HH:MM formátumban kell lennie (pl. 09:20, 14:30).",
+    }),
 });
 
-interface ColumnProps {
-  variant: string;
-  className?: string;
-}
+type FormValues = z.infer<typeof formSchema>;
 
-const columnTitle = (state: string): string => {
-  const titles: Record<string, string> = {
-    done: "DONE",
-    archived: "ARCHIVED",
+const columnTitle = (state: TaskVariant): string => {
+  const titles: Record<TaskVariant, string> = {
+    done: "FOGLALT",
     monday: "HÉTFŐ",
     tuesday: "KEDD",
     wednesday: "SZERDA",
@@ -32,14 +31,14 @@ const columnTitle = (state: string): string => {
     saturday: "SZOMBAT",
     sunday: "VASÁRNAP",
   };
-  return titles[state] || "";
+  return titles[state];
 };
 
 export const Column = React.forwardRef<HTMLDivElement, ColumnProps>(
   ({ variant, className }, ref) => {
     const addTodo = useTodos((store) => store.addTodos);
     const todos = useTodos((store) => store.todos[variant]);
-    const [isAddingTodo, setIsAddingTodo] = React.useState(false);
+    const [isAddingTodo, setIsAddingTodo] = React.useState<boolean>(false);
 
     const {
       control,
@@ -47,17 +46,27 @@ export const Column = React.forwardRef<HTMLDivElement, ColumnProps>(
       reset,
       formState: { errors },
       setFocus,
-    } = useForm<z.infer<typeof formSchema>>({
+      getValues,
+    } = useForm<FormValues>({
       resolver: zodResolver(formSchema),
       defaultValues: { task: "" },
     });
 
-    const inputRef = React.useRef<HTMLInputElement>(null);
+    const inputRef = React.useRef<HTMLInputElement | null>(null);
 
-    const onSubmit = (values: z.infer<typeof formSchema>) => {
+    const onSubmit = (values: FormValues): void => {
       addTodo(values.task, variant);
       reset();
       setIsAddingTodo(false);
+    };
+
+    const handleBlur = (): void => {
+      const values = getValues();
+      if (values.task && !errors.task) {
+        handleSubmit(onSubmit)();
+      } else {
+        setIsAddingTodo(false);
+      }
     };
 
     return (
@@ -69,16 +78,14 @@ export const Column = React.forwardRef<HTMLDivElement, ColumnProps>(
           <DayBadge day={columnTitle(variant)} />
           {variant !== "done" && (
             <button
-              className="text-indigo-600 hover:text-indigo-800 p-2 rounded-full hover:bg-indigo-50 transition-colors duration-200 transform hover:scale-110"
+              className="text-black hover:text-black p-2 rounded-full hover:bg-black-50 transition-colors duration-200 transform hover:scale-110"
               onClick={() => {
                 setIsAddingTodo(true);
                 setTimeout(() => {
-                  if (inputRef.current) {
-                    setFocus("task");
-                  }
+                  setFocus("task");
                 }, 0);
               }}
-              aria-label="Add task"
+              aria-label="Adj hozzá időpontot"
             >
               <Plus size={22} />
             </button>
@@ -104,35 +111,30 @@ export const Column = React.forwardRef<HTMLDivElement, ColumnProps>(
 
               {variant !== "done" && isAddingTodo && (
                 <div className="p-3">
-                  <form
-                    onSubmit={handleSubmit(onSubmit)}
-                    onBlur={() => setIsAddingTodo(false)}
-                  >
+                  <form onSubmit={handleSubmit(onSubmit)}>
                     <Controller
                       name="task"
                       control={control}
                       render={({ field }) => (
                         <div>
-                          <textarea
+                          <input
                             {...field}
                             ref={(e) => {
                               field.ref(e);
                               inputRef.current = e;
                             }}
-                            className={`w-full border rounded-lg p-3 text-sm resize-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all duration-200 shadow-sm ${
+                            type="text"
+                            className={`w-full border rounded-lg p-3 text-sm focus:ring-2 focus:ring-black focus:border-black outline-none transition-all duration-200 shadow-sm ${
                               errors.task ? "border-red-500" : "border-gray-300"
                             }`}
-                            rows={2}
                             onKeyDown={(e) => {
-                              if (e.key === "Enter" && !e.shiftKey) {
-                                e.preventDefault();
-                                handleSubmit(onSubmit)();
-                              }
                               if (e.key === "Escape") {
                                 setIsAddingTodo(false);
                               }
                             }}
-                            placeholder="What needs to be done?"
+                            onBlur={handleBlur}
+                            placeholder="Adj hozzá időpontot (pl 09:30)"
+                            maxLength={5}
                           />
                           {errors.task && (
                             <p className="text-red-500 text-xs mt-1 ml-1">

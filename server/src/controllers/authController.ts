@@ -3,7 +3,6 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import { AppDataSource } from "../config/dbconfig";
 import { generateToken } from "../middlewares/authMiddleware";
 import * as model from "../models/index";
-import { Not } from "typeorm";
 import {
   loginSchema,
   registerSchema,
@@ -192,34 +191,53 @@ export const deleteUser = async (
   }
 };
 
-export const listAllWorkers = async (
-  request: AuthenticatedRequest,
-  reply: FastifyReply,
-) => {
+export const isStoreOwner = async (
+  userId: number,
+  storeId: number,
+): Promise<boolean> => {
+  if (!userId || !storeId) {
+    return false;
+  }
+
   try {
-    const currentUserId = request.user?.userId;
-    const userRepository = AppDataSource.getRepository(model.User);
-
-    const workers = await userRepository.find({
+    const storeWorker = await AppDataSource.getRepository(
+      model.StoreWorker,
+    ).findOne({
       where: {
-        role: "worker",
-        ...(currentUserId ? { userId: Not(currentUserId) } : {}),
+        user: { userId },
+        store: { storeId },
+        role: "owner",
       },
-      select: ["userId", "username", "profilePic", "firstName", "lastName"],
     });
 
-    if (!workers || workers.length === 0) {
-      return reply.status(404).send({ message: "No workers found" });
-    }
-
-    return reply.status(200).send({
-      message: "Workers retrieved successfully",
-      data: workers,
-    });
+    return !!storeWorker;
   } catch (error) {
-    console.error("Error fetching workers:", error);
-    return reply
-      .status(500)
-      .send({ message: "An error occurred while fetching workers" });
+    console.error("Error checking store ownership:", error);
+    return false;
+  }
+};
+
+export const isConnectedToStore = async (
+  userId: number,
+  storeId: number,
+): Promise<boolean> => {
+  if (!userId || !storeId) {
+    return false;
+  }
+
+  try {
+    const storeWorker = await AppDataSource.getRepository(
+      model.StoreWorker,
+    ).findOne({
+      where: {
+        user: { userId },
+        store: { storeId },
+      },
+    });
+
+    return !!storeWorker;
+  } catch (error) {
+    console.error("Error checking store connection:", error);
+    return false;
   }
 };

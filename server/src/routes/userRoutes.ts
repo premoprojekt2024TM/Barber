@@ -4,14 +4,15 @@ import {
   loginUser,
   registerUser,
   updateUser,
-  listAllWorkers,
+  isStoreOwner,
+  isConnectedToStore,
 } from "../controllers/authController";
 import { authenticateJwt, authorizeRole } from "../middlewares/authMiddleware";
 
 export const userRoutes = async (fastify: FastifyInstance) => {
   fastify.post("/register", registerUser);
   fastify.post("/login", loginUser);
-  fastify.get("/list", { preHandler: authenticateJwt }, listAllWorkers);
+
   fastify.delete("/delete", { preHandler: authenticateJwt }, deleteUser);
   //fastify.get('/profile', { preHandler: authenticateJwt }, profile);
   //fastify.get('/user/:username', getUserByUsername);
