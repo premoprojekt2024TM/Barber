@@ -16,9 +16,7 @@ export const registerUser = async (
 ) => {
   const result = registerSchema.safeParse(request.body);
   if (!result.success) {
-    return reply
-      .status(400)
-      .send({ message: "Validation failed", errors: result.error.errors });
+    return reply.status(400);
   }
 
   const { username, email, password, role, firstName, lastName } = result.data;
@@ -61,10 +59,13 @@ export const registerUser = async (
     newUser.lastName = lastName;
     newUser.firstName = firstName;
     await AppDataSource.getRepository(model.User).save(newUser);
-    return reply.status(201).send({ message: "User created successfully" });
+    return reply
+      .status(201)
+      .send({ message: "Felhasználó sikeresen létrehozva." });
   } catch (error) {
-    console.error("Error during user registration:", error);
-    return reply.status(500).send({ message: "Error creating user" });
+    return reply
+      .status(500)
+      .send({ message: "Hiba történt Felhasználó létrehozása közben" });
   }
 };
 
@@ -99,12 +100,9 @@ export const loginUser = async (
 
     const token = generateToken(user);
 
-    return reply.send({ message: "Login successful", token });
+    return reply.send({ message: "Sikeres bejelentkezés", token });
   } catch (error) {
-    console.error("Error during login:", error);
-    return reply
-      .status(500)
-      .send({ message: "An error occurred during login" });
+    return reply.status(500).send({ message: "Hiba történt bejelentkezéskor" });
   }
 };
 
@@ -115,7 +113,7 @@ export const updateUser = async (
   const userId = request.user?.userId;
 
   if (!userId) {
-    return reply.status(400).send({ message: "User ID is missing" });
+    return reply.status(400);
   }
 
   const result = updateSchema.safeParse(request.body);
@@ -137,7 +135,7 @@ export const updateUser = async (
       username,
     });
     if (checkUsername) {
-      return reply.status(400).send({ message: "Username already exists" });
+      return reply.status(400).send({ message: "A felhasználó már létezik!" });
     }
 
     if (!user) {

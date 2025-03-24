@@ -13,7 +13,9 @@ export const createAvailability = async (
 ) => {
   const userId = request.user?.userId;
   if (!userId) {
-    return reply.status(400).send({ message: "User not authenticated" });
+    return reply
+      .status(400)
+      .send({ message: "Felhasználó nincs autentikálva" });
   }
 
   const { monday, tuesday, wednesday, thursday, friday, saturday, sunday } =
