@@ -10,7 +10,6 @@ import { friendRoutes } from "./routes/friendRoutes";
 import { storeRoutes } from "./routes/storeRoutes";
 import { availRoutes } from "./routes/availRoutes";
 import { appointmentRoutes } from "./routes/appointmentRoutes";
-import fastifyMultipart from "fastify-multipart";
 
 dotenv.config();
 
@@ -29,18 +28,23 @@ fastify.register(cors, {
   credentials: true,
 });
 
+const routes = [
+  userRoutes,
+  chatRoutes,
+  friendRoutes,
+  storeRoutes,
+  availRoutes,
+  appointmentRoutes,
+];
+
+routes.forEach((route) => fastify.register(route, { prefix: "/api/v1" }));
+
 fastify.register(chatController);
-fastify.register(userRoutes, { prefix: "/api/v1" });
-fastify.register(chatRoutes, { prefix: "/api/v1" });
-fastify.register(storeRoutes, { prefix: "/api/v1" });
-fastify.register(friendRoutes, { prefix: "/api/v1" });
-fastify.register(availRoutes, { prefix: "/api/v1" });
-fastify.register(appointmentRoutes, { prefix: "/api/v1" });
 
 fastify.listen({ port: 8080 }, (err, address) => {
   if (err) {
     console.error(err);
     process.exit(1);
   }
-  console.log(`Server listening at ${address}`);
+  console.log(`Szerver az alábbi porton fut: ${address}`);
 });

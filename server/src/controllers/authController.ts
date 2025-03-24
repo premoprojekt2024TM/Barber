@@ -87,9 +87,7 @@ export const loginUser = async (
     });
 
     if (!user) {
-      return reply
-        .status(400)
-        .send({ message: "Érvénytelen hitelesítő adatok" });
+      return reply.status(401);
     }
 
     const isMatch = await bcrypt.compare(password, user.password);

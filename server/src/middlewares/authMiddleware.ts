@@ -1,8 +1,13 @@
 import jwt from "jsonwebtoken";
 import { FastifyReply } from "fastify";
 import { AuthenticatedRequest, JwtPayload } from "../interfaces/interfaces";
+import * as dotenv from "dotenv";
+dotenv.config();
+const JWT_SECRET = process.env.JWT_SECRET;
 
-const JWT_SECRET = "process.env.JWT_SECRET";
+if (!JWT_SECRET) {
+  throw new Error("JWT_SECRET nincs deklarálva a környezeti változoban.");
+}
 
 export const generateToken = (user: {
   userId: number;
@@ -30,9 +35,7 @@ export const authenticateJwt = async (
   const authHeader = request.headers["authorization"];
 
   if (!authHeader) {
-    return reply
-      .status(401)
-      .send({ message: "Authorization token is required" });
+    return reply.status(401).send({ message: "Autentikációs kulcs kötelező!" });
   }
 
   const token = authHeader.split(" ")[1];
@@ -48,8 +51,7 @@ export const authenticateJwt = async (
     };
     return true;
   } catch (error) {
-    console.error("Invalid token:", error);
-    return reply.status(403).send({ message: "Invalid or expired token" });
+    return reply.status(403).send({ message: "Hibás vagy lejárt kulcs." });
   }
 };
 
@@ -57,14 +59,16 @@ export const authorizeRole = (allowedRoles: ("client" | "worker")[]) => {
   return async (request: AuthenticatedRequest, reply: FastifyReply) => {
     const user = request.user;
     if (!user) {
-      return reply.status(401).send({ message: "User is not authenticated" });
+      return reply
+        .status(401)
+        .send({ message: "Felhasználó nincs autentikálva." });
     }
 
     const { role } = user;
 
     if (!allowedRoles.includes(role)) {
       return reply.status(403).send({
-        message: "Forbidden: You do not have the required permissions",
+        message: "Hozzáférés megtagadva: Nincs meg a szükséges jogosultságod.",
       });
     }
 

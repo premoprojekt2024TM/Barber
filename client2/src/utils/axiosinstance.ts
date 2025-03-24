@@ -1,6 +1,5 @@
 import axios from "axios";
 import Cookies from "js-cookie";
-
 import { jwtDecode } from "jwt-decode";
 
 export const axiosInstance = axios.create({
@@ -11,6 +10,7 @@ export const axiosInstance = axios.create({
   },
 });
 
+// Add Authorization Header if Token Exists
 axiosInstance.interceptors.request.use(
   (config) => {
     const token = getJWTToken();
@@ -19,15 +19,12 @@ axiosInstance.interceptors.request.use(
     }
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  },
+  (error) => Promise.reject(error), // No console.log here
 );
 
+// Handle Unauthorized Responses (401/403)
 axiosInstance.interceptors.response.use(
-  (response) => {
-    return response;
-  },
+  (response) => response,
   (error) => {
     if (
       error.response &&
@@ -35,13 +32,11 @@ axiosInstance.interceptors.response.use(
     ) {
       Cookies.remove("jwt_token");
     }
-    return Promise.reject(error);
+    return Promise.reject(error); // No console.log here
   },
 );
 
-export const getJWTToken = () => {
-  return Cookies.get("jwt_token");
-};
+export const getJWTToken = () => Cookies.get("jwt_token");
 
 export const getInfoFromToken = () => {
   const token = getJWTToken();
@@ -55,9 +50,8 @@ export const getInfoFromToken = () => {
         username: decoded.username || null,
         profilePic: decoded.profilePic || null,
       };
-    } catch (error) {
-      console.error("Error decoding JWT token:", error);
-      return null;
+    } catch {
+      return null; // No error logging
     }
   }
   return null;
@@ -65,13 +59,11 @@ export const getInfoFromToken = () => {
 
 export const isClientAuthenticated = () => {
   const token = getJWTToken();
-  if (token && token !== "") {
+  if (token) {
     try {
-      const decoded = jwtDecode(token);
-      return decoded.role === "client";
-    } catch (error) {
-      console.error("Error decoding JWT token:", error);
-      return false;
+      return jwtDecode(token).role === "client";
+    } catch {
+      return false; // No error logging
     }
   }
   return false;
@@ -79,13 +71,11 @@ export const isClientAuthenticated = () => {
 
 export const isWorkerAuthenticated = () => {
   const token = getJWTToken();
-  if (token && token !== "") {
+  if (token) {
     try {
-      const decoded = jwtDecode(token);
-      return decoded.role === "worker";
-    } catch (error) {
-      console.error("Error decoding JWT token:", error);
-      return false;
+      return jwtDecode(token).role === "worker";
+    } catch {
+      return false; // No error logging
     }
   }
   return false;
@@ -96,7 +86,6 @@ export const checkClientAccess = async () => {
     if (!isClientAuthenticated()) {
       return { status: 403, data: { message: "Not authenticated as client" } };
     }
-
     const response = await axiosInstance.get("/api/v1/client");
     return { status: 200, data: response.data };
   } catch (error) {
@@ -112,7 +101,6 @@ export const checkWorkerAccess = async () => {
     if (!isWorkerAuthenticated()) {
       return { status: 403, data: { message: "Not authenticated as worker" } };
     }
-
     const response = await axiosInstance.get("/api/v1/hair");
     return { status: 200, data: response.data };
   } catch (error) {

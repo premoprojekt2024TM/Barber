@@ -19,13 +19,13 @@ export const AppDataSource = new DataSource({
     model.Appointment,
   ],
   synchronize: true,
-  logging: true,
+  logging: false,
 });
 
 AppDataSource.initialize()
   .then(() => {
-    console.log("Data Source has been initialized!");
+    console.log("Az adatforrás sikeresen inicializálva!");
   })
   .catch((err) => {
-    console.error("Error during Data Source initialization", err);
+    console.error("Hiba történt az adatforrás inicializálása közben", err);
   });

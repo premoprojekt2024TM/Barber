@@ -37,7 +37,6 @@ export default function Sidebar() {
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [isWorker, setIsWorker] = useState(false);
 
-  // Define menuItems outside the useEffect but inside the component
   const menuItems: MenuItem[] = [
     { name: "Dashboard", icon: Home, path: "/dashboard" },
     { name: "Add", icon: CirclePlus, path: "/add" },
@@ -53,7 +52,6 @@ export default function Sidebar() {
     const workerAuth = isWorkerAuthenticated();
     setIsWorker(workerAuth);
 
-    // Set active item based on current path
     const path = window.location.pathname;
     const currentItem = menuItems.find((item) => path.includes(item.path));
     if (currentItem) {
@@ -176,7 +174,7 @@ export default function Sidebar() {
                 className="flex items-center gap-2 w-full p-4 text-red-600"
               >
                 <LogOut size={20} />
-                <span className="text-sm font-medium">Logout</span>
+                <span className="text-sm font-medium">Kijelentkezés</span>
               </button>
             </div>
           </div>
@@ -283,7 +281,7 @@ export default function Sidebar() {
                   className="flex items-center gap-2 w-full p-3 text-red-600 hover:bg-gray-50 transition-colors"
                 >
                   <LogOut size={16} />
-                  <span className="text-sm font-medium">Logout</span>
+                  <span className="text-sm font-medium">Kijelentkezés</span>
                 </button>
               </div>
             )}
