@@ -12,9 +12,9 @@ export interface Store {
 
 export interface Worker {
   workerId: number;
-  workerUsername: string;
-  workerFirstName: string;
-  workerLastName: string;
+  WorkerUsername: string;
+  WorkerFirstName: string;
+  WorkerLastName: string;
   workerImage?: string;
   availability: AvailabilitySlot[];
 }

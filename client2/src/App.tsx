@@ -5,6 +5,7 @@ import {
   Navigate,
 } from "react-router-dom";
 import { useEffect, useState } from "react";
+import Bubble from "./components/Client/BubbleView/bubblepage";
 import Register from "./components/shared/Auth/register";
 import BookingSystem from "./components/Client/Booking/Booking";
 import MainPage from "./components/Client/Main/MainPage";
@@ -22,7 +23,9 @@ import {
   isWorkerAuthenticated,
   checkClientAccess,
   checkWorkerAccess,
+  checkStoreConnection,
 } from "./utils/axiosinstance";
+
 // Protected route for clients
 const ClientRoute = ({ children }) => {
   const [loading, setLoading] = useState(true);
@@ -45,15 +48,28 @@ const ClientRoute = ({ children }) => {
   return authorized ? children : <Navigate to="/login" />;
 };
 
-// Protected route for workers
-const WorkerRoute = ({ children }) => {
+// Protected route for workers, allowing access to certain pages even without a store connection
+const WorkerStoreRoute = ({ children, allowWithoutStore = false }) => {
   const [loading, setLoading] = useState(true);
   const [authorized, setAuthorized] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
-      const result = await checkWorkerAccess();
-      setAuthorized(result.status === 200);
+      // First check worker authentication
+      const workerResult = await checkWorkerAccess();
+
+      // If worker is authenticated, decide access based on `allowWithoutStore`
+      if (workerResult.status === 200) {
+        if (allowWithoutStore) {
+          setAuthorized(true); // Allow access even without a store
+        } else {
+          const storeConnection = await checkStoreConnection();
+          setAuthorized(storeConnection.isConnectedToStore);
+        }
+      } else {
+        setAuthorized(false);
+      }
+
       setLoading(false);
     };
 
@@ -64,13 +80,7 @@ const WorkerRoute = ({ children }) => {
     return <div>Loading...</div>;
   }
 
-  return authorized ? children : <Navigate to="/login" />;
-};
-
-// Route accessible to authenticated users of any role
-const AuthenticatedRoute = ({ children }) => {
-  const isAuthenticated = isClientAuthenticated() || isWorkerAuthenticated();
-  return isAuthenticated ? children : <Navigate to="/login" />;
+  return authorized ? children : <Navigate to="/nostore" />;
 };
 
 // Route that redirects authenticated users to their appropriate dashboard
@@ -86,12 +96,10 @@ const PublicOnlyRoute = ({ children }) => {
 };
 
 const PublicOrClientRoute = ({ children }) => {
-  // If user is a worker, redirect them to worker dashboard
   if (isWorkerAuthenticated()) {
     return <Navigate to="/dashboard" />;
   }
 
-  // Allow access if user is not authenticated (public) or is a client
   return children;
 };
 
@@ -99,8 +107,6 @@ function App() {
   return (
     <Router>
       <Routes>
-        {/* Public routes - accessible to everyone */}
-
         {/* Public only routes - redirect authenticated users */}
         <Route
           path="/login"
@@ -119,6 +125,7 @@ function App() {
           }
         />
 
+        {/* Public or Client routes */}
         <Route
           path="/"
           element={
@@ -127,24 +134,24 @@ function App() {
             </PublicOrClientRoute>
           }
         />
-
-        {/* Client routes */}
         <Route
-          path="/"
-          element={
-            <ClientRoute>
-              <MainPage />
-            </ClientRoute>
-          }
-        />
-        <Route
-          path="/Map"
+          path="/map"
           element={
             <PublicOrClientRoute>
               <Map />
             </PublicOrClientRoute>
           }
         />
+        <Route
+          path="/bubble"
+          element={
+            <PublicOrClientRoute>
+              <Bubble />
+            </PublicOrClientRoute>
+          }
+        />
+
+        {/* Client-specific routes */}
         <Route
           path="/booking/:storeId"
           element={
@@ -158,71 +165,58 @@ function App() {
         <Route
           path="/dashboard"
           element={
-            <WorkerRoute>
+            <WorkerStoreRoute>
               <BarberShopDashboard />
-            </WorkerRoute>
+            </WorkerStoreRoute>
           }
         />
         <Route
           path="/sidebar"
           element={
-            <WorkerRoute>
+            <WorkerStoreRoute>
               <Sidebar />
-            </WorkerRoute>
+            </WorkerStoreRoute>
           }
         />
+
+        {/* Allow access to /store and /search even without a store */}
         <Route
           path="/store"
           element={
-            <WorkerRoute>
+            <WorkerStoreRoute allowWithoutStore={true}>
               <Store />
-            </WorkerRoute>
+            </WorkerStoreRoute>
           }
         />
+        <Route
+          path="/search"
+          element={
+            <WorkerStoreRoute allowWithoutStore={true}>
+              <FriendsPage />
+            </WorkerStoreRoute>
+          }
+        />
+
+        {/* Routes requiring store connection */}
         <Route
           path="/add"
           element={
-            <WorkerRoute>
+            <WorkerStoreRoute>
               <AvailabilityPage />
-            </WorkerRoute>
-          }
-        />
-        <Route
-          path="/search"
-          element={
-            <WorkerRoute>
-              <FriendsPage />
-            </WorkerRoute>
+            </WorkerStoreRoute>
           }
         />
 
+        {/* Error and special routes */}
         <Route
           path="/noedit"
           element={
-            <WorkerRoute>
+            <WorkerStoreRoute>
               <NoEditRightsPage />
-            </WorkerRoute>
+            </WorkerStoreRoute>
           }
         />
-
-        <Route
-          path="/nostore"
-          element={
-            <WorkerRoute>
-              <NotInStorePage />
-            </WorkerRoute>
-          }
-        />
-
-        {/* Route for any authenticated user */}
-        <Route
-          path="/search"
-          element={
-            <WorkerRoute>
-              <FriendsPage />
-            </WorkerRoute>
-          }
-        />
+        <Route path="/nostore" element={<NotInStorePage />} />
 
         {/* Catch-all redirect to homepage */}
         <Route path="*" element={<Navigate to="/" replace />} />

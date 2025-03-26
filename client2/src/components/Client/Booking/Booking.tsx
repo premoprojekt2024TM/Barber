@@ -191,10 +191,6 @@ const BookingSystem = () => {
                 <h2 className="text-2xl font-bold text-gray-800 mb-2">
                   {storeData.name}
                 </h2>
-                <p className="text-gray-600 mb-4">
-                  A minimalist approach to beauty and style. Our expert team
-                  provides top-quality services in a relaxing environment.
-                </p>
                 <div className="mt-4">
                   <div className="flex items-center mb-2">
                     <span className="text-gray-500 mr-2">
@@ -209,7 +205,7 @@ const BookingSystem = () => {
                     <span className="text-gray-500 mr-2">
                       <Phone className="h-5 w-5" />
                     </span>
-                    <span className="text-gray-600">{storeData.phone}</span>
+                    <span className="text-gray-600">+36 {storeData.phone}</span>
                   </div>
                   <div className="flex items-center mb-2">
                     <span className="text-gray-500 mr-2">
@@ -247,12 +243,12 @@ const BookingSystem = () => {
                         >
                           <img
                             src={worker.workerImage || "/placeholder.svg"}
-                            alt={worker.workerUsername}
+                            alt={worker.WorkerUsername}
                             className="w-full h-full object-cover"
                           />
                         </div>
                         <span className="mt-2 font-medium text-sm">
-                          {worker.workerLastName} {worker.workerFirstName}
+                          {worker.WorkerLastName} {worker.WorkerFirstName}
                         </span>
                       </div>
                     ))}

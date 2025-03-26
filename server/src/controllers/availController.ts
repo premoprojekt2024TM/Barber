@@ -170,3 +170,57 @@ export const getMyAvailability = async (
     });
   }
 };
+
+export const getAvailableWorkers = async (
+  request: FastifyRequest,
+  reply: FastifyReply,
+) => {
+  try {
+    // Find users with worker role who have availability
+    const availableWorkers = await AppDataSource.getRepository(model.User)
+      .createQueryBuilder("user")
+      .leftJoinAndSelect("user.availabilityTimes", "availability")
+      .where("user.role = :role", { role: "worker" })
+      .getMany();
+
+    // Transform the data to include worker details and their availability
+    const workersWithAvailability = availableWorkers.map((worker) => ({
+      userId: worker.userId,
+      username: worker.username,
+      firstName: worker.firstName,
+      lastName: worker.lastName,
+      profilePic: worker.profilePic,
+      availability: worker.availabilityTimes.reduce(
+        (
+          acc: { [key: string]: { timeSlot: string; status: string }[] },
+          curr,
+        ) => {
+          if (!acc[curr.day]) acc[curr.day] = [];
+          acc[curr.day].push({
+            timeSlot: curr.timeSlot,
+            status: curr.status,
+          });
+          return acc;
+        },
+        {},
+      ),
+    }));
+
+    if (workersWithAvailability.length === 0) {
+      return reply.status(200).send({
+        message: "No workers with time slots found",
+        workers: [],
+      });
+    }
+
+    return reply.status(200).send({
+      message: "Workers fetched successfully",
+      workers: workersWithAvailability,
+    });
+  } catch (error) {
+    console.error("Error fetching workers:", error);
+    return reply.status(500).send({
+      message: "Error fetching workers",
+    });
+  }
+};

@@ -1,11 +1,21 @@
 import { PlusCircle, UserPlus } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import Sidebar from "../sidebar";
 
 export default function NotInStorePage() {
+  const navigate = useNavigate();
+
+  const handleCreateStore = () => {
+    navigate("/store");
+  };
+
+  const handleAddFriends = () => {
+    navigate("/search");
+  };
+
   return (
     <div className="flex h-screen bg-gray-50">
       <Sidebar />
-
       <div className="flex-1 flex items-center justify-center relative overflow-hidden">
         <div className="absolute inset-0 w-full h-full z-0">
           <div className="bg-gradient-to-b from-white to-gray-50 w-full h-full" />
@@ -53,14 +63,14 @@ export default function NotInStorePage() {
             <div className="space-y-4">
               <button
                 className="w-full bg-black hover:bg-gray-800 text-white rounded-full flex items-center justify-center gap-2 py-5 px-4 font-medium transition-colors"
-                onClick={() => {}}
+                onClick={handleCreateStore}
               >
                 <PlusCircle size={18} />
                 Új üzlet létrehozása
               </button>
               <button
                 className="w-full border border-gray-300 hover:bg-gray-50 text-gray-800 rounded-full flex items-center justify-center gap-2 py-5 px-4 font-medium transition-colors"
-                onClick={() => {}}
+                onClick={handleAddFriends}
               >
                 <UserPlus size={18} />
                 Barátok hozzáadása

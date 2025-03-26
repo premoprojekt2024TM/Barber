@@ -187,53 +187,44 @@ export const deleteUser = async (
   }
 };
 
-export const isStoreOwner = async (
-  userId: number,
-  storeId: number,
-): Promise<boolean> => {
-  if (!userId || !storeId) {
-    return false;
-  }
-
-  try {
-    const storeWorker = await AppDataSource.getRepository(
-      model.StoreWorker,
-    ).findOne({
-      where: {
-        user: { userId },
-        store: { storeId },
-        role: "owner",
-      },
-    });
-
-    return !!storeWorker;
-  } catch (error) {
-    console.error("Error checking store ownership:", error);
-    return false;
-  }
-};
-
 export const isConnectedToStore = async (
-  userId: number,
-  storeId: number,
-): Promise<boolean> => {
-  if (!userId || !storeId) {
-    return false;
+  request: AuthenticatedRequest,
+  reply: FastifyReply,
+) => {
+  const userId = request.user?.userId;
+
+  if (!userId) {
+    return reply.status(400).send({ message: "User ID is missing" });
   }
 
   try {
-    const storeWorker = await AppDataSource.getRepository(
+    const storeWorkerRepository = AppDataSource.getRepository(
       model.StoreWorker,
-    ).findOne({
+    );
+
+    // Check if the user is connected to any store (either as owner or worker)
+    const storeConnection = await storeWorkerRepository.findOne({
       where: {
-        user: { userId },
-        store: { storeId },
+        user: { userId: userId },
       },
+      relations: ["store"],
     });
 
-    return !!storeWorker;
+    if (storeConnection) {
+      return reply.send({
+        isConnectedToStore: true,
+        store: storeConnection.store,
+        role: storeConnection.role,
+      });
+    }
+
+    return reply.send({
+      isConnectedToStore: false,
+    });
   } catch (error) {
     console.error("Error checking store connection:", error);
-    return false;
+    return reply
+      .status(500)
+      .send({ message: "An error occurred while checking store connection" });
   }
 };

@@ -13,7 +13,7 @@ const features: Feature[] = [
     image:
       "https://pub-f0fa5b4b544643998cb832c3f9d449bc.r2.dev/static/Feature3.jpg",
     text: "Időpontfoglalás",
-    linkGoto: "https://www.example.com",
+    linkGoto: "/bubble",
   },
 ];
 

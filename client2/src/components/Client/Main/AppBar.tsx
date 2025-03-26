@@ -130,16 +130,6 @@ export default function AppBar() {
                   </button>
                 </ScrollLink>
                 <ScrollLink
-                  to="popular"
-                  smooth={true}
-                  duration={500}
-                  className="cursor-pointer"
-                >
-                  <button className="px-3 py-1.5 text-gray-800 font-medium text-sm rounded-md hover:bg-gray-100 transition-colors duration-200">
-                    Népszerű
-                  </button>
-                </ScrollLink>
-                <ScrollLink
                   to="faq"
                   smooth={true}
                   duration={500}

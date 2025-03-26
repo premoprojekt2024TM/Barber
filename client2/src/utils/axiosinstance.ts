@@ -96,6 +96,23 @@ export const checkClientAccess = async () => {
   }
 };
 
+export const checkStoreConnection = async () => {
+  try {
+    const response = await axiosInstance.get("/api/v1/is-connected-to-store");
+    return {
+      isConnectedToStore: response.data.isConnectedToStore,
+      store: response.data.store,
+      role: response.data.role,
+    };
+  } catch (error) {
+    return {
+      isConnectedToStore: false,
+      store: null,
+      role: null,
+    };
+  }
+};
+
 export const checkWorkerAccess = async () => {
   try {
     if (!isWorkerAuthenticated()) {

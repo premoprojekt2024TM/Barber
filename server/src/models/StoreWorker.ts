@@ -19,7 +19,9 @@ export class StoreWorker {
   @JoinColumn({ name: "store_id" })
   store!: Store;
 
-  @ManyToOne(() => User, (user) => user.storeWorkers)
+  @ManyToOne(() => User, (user) => user.storeWorkers, {
+    onDelete: "CASCADE",
+  })
   @JoinColumn({ name: "user_id" })
   user!: User;
 

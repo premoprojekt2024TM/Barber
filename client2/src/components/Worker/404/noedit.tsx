@@ -1,4 +1,3 @@
-"use client";
 import { ArrowLeft, LogOut, PlusCircle } from "lucide-react";
 import Sidebar from "../sidebar";
 

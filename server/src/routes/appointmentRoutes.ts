@@ -3,6 +3,7 @@ import { authenticateJwt } from "../middlewares/authMiddleware";
 import {
   createAppointment,
   getAppointment,
+  getWorkerStore,
 } from "../controllers/appointmentController";
 
 export const appointmentRoutes = async (fastify: FastifyInstance) => {
@@ -16,4 +17,5 @@ export const appointmentRoutes = async (fastify: FastifyInstance) => {
     { preHandler: authenticateJwt },
     getAppointment,
   );
+  fastify.get("/worker/:workerId/store", getWorkerStore);
 };

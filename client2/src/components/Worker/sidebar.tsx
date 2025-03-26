@@ -38,11 +38,11 @@ export default function Sidebar() {
   const [isWorker, setIsWorker] = useState(false);
 
   const menuItems: MenuItem[] = [
-    { name: "Dashboard", icon: Home, path: "/dashboard" },
-    { name: "Add", icon: CirclePlus, path: "/add" },
-    { name: "Appointments", icon: Calendar, path: "/appointments" },
-    { name: "Search", icon: Search, path: "/search" },
-    { name: "Store", icon: Store, path: "/store" },
+    { name: "Irányítópult", icon: Home, path: "/dashboard" },
+    { name: "Időpont hozzáadása", icon: CirclePlus, path: "/add" },
+    { name: "Foglalások", icon: Calendar, path: "/appointments" },
+    { name: "Keresés", icon: Search, path: "/search" },
+    { name: "Üzlet", icon: Store, path: "/store" },
   ];
 
   useEffect(() => {

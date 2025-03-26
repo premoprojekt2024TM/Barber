@@ -73,11 +73,11 @@ function ConfirmationDialog({
               <div className="text-gray-800 col-span-2">
                 {
                   storeData.workers.find((w) => w.workerId === selectedWorker)
-                    ?.workerFirstName
+                    ?.WorkerLastName
                 }{" "}
                 {
                   storeData.workers.find((w) => w.workerId === selectedWorker)
-                    ?.workerLastName
+                    ?.WorkerFirstName
                 }
               </div>
               <div className="text-gray-500">Nap:</div>

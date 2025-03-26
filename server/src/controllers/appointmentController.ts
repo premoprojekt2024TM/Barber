@@ -45,11 +45,9 @@ export const createAppointment = async (
   });
 
   if (!timeSlotEntity) {
-    return reply
-      .status(404)
-      .send({
-        message: "Selected time slot is not available on the specified day",
-      });
+    return reply.status(404).send({
+      message: "Selected time slot is not available on the specified day",
+    });
   }
 
   const newAppointment = new model.Appointment();
@@ -85,5 +83,37 @@ export const getAppointment = async (
   const clientId = request.user?.userId;
   if (!clientId) {
     return reply.status(400).send({ message: "User not authenticated" });
+  }
+};
+export const getWorkerStore = async (
+  request: AuthenticatedRequest,
+  reply: FastifyReply,
+) => {
+  const { workerId } = request.params as { workerId: string };
+
+  try {
+    const storeWorker = await AppDataSource.getRepository(
+      model.StoreWorker,
+    ).findOne({
+      where: { user: { userId: parseInt(workerId) } },
+      relations: ["store", "user"],
+    });
+
+    // Check if store worker exists
+    if (!storeWorker) {
+      return reply.status(404).send({
+        message: "No store found for the specified worker",
+      });
+    }
+
+    return reply.status(200).send({
+      store: storeWorker.store,
+      worker: storeWorker.user,
+    });
+  } catch (error) {
+    console.error("Error fetching worker's store:", error);
+    return reply.status(500).send({
+      message: "Error retrieving worker's store information",
+    });
   }
 };

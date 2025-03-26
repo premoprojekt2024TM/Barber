@@ -4,6 +4,7 @@ import {
   createAvailability,
   getAvailabilitybyId,
   getMyAvailability,
+  getAvailableWorkers,
 } from "../controllers/availController";
 
 export const availRoutes = async (fastify: FastifyInstance) => {
@@ -22,4 +23,5 @@ export const availRoutes = async (fastify: FastifyInstance) => {
     { preHandler: authenticateJwt },
     getMyAvailability,
   );
+  fastify.get("/available-workers", getAvailableWorkers);
 };

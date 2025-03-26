@@ -77,11 +77,12 @@ export default function FriendsPage() {
       <Sidebar />
       <div
         className="flex-1 min-h-screen bg-cover bg-center bg-no-repeat p-4"
-        style={{
-          backgroundColor: "#e6e2d9",
-          // backgroundImage:
-          //"url(https://pub-f0fa5b4b544643998cb832c3f9d449bc.r2.dev/static/authbg.png)",
-        }}
+        style={
+          {
+            // backgroundImage:
+            //"url(https://pub-f0fa5b4b544643998cb832c3f9d449bc.r2.dev/static/authbg.png)",
+          }
+        }
       >
         <div className="max-w-3xl mx-auto">
           <SearchBar onSearch={handleSearch} />

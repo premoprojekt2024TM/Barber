@@ -204,7 +204,7 @@ const Map = () => {
         setLoading(true);
         const result = await getStores();
         if (result.status !== 200) {
-          throw new Error("Failed to fetch stores");
+          throw new Error("Nem sikerült lekérdezni az adatokat.");
         }
         setLoading(false);
         if (map.current && map.current.loaded()) {
@@ -215,8 +215,7 @@ const Map = () => {
           );
         }
       } catch (err) {
-        console.error("Error in fetchStores:", err);
-        setError("Failed to load store data");
+        setError("Nem sikerült betölteni az üzleteket");
         setLoading(false);
       }
     };

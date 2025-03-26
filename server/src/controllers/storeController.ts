@@ -241,10 +241,15 @@ export const getStoreById = async (
       return reply.status(404).send({ message: "Store not found" });
     }
 
-    // Collect the workers along with their availability times
+    // Collect the workers along with their available time slots
     const workersWithAvailability = store.storeWorkers.map((storeWorker) => {
       const user = storeWorker.user;
       const availabilityTimes = user.availabilityTimes;
+
+      // Filter for only available time slots
+      const availableTimeSlots = availabilityTimes.filter(
+        (availability) => availability.status === "available",
+      );
 
       return {
         workerId: user.userId,
@@ -252,7 +257,7 @@ export const getStoreById = async (
         workerImage: user.profilePic,
         WorkerLastName: user.lastName,
         WorkerFirstName: user.firstName,
-        availability: availabilityTimes.map((availability) => ({
+        availability: availableTimeSlots.map((availability) => ({
           day: availability.day,
           timeSlot: availability.timeSlot,
           status: availability.status,
