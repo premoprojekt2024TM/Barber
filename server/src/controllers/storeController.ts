@@ -22,8 +22,6 @@ export const createStore = async (
   try {
     const { name, address, phone, email, workerId, image } =
       request.body as any;
-
-    // Validate required fields
     if (!name || !address || !phone || !email) {
       return reply.status(400).send({ message: "Missing required fields" });
     }
@@ -52,7 +50,7 @@ export const createStore = async (
 
     const geocodedData = await geocodeAddress(address);
     if (!geocodedData) {
-      return reply.status(400).send({ message: "Failed to geocode address" });
+      return reply.status(400).send({ message: "Nem létezik ilyen cím" });
     }
 
     const { lat, lng, city, postalCode, streetAddress, country } = geocodedData;
@@ -154,7 +152,6 @@ const geocodeAddress = async (
   country: string;
 } | null> => {
   try {
-    // Use API key from environment variables
     const apiKey = process.env.GOOGLE_MAPS_API_KEY;
     const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${apiKey}`;
 
@@ -167,20 +164,18 @@ const geocodeAddress = async (
       let postalCode = "";
       let streetAddress = "";
       let country = "";
-
-      // Extract components
       for (let component of addressComponents) {
         if (component.types.includes("locality")) {
-          city = component.long_name; // City
+          city = component.long_name;
         }
         if (component.types.includes("postal_code")) {
-          postalCode = component.long_name; // Postal Code
+          postalCode = component.long_name;
         }
         if (component.types.includes("route")) {
-          streetAddress = component.long_name; // Street Address
+          streetAddress = component.long_name;
         }
         if (component.types.includes("country")) {
-          country = component.long_name; // Country
+          country = component.long_name;
         }
       }
 
@@ -193,11 +188,9 @@ const geocodeAddress = async (
         country,
       };
     } else {
-      console.error(`Geocoding failed for address: ${address}`);
       return null;
     }
   } catch (error) {
-    console.error("Error during geocoding request:", error);
     return null;
   }
 };
@@ -226,7 +219,6 @@ export const getStoreById = async (
   reply: FastifyReply,
 ) => {
   const { storeId } = request.params as GetStoreId;
-
   try {
     const store = await AppDataSource.getRepository(model.Store).findOne({
       where: { storeId },
@@ -236,21 +228,17 @@ export const getStoreById = async (
         "storeWorkers.user.availabilityTimes",
       ],
     });
-
     if (!store) {
       return reply.status(404).send({ message: "Store not found" });
     }
-
     // Collect the workers along with their available time slots
     const workersWithAvailability = store.storeWorkers.map((storeWorker) => {
       const user = storeWorker.user;
       const availabilityTimes = user.availabilityTimes;
-
       // Filter for only available time slots
       const availableTimeSlots = availabilityTimes.filter(
         (availability) => availability.status === "available",
       );
-
       return {
         workerId: user.userId,
         workerName: user.username,
@@ -258,13 +246,13 @@ export const getStoreById = async (
         WorkerLastName: user.lastName,
         WorkerFirstName: user.firstName,
         availability: availableTimeSlots.map((availability) => ({
+          availabilityId: availability.timeSlotId,
           day: availability.day,
           timeSlot: availability.timeSlot,
           status: availability.status,
         })),
       };
     });
-
     return reply.status(200).send({
       message: "Store and workers retrieved successfully",
       store: {

@@ -3,9 +3,11 @@ import {
   PrimaryGeneratedColumn,
   Column,
   ManyToOne,
+  OneToMany,
   JoinColumn,
 } from "typeorm";
 import { User } from "./User";
+import { Appointment } from "./Appointment";
 
 @Entity("AvailabilityTimes")
 export class AvailabilityTimes {
@@ -30,4 +32,7 @@ export class AvailabilityTimes {
     default: "available",
   })
   status!: "accepted" | "available";
+
+  @OneToMany(() => Appointment, (appointment) => appointment.timeSlot)
+  appointments!: Appointment[];
 }

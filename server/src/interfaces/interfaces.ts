@@ -61,6 +61,8 @@ export interface GetStoreId {
 }
 
 export interface CreateAppointmentRequestBody {
+  availabilityId: number;
+  workerId: number;
   storeworkerId: number;
   timeSlot: string;
   notes?: string;

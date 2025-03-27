@@ -3,6 +3,7 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import { AppDataSource } from "../config/dbconfig";
 import { generateToken } from "../middlewares/authMiddleware";
 import * as model from "../models/index";
+import { uploadProfilePicture } from "../config/awsconfig";
 import {
   loginSchema,
   registerSchema,
@@ -113,7 +114,7 @@ export const updateUser = async (
   const userId = request.user?.userId;
 
   if (!userId) {
-    return reply.status(400);
+    return reply.status(400).send({ message: "User ID is missing." });
   }
 
   const result = updateSchema.safeParse(request.body);
@@ -123,27 +124,49 @@ export const updateUser = async (
       .send({ message: "Validation failed", errors: result.error.errors });
   }
 
-  const { username, email, password } = result.data;
+  const { username, email, password, firstName, lastName, profilePic } =
+    result.data;
 
   try {
     const userRepository = AppDataSource.getRepository(model.User);
-    const user = await userRepository.findOneBy({ userId: userId });
-
-    const checkUsername = await AppDataSource.getRepository(
-      model.User,
-    ).findOneBy({
-      username,
-    });
-    if (checkUsername) {
-      return reply.status(400).send({ message: "A felhasználó már létezik!" });
-    }
+    const user = await userRepository.findOneBy({ userId });
 
     if (!user) {
       return reply.status(404).send({ message: "User not found" });
     }
 
+    // Check if the username is already taken (only if it's being updated)
+    if (username && username !== user.username) {
+      const checkUsername = await userRepository.findOneBy({ username });
+      if (checkUsername) {
+        return reply.status(400).send({ message: "Username already exists!" });
+      }
+    }
+
+    // Handle profile picture upload
+    let profilePictureUrl: string | undefined;
+    if (profilePic) {
+      // Check if profilePic data exists
+      try {
+        profilePictureUrl = await uploadProfilePicture(
+          profilePic, // Assuming profilePic is the base64 encoded image
+          `${userId}-${Date.now()}.png`, // Generate a unique filename
+          "image/png", // Adjust contentType as needed based on your image format
+        );
+      } catch (uploadError) {
+        console.error("Error uploading profile picture:", uploadError);
+        return reply
+          .status(500)
+          .send({ message: "Failed to upload profile picture" });
+      }
+    }
+
+    // Update user properties conditionally
     if (username) user.username = username;
     if (email) user.email = email;
+    if (firstName) user.firstName = firstName;
+    if (lastName) user.lastName = lastName;
+    if (profilePictureUrl) user.profilePic = profilePictureUrl; // Save the URL from S3
 
     if (password) {
       const salt = await bcrypt.genSalt(12);
@@ -151,7 +174,14 @@ export const updateUser = async (
     }
 
     await userRepository.save(user);
-    return reply.send({ message: "User updated successfully", user });
+
+    // Remove password from response
+    const { password: removedPassword, ...userWithoutPassword } = user;
+
+    return reply.send({
+      message: "User updated successfully",
+      user: userWithoutPassword,
+    });
   } catch (error) {
     console.error("Error during user update:", error);
     return reply
@@ -177,7 +207,46 @@ export const deleteUser = async (
       return reply.status(404).send({ message: "User not found" });
     }
 
+    // **Crucial: Handle Appointments and AvailabilityTimes before deleting the user**
+
+    // 1. Update Appointment status (if necessary - you might prefer cascading delete)
+    const appointmentRepository = AppDataSource.getRepository(
+      model.Appointment,
+    );
+    const appointments = await appointmentRepository.find({
+      where: [{ client: { userId: userId } }, { worker: { userId: userId } }], // Find appointments where the user is either the client or the worker
+      relations: ["timeSlot"], // Load the related timeSlot for each appointment.  VERY IMPORTANT
+    });
+
+    for (const appointment of appointments) {
+      // Update associated AvailabilityTimes to 'available' if the timeSlot exists
+      if (appointment.timeSlot) {
+        appointment.timeSlot.status = "available";
+        const availabilityTimesRepository = AppDataSource.getRepository(
+          model.AvailabilityTimes,
+        );
+        await availabilityTimesRepository.save(appointment.timeSlot);
+      }
+      // Optionally, you can delete the appointment if you don't want to keep it
+      // await appointmentRepository.remove(appointment);
+    }
+
+    //2.  Update AvailabilityTimes to available  (the cascade delete should handle this now because of the onDelete: "CASCADE" on the AvailabilityTime entity. The code below is probably redundant but leaving it here for explicitness)
+    const availabilityTimesRepository = AppDataSource.getRepository(
+      model.AvailabilityTimes,
+    );
+    const availabilityTimes = await availabilityTimesRepository.find({
+      where: { user: { userId: userId } },
+    });
+
+    for (const timeSlot of availabilityTimes) {
+      timeSlot.status = "available";
+      await availabilityTimesRepository.save(timeSlot);
+    }
+
+    // 3.  Now delete the user (after handling related data).  The cascade delete should take care of things from here.
     await userRepository.remove(user);
+
     return reply.send({ message: "User deleted successfully" });
   } catch (error) {
     console.error("Error during user deletion:", error);
@@ -226,5 +295,45 @@ export const isConnectedToStore = async (
     return reply
       .status(500)
       .send({ message: "An error occurred while checking store connection" });
+  }
+};
+
+export const getCurrentUser = async (
+  request: AuthenticatedRequest,
+  reply: FastifyReply,
+) => {
+  const userId = request.user?.userId;
+
+  if (!userId) {
+    return reply.status(400).send({ message: "User ID is missing" });
+  }
+
+  try {
+    const userRepository = AppDataSource.getRepository(model.User);
+
+    // Find the user by ID, excluding sensitive information like password
+    const user = await userRepository.findOne({
+      where: { userId },
+      select: [
+        "userId",
+        "username",
+        "email",
+        "firstName",
+        "lastName",
+        "profilePic",
+      ],
+    });
+
+    if (!user) {
+      return reply.status(404).send({ message: "User not found" });
+    }
+
+    // Return the user data
+    return reply.send(user);
+  } catch (error) {
+    console.error("Error retrieving user:", error);
+    return reply
+      .status(500)
+      .send({ message: "An error occurred while retrieving user data" });
   }
 };

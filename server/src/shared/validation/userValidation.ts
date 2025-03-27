@@ -54,16 +54,12 @@ export const loginSchema = z.object({
 });
 
 export const updateSchema = z.object({
-  username: z
-    .string()
-    .min(3, "Username should be at least 3 characters long")
-    .max(12, "Username should be at most 12 characters long")
-    .optional(),
-  email: z.string().email("Invalid email format").optional(),
-  password: z
-    .string()
-    .min(6, "Password should be at least 6 characters long")
-    .optional(),
+  username: z.string().min(3).max(50).optional(),
+  email: z.string().email().optional(),
+  password: z.string().min(6).optional(),
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
+  profilePic: z.string().optional(), // Assuming profilePic is a string (e.g., URL or base64)
 });
 
 export const storeSchema = z.object({

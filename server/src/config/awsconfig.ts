@@ -51,3 +51,29 @@ export const uploadStoreImage = async (
     throw new Error("Sikertelen képfeltöltés");
   }
 };
+
+export const uploadProfilePicture = async (
+  base64Image: string,
+  filename: string,
+  contentType: string,
+): Promise<string> => {
+  const base64Data = base64Image.replace(/^data:image\/\w+;base64,/, "");
+  const buffer = Buffer.from(base64Data, "base64");
+  const folderPath = "Uploads/ProfilePhotos/";
+  const filePath = `${folderPath}${Date.now()}-${filename}`;
+  const putObjectParams = {
+    Bucket: BUCKET_NAME,
+    Key: filePath,
+    Body: buffer,
+    ContentType: contentType,
+    ACL: "public-read" as ObjectCannedACL,
+  };
+
+  try {
+    const command = new PutObjectCommand(putObjectParams);
+    await s3Client.send(command);
+    return `${S3_BASE_URL}${filePath}`;
+  } catch (error) {
+    throw new Error("Sikertelen profilkép feltöltés");
+  }
+};
