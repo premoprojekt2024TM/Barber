@@ -6,12 +6,18 @@ import {
   updateUser,
   isConnectedToStore,
   getCurrentUser,
+  isStoreOwner,
 } from "../controllers/authController";
 import { authenticateJwt, authorizeRole } from "../middlewares/authMiddleware";
 
 export const userRoutes = async (fastify: FastifyInstance) => {
   fastify.post("/register", registerUser);
   fastify.post("/login", loginUser);
+  fastify.get(
+    "/isStoreOwner",
+    { preHandler: [authenticateJwt, authorizeRole(["worker"])] },
+    isStoreOwner,
+  );
   fastify.get(
     "/is-connected-to-store",
     { preHandler: authenticateJwt },

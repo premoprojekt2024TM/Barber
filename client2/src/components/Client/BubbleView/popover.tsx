@@ -1,11 +1,10 @@
 import type React from "react";
-import type { AppointmentPopoverProps } from "./hairdresser";
+import type { AppointmentPopoverProps as AppointmentPopoverPropsType } from "./hairdresser"; // Renamed the imported type
 import { Clock, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
-// Hungarian day name translation
 const dayTranslations: Record<string, string> = {
   monday: "Hétfő",
   tuesday: "Kedd",
@@ -15,6 +14,8 @@ const dayTranslations: Record<string, string> = {
   saturday: "Szombat",
   sunday: "Vasárnap",
 };
+
+interface AppointmentPopoverProps extends AppointmentPopoverPropsType {}
 
 export default function AppointmentPopover({
   hairdresser,
@@ -27,7 +28,6 @@ export default function AppointmentPopover({
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  // Fetch store for the worker
   useEffect(() => {
     const fetchWorkerStore = async () => {
       try {
@@ -42,14 +42,12 @@ export default function AppointmentPopover({
         }
       } catch (err) {
         setError("Nem sikerült lekérdezni a bolt információt.");
-        console.error(err);
       }
     };
 
     fetchWorkerStore();
-  }, [hairdresser.userId]);
+  }, [hairdresser.id]);
 
-  // Improved availability extraction
   const availableTimes = Object.entries(hairdresser.availability || {}).flatMap(
     ([day, daySlots]) =>
       (daySlots as any[])
@@ -76,36 +74,27 @@ export default function AppointmentPopover({
     };
   }, [onClose]);
 
-  // Calculate position to ensure popover stays in viewport
   useEffect(() => {
     if (!popoverRef.current) return;
-
-    // Get viewport dimensions
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
 
-    // Get popover dimensions
     const popoverRect = popoverRef.current.getBoundingClientRect();
     const popoverWidth = popoverRect.width;
     const popoverHeight = popoverRect.height;
 
-    // Calculate position
     let left = position.x;
-    let top = position.y + 20; // Add some offset from the bubble
+    let top = position.y + 20;
 
-    // Check if popover would go off the right edge
     if (left + popoverWidth / 2 > viewportWidth) {
       left = viewportWidth - popoverWidth / 2 - 20;
     }
 
-    // Check if popover would go off the left edge
     if (left - popoverWidth / 2 < 0) {
       left = popoverWidth / 2 + 20;
     }
 
-    // Check if popover would go off the bottom edge
     if (top + popoverHeight > viewportHeight) {
-      // Place popover above the bubble instead
       top = position.y - popoverHeight - 20;
     }
 
@@ -118,9 +107,7 @@ export default function AppointmentPopover({
     });
   }, [position]);
 
-  // Handle booking navigation
   const handleBooking = () => {
-    // Navigate to booking page with store ID
     if (storeId) {
       navigate(`/booking/${storeId}`);
     }

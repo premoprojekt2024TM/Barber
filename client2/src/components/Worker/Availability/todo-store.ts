@@ -62,7 +62,7 @@ const showAlert = (message: string, type: AlertType = "success"): void => {
       }"
       aria-label="Close notification"
     >
-      &times;
+      ×
     </button>
   `;
 
@@ -141,9 +141,7 @@ export const useTodos = create<TodoStore>()(
               availabilityData[day as keyof typeof availabilityData];
 
             if (dayData && Array.isArray(dayData)) {
-              // Use type casting with a proper check
               if (isTimeSlotObjectArray(dayData)) {
-                // Process as TimeSlotObject[]
                 dayData.forEach((item: TimeSlotObject) => {
                   const todoItem = {
                     id: nanoid(),
@@ -164,7 +162,6 @@ export const useTodos = create<TodoStore>()(
                   }
                 });
               } else {
-                // Process as string[]
                 (dayData as string[]).forEach((timeSlot: string) => {
                   const todoItem = {
                     id: nanoid(),
@@ -269,17 +266,31 @@ export const useTodos = create<TodoStore>()(
           ) {
             return store;
           }
-          const [taskToMove] = sourceTasks.splice(taskToMoveIndex, 1);
+
+          const taskToMove = sourceTasks[taskToMoveIndex];
+          const targetTasks = [...newTodos[targetCategory]];
+
+          const isDuplicate = targetTasks.some(
+            (task) => task.title === taskToMove.title,
+          );
+
+          if (isDuplicate) {
+            showAlert(
+              `Az időpont '${taskToMove.title}' már létezik ezen a napon.`,
+              "error",
+            );
+            return store;
+          }
+          const [taskToMoveSplice] = sourceTasks.splice(taskToMoveIndex, 1);
           newTodos[sourceCategory] = sourceTasks;
 
-          const targetTasks = [...newTodos[targetCategory]];
           targetTasks.splice(targetIndex, 0, {
-            ...taskToMove,
+            ...taskToMoveSplice,
             state: targetCategory,
             status:
               targetCategory === "done"
                 ? "accepted"
-                : taskToMove.status || "available",
+                : taskToMoveSplice.status || "available",
           });
           newTodos[targetCategory] = targetTasks;
           return { ...store, todos: newTodos };

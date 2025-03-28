@@ -1,4 +1,3 @@
-"use client";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import BubbleContainer from "./container";
@@ -26,37 +25,38 @@ export default function Home() {
         );
 
         if (!response.ok) {
-          throw new Error("Failed to fetch workers");
+          throw new Error("Nem sikerült lekérdezni a fodrászokat.");
         }
 
         const data = await response.json();
-
-        // Transform API response to Hairdresser type
         const transformedHairdressers: Hairdresser[] = data.workers.map(
-          (worker: any) => ({
-            id: worker.userId,
-            name: `${worker.firstName} ${worker.lastName}`,
-            specialty: worker.username,
-            rating: 0,
-            nextAvailable: worker.availability
-              ? Object.keys(worker.availability).length > 0
-                ? "Available"
-                : "No Availability"
-              : "No Availability",
-            hasAvailability:
+          (worker: any) => {
+            const hasAvailableSlot =
               worker.availability &&
-              Object.keys(worker.availability).length > 0,
-            profilePic: worker.profilePic,
-            availability: worker.availability || {}, // Preserve full availability data
-          }),
+              Object.keys(worker.availability).some(
+                (day) =>
+                  Array.isArray(worker.availability[day]) &&
+                  worker.availability[day].length > 0 &&
+                  worker.availability[day].every(
+                    (slot) => slot.status !== "accepted",
+                  ),
+              );
+
+            return {
+              id: worker.userId,
+              name: `${worker.lastName} ${worker.firstName}`,
+              hasAvailability: hasAvailableSlot,
+              profilePic: worker.profilePic,
+              availability: worker.availability || {},
+            };
+          },
         );
 
         setHairdressers(transformedHairdressers);
       } catch (err) {
         setError(
-          err instanceof Error ? err.message : "An unknown error occurred",
+          err instanceof Error ? err.message : "Ismeretlen hiba történt",
         );
-        console.error(err);
       } finally {
         setIsLoading(false);
       }
@@ -83,7 +83,7 @@ export default function Home() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-xl text-gray-700">Loading...</div>
+        <div className="text-xl text-gray-700">Töltés...</div>
       </div>
     );
   }
@@ -91,7 +91,7 @@ export default function Home() {
   if (error) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-xl text-red-600">Error: {error}</div>
+        <div className="text-xl text-red-600">Hiba: {error}</div>
       </div>
     );
   }

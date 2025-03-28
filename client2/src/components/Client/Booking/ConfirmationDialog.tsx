@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { ConfirmationDialogProps } from "./BookingTypes";
-import {
-  axiosInstance,
-  getInfoFromToken,
-  isClientAuthenticated,
-} from "../../../utils/axiosinstance";
+import { axiosInstance, getInfoFromToken } from "../../../utils/axiosinstance";
+
+interface ExtendedConfirmationDialogProps extends ConfirmationDialogProps {
+  onBookingSuccessful: () => void;
+  selectedAvailabilityId: number | null;
+}
 
 function ConfirmationDialog({
   isOpen,
@@ -14,7 +15,9 @@ function ConfirmationDialog({
   selectedDay,
   selectedTime,
   storeData,
-}: ConfirmationDialogProps) {
+  onBookingSuccessful,
+  selectedAvailabilityId,
+}: ExtendedConfirmationDialogProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -23,39 +26,25 @@ function ConfirmationDialog({
     setError(null);
 
     try {
-      // Check if user is authenticated as client
-      if (!isClientAuthenticated()) {
-        setError("You must be logged in as a client to book appointments");
-        setIsLoading(false);
-        return;
-      }
-
-      // Get client ID from token
       const userInfo = getInfoFromToken();
       if (!userInfo || !userInfo.userId) {
-        setError("Unable to get user information. Please log in again.");
+        setError("Nincs megfelelő felhasználói adat. Kérem lépjen be ismét.");
         setIsLoading(false);
         return;
       }
-
-      // Make the API call
+      //@ts-ignore
       const response = await axiosInstance.post("/api/v1/createAppointment", {
         workerId: selectedWorker,
         clientId: userInfo.userId,
-        date: selectedDay,
-        time: selectedTime,
+        availabilityId: selectedAvailabilityId,
       });
 
       setIsLoading(false);
-
-      // Call the original onConfirm with the response data
-      onConfirm(response.data);
+      onConfirm();
+      onBookingSuccessful();
+      onClose();
     } catch (error) {
-      console.error("Error creating appointment:", error);
-      setError(
-        error.response?.data?.message ||
-          "Failed to create appointment. Please try again.",
-      );
+      setError("Siketelen foglalás. Kérem próbálja később.");
       setIsLoading(false);
     }
   };

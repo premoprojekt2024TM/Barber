@@ -19,7 +19,7 @@ axiosInstance.interceptors.request.use(
     }
     return config;
   },
-  (error) => Promise.reject(error), // No console.log here
+  (error) => Promise.reject(error),
 );
 
 // Handle Unauthorized Responses (401/403)
@@ -32,7 +32,7 @@ axiosInstance.interceptors.response.use(
     ) {
       Cookies.remove("jwt_token");
     }
-    return Promise.reject(error); // No console.log here
+    return Promise.reject(error);
   },
 );
 
@@ -51,7 +51,7 @@ export const getInfoFromToken = () => {
         profilePic: decoded.profilePic || null,
       };
     } catch {
-      return null; // No error logging
+      return null;
     }
   }
   return null;
@@ -63,7 +63,7 @@ export const isClientAuthenticated = () => {
     try {
       return jwtDecode(token).role === "client";
     } catch {
-      return false; // No error logging
+      return false;
     }
   }
   return false;
@@ -75,7 +75,7 @@ export const isWorkerAuthenticated = () => {
     try {
       return jwtDecode(token).role === "worker";
     } catch {
-      return false; // No error logging
+      return false;
     }
   }
   return false;
@@ -92,6 +92,25 @@ export const checkClientAccess = async () => {
     return {
       status: error.response?.status || 500,
       data: error.response?.data || { message: "Server error" },
+    };
+  }
+};
+
+// Updated checkStoreOwner function
+export const checkStoreOwner = async () => {
+  try {
+    const response = await axiosInstance.get("/api/v1/isStoreOwner");
+    return {
+      isStoreOwner: response.data.isStoreOwner,
+      storeId: response.data.storeId || null, // Handle potential null
+      storeName: response.data.storeName || null,
+    };
+  } catch (error) {
+    console.error("Error checking store owner:", error); // Log the error
+    return {
+      isStoreOwner: false,
+      storeId: null,
+      storeName: null,
     };
   }
 };

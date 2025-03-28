@@ -4,23 +4,18 @@ import Sidebar from "../sidebar";
 
 export default function NotInStorePage() {
   const navigate = useNavigate();
-
   const handleCreateStore = () => {
     navigate("/store");
   };
-
   const handleAddFriends = () => {
     navigate("/search");
   };
-
   return (
     <div className="flex h-screen bg-gray-50">
       <Sidebar />
-      <div className="flex-1 flex items-center justify-center relative overflow-hidden">
-        <div className="absolute inset-0 w-full h-full z-0">
-          <div className="bg-gradient-to-b from-white to-gray-50 w-full h-full" />
-        </div>
-        <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-md z-10 mx-4">
+      <div className="flex-1 flex items-center justify-center relative">
+        <div className="absolute inset-0 bg-gradient-to-b from-white to-gray-50 z-0" />
+        <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-md  mx-4 relative">
           <div className="space-y-6">
             <div className="space-y-2">
               <h1 className="text-3xl font-bold text-gray-900">

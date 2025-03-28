@@ -31,6 +31,42 @@ export const createAvailability = async (
     { day: "sunday", slots: sunday },
   ];
 
+  // First, get all existing availability times for this user
+  const existingAvailabilities = await AppDataSource.getRepository(
+    model.AvailabilityTimes,
+  ).find({
+    where: {
+      user: { userId: userId },
+    },
+  });
+
+  // Function to build a combined array of all received time slots
+  const allReceivedTimeSlots = timeSlots.reduce<
+    { day: string; timeSlot: string }[]
+  >((acc, { day, slots }) => {
+    if (slots) {
+      slots.forEach((timeSlot) => acc.push({ day, timeSlot }));
+    }
+    return acc;
+  }, []);
+
+  // Loop through all existing availabilities and delete if not in the new set
+  for (const existingAvailability of existingAvailabilities) {
+    const isStillAvailable = allReceivedTimeSlots.some(
+      (slot) =>
+        slot.day === existingAvailability.day &&
+        slot.timeSlot === existingAvailability.timeSlot,
+    );
+
+    if (!isStillAvailable) {
+      // If the existing availability is NOT in the received time slots, delete it
+      await AppDataSource.getRepository(model.AvailabilityTimes).remove(
+        existingAvailability,
+      );
+    }
+  }
+
+  // Loop through the timeSlots array, checking if a availability exists.
   for (const { day, slots } of timeSlots) {
     if (slots && slots.length > 0) {
       for (const timeSlot of slots) {
@@ -44,12 +80,8 @@ export const createAvailability = async (
           },
         });
 
-        if (existingAvailability) {
-          existingAvailability.status = "available";
-          await AppDataSource.getRepository(model.AvailabilityTimes).save(
-            existingAvailability,
-          );
-        } else {
+        if (!existingAvailability) {
+          // Does not exists create a new one.
           const newAvailabilityTime = new model.AvailabilityTimes();
           newAvailabilityTime.user = { userId } as any;
           newAvailabilityTime.day = day;
@@ -87,7 +119,6 @@ export const getAvailabilitybyId = async (
       .createQueryBuilder("availability")
       .leftJoinAndSelect("availability.user", "user")
       .where("user.userId = :id", { id: userId })
-      .andWhere("availability.status = :status", { status: "available" })
       .getMany();
 
     if (availability.length === 0) {
@@ -141,6 +172,7 @@ export const getMyAvailability = async (
     if (availability.length === 0) {
       return reply.status(200).send({
         message: "No available slots found for your account",
+        availability: {}, // Return an empty object for consistency.
       });
     }
 

@@ -1,11 +1,9 @@
-"use client";
-
 import type React from "react";
 import { useState, useEffect, useRef } from "react";
 import GooglePlacesAutocomplete from "react-google-places-autocomplete";
 import { X } from "lucide-react";
 
-const GOOGLE_MAPS_API_KEY = "AIzaSyCSJN2Qzyjhv-AFd1I2LVLD30hX7-lZhRE";
+const GOOGLE_MAPS_API_KEY = "AIzaSyCSJN2Qzyjhv-AFd1I2LVLD30hX7-lZhRE"; // HARDCODED API KEY - SECURE YOURS!
 
 interface StoreInformationProps {
   onStoreInfoChange: (
@@ -28,11 +26,26 @@ export const StoreInformationSection = ({
   const [isTyping, setIsTyping] = useState(false);
   const placesRef = useRef<any>(null);
 
+  const [phoneError, setPhoneError] = useState<string | null>(null);
+  const [emailError, setEmailError] = useState<string | null>(null);
+
   useEffect(() => {
     if (location && !isTyping) {
       setAddressText(location.label || location.value?.description || "");
     }
   }, [location, isTyping]);
+
+  const validateEmail = (email: string): boolean => {
+    // Basic email validation using regex
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const validatePhoneNumber = (phoneNumber: string): boolean => {
+    // Check if it matches 12 345 6789 format
+    const phoneRegex = /^\d{2} \d{3} \d{4}$/;
+    return phoneRegex.test(phoneNumber);
+  };
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const name = e.target.value;
@@ -65,13 +78,30 @@ export const StoreInformationSection = ({
     }
 
     setStorePhone(formattedPhone);
-    onStoreInfoChange(storeName, "+36 " + formattedPhone, storeEmail, location);
+
+    const fullPhoneNumber = "+36 " + formattedPhone;
+    if (formattedPhone && !validatePhoneNumber(formattedPhone)) {
+      setPhoneError(
+        "Kérlek, érvényes telefonszámot adj meg (12 345 6789 formátum).",
+      );
+      onStoreInfoChange(storeName, "", storeEmail, location); // Send empty string to parent on error
+    } else {
+      setPhoneError(null);
+      onStoreInfoChange(storeName, fullPhoneNumber, storeEmail, location);
+    }
   };
 
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const email = e.target.value;
     setStoreEmail(email);
-    onStoreInfoChange(storeName, storePhone, email, location);
+
+    if (email && !validateEmail(email)) {
+      setEmailError("Kérlek, érvényes email címet adj meg.");
+      onStoreInfoChange(storeName, storePhone, "", location); // Send empty string to parent on error
+    } else {
+      setEmailError(null);
+      onStoreInfoChange(storeName, storePhone, email, location);
+    }
   };
 
   const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -258,6 +288,9 @@ export const StoreInformationSection = ({
             maxLength={12}
           />
         </div>
+        {phoneError && (
+          <p className="text-red-500 text-sm mt-1">{phoneError}</p>
+        )}
       </div>
 
       <div className="w-full">
@@ -271,6 +304,9 @@ export const StoreInformationSection = ({
           placeholder="Email cím"
           className={inputClass}
         />
+        {emailError && (
+          <p className="text-red-500 text-sm mt-1">{emailError}</p>
+        )}
       </div>
     </div>
   );

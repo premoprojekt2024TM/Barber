@@ -3,6 +3,10 @@ import {
   createStore,
   getAllStores,
   getStoreById,
+  getStoreWorkerDetails,
+  getStoreWorkersAndAppointments,
+  deleteStore,
+  exitStore,
 } from "../controllers/storeController";
 import { RateLimiterMemory } from "rate-limiter-flexible";
 import { authenticateJwt } from "../middlewares/authMiddleware";
@@ -14,6 +18,11 @@ export const storeRoutes = async (fastify: FastifyInstance) => {
   });
   fastify.get("/store/:storeId", getStoreById);
   fastify.get("/Store", getAllStores);
+  fastify.get(
+    "/mystore",
+    { preHandler: authenticateJwt },
+    getStoreWorkerDetails,
+  );
   fastify.post(
     "/createStore",
     { preHandler: authenticateJwt },
@@ -24,8 +33,15 @@ export const storeRoutes = async (fastify: FastifyInstance) => {
       } catch (error) {
         reply
           .status(429)
-          .send({ message: "Too many requests, please try again later." });
+          .send({ message: "Túl sok lekérdezés próbáld meg később." });
       }
     },
   );
+  fastify.get(
+    "/stores",
+    { preHandler: authenticateJwt },
+    getStoreWorkersAndAppointments,
+  );
+  fastify.delete("/deletestore", { preHandler: authenticateJwt }, deleteStore);
+  fastify.delete("/exitstore", { preHandler: authenticateJwt }, exitStore);
 };

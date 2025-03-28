@@ -21,7 +21,7 @@ export const getStores = async (): Promise<ApiResponse> => {
             : [];
 
       if (!Array.isArray(storesData)) {
-        throw new Error("Cannot extract store data from API response");
+        throw new Error("Nem sikerült lekérdezni a boltokat");
       }
     } else {
       storesData = response.data;
@@ -37,7 +37,7 @@ export const getStores = async (): Promise<ApiResponse> => {
         ],
       },
       properties: {
-        name: store.name || "Unnamed Store",
+        name: store.name || "",
         description: store.description || "",
         address: store.address || "",
         phone: store.phone || "",
@@ -58,8 +58,8 @@ export const getStores = async (): Promise<ApiResponse> => {
   } catch (error: any) {
     return {
       status: error.response?.status || 500,
-      data: error.response?.data || { message: "Server error" },
-      error: error.message || "Unknown error",
+      data: error.response?.data || { message: "Szerver hiba" },
+      error: error.message || "Ismeretlen hiba",
     };
   }
 };

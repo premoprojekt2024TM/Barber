@@ -1,17 +1,28 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 
-const Snackbar = ({ open, message, severity, onClose }) => {
+interface SnackbarProps {
+  open: boolean;
+  message: string;
+  severity: "success" | "error" | "warning" | "info";
+  onClose: () => void;
+}
+
+const Snackbar = (props: SnackbarProps) => {
+  const { open, message, severity, onClose } = props;
+
   useEffect(() => {
     if (open) {
       const timer = setTimeout(() => {
-        onClose && onClose();
+        onClose?.();
       }, 5000);
 
       return () => clearTimeout(timer);
     }
   }, [open, onClose]);
 
-  if (!open) return null;
+  if (!open) {
+    return null;
+  }
 
   const bgColor =
     severity === "success"

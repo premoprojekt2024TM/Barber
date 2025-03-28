@@ -77,16 +77,25 @@ const setupMapClustering = (
 
   map.addLayer({
     id: "unclustered-point",
-    type: "circle",
+    type: "symbol",
     source: "points",
     filter: ["!", ["has", "point_count"]],
-    paint: {
-      "circle-color": "#fff",
-      "circle-radius": 20,
-      "circle-stroke-width": 1,
-      "circle-stroke-color": "#fff",
+    layout: {
+      "icon-image": "custom-marker",
+      "icon-size": 1,
+      "icon-allow-overlap": true,
     },
   });
+
+  map.loadImage(
+    "https://docs.mapbox.com/mapbox-gl-js/assets/custom_marker.png",
+    (error, image) => {
+      if (error) throw error;
+      if (!map.hasImage("custom-marker")) {
+        map.addImage("custom-marker", image!);
+      }
+    },
+  );
 
   map.on("click", "clusters", (e) => {
     const features = map.queryRenderedFeatures(e.point, {

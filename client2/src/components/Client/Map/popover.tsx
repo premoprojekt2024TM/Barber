@@ -30,8 +30,10 @@ function Popover({ popoverInfo, handleClose }: PopoverProps) {
       <div className="p-5">
         <h2 className="text-xl font-bold">{popoverInfo.city}</h2>
         <p className="mb-4">{popoverInfo.address}</p>
-        <p className="text-sm text-gray-500">Address: {popoverInfo.address}</p>
-        <p className="text-sm text-gray-500">Phone: {popoverInfo.phone}</p>
+        <p className="text-sm text-gray-500">Cím: {popoverInfo.address}</p>
+        <p className="text-sm text-gray-500">
+          Telefonszám: {popoverInfo.phone}
+        </p>
         <p className="text-sm text-gray-500 mb-4">Email: {popoverInfo.email}</p>
 
         <button

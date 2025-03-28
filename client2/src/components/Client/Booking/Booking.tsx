@@ -16,6 +16,20 @@ const dayTranslations: { [key: string]: string } = {
   sunday: "Vasárnap",
 };
 
+const reverseDayTranslations: { [key: string]: string } = Object.fromEntries(
+  Object.entries(dayTranslations).map(([eng, hun]) => [hun, eng]),
+);
+
+const dayOrder: { [key: string]: number } = {
+  monday: 1,
+  tuesday: 2,
+  wednesday: 3,
+  thursday: 4,
+  friday: 5,
+  saturday: 6,
+  sunday: 7,
+};
+
 const BookingSystem = () => {
   const { storeId } = useParams<{ storeId: string }>();
   const navigate = useNavigate();
@@ -29,6 +43,10 @@ const BookingSystem = () => {
   const [availabilityByDay, setAvailabilityByDay] = useState<
     Record<string, string[]>
   >({});
+  const [bookingSuccess, setBookingSuccess] = useState(false);
+  const [selectedAvailabilityId, setSelectedAvailabilityId] = useState<
+    number | null
+  >(null);
 
   const handleBackClick = () => {
     navigate(-1);
@@ -53,7 +71,7 @@ const BookingSystem = () => {
     if (storeId) {
       fetchStoreData();
     }
-  }, [storeId]);
+  }, [storeId, bookingSuccess]);
 
   useEffect(() => {
     if (selectedWorker && storeData) {
@@ -73,20 +91,53 @@ const BookingSystem = () => {
           }
         });
 
-        setAvailabilityByDay(availByDay);
+        const sortedAvailability: Record<string, string[]> = Object.fromEntries(
+          Object.entries(availByDay).sort(([dayA], [dayB]) => {
+            const englishDayA = reverseDayTranslations[dayA] || dayA;
+            const englishDayB = reverseDayTranslations[dayB] || dayB;
+
+            return (dayOrder[englishDayA] || 7) - (dayOrder[englishDayB] || 7);
+          }),
+        );
+
+        setAvailabilityByDay(sortedAvailability);
         setSelectedTime(null);
         setSelectedDay(null);
+        setSelectedAvailabilityId(null);
       }
     }
-  }, [selectedWorker, storeData]);
+  }, [selectedWorker, storeData, bookingSuccess]);
 
   const handleWorkerSelect = (id: number) => {
     setSelectedWorker(id);
     setSelectedTime(null);
     setSelectedDay(null);
+    setSelectedAvailabilityId(null);
   };
 
   const handleTimeSelect = (day: string, time: string) => {
+    if (selectedWorker && storeData) {
+      const worker = storeData.workers.find(
+        (w) => w.workerId === selectedWorker,
+      );
+      if (worker) {
+        const englishDay = reverseDayTranslations[day] || day;
+
+        const foundAvailability = worker.availability.find(
+          (slot) =>
+            slot.day === englishDay &&
+            slot.timeSlot === time &&
+            slot.status === "available",
+        );
+
+        if (foundAvailability) {
+          setSelectedAvailabilityId(foundAvailability.availabilityId);
+        } else {
+          setSelectedAvailabilityId(null);
+        }
+      }
+    }
+
     setSelectedDay(day);
     setSelectedTime(time);
   };
@@ -99,23 +150,15 @@ const BookingSystem = () => {
     setOpenDialog(false);
   };
 
-  const handleBooking = async () => {
-    try {
-      await axiosInstance.post("/api/v1/booking", {
-        storeId,
-        workerId: selectedWorker,
-        day: selectedDay,
-        timeSlot: selectedTime,
-      });
+  const handleBooking = () => {
+    setBookingSuccess(true);
+    setSelectedTime(null);
+    setSelectedDay(null);
+    setSelectedAvailabilityId(null);
+  };
 
-      handleCloseDialog();
-      setSelectedTime(null);
-      setSelectedDay(null);
-      alert("Booking confirmed!");
-    } catch (err) {
-      console.error("Booking error:", err);
-      alert("Failed to book appointment. Please try again.");
-    }
+  const handleBookingSuccessful = () => {
+    setBookingSuccess(!bookingSuccess);
   };
 
   if (loading) {
@@ -268,24 +311,28 @@ const BookingSystem = () => {
                     <div className="mt-6">
                       {Object.keys(availabilityByDay).length > 0 ? (
                         Object.entries(availabilityByDay).map(
-                          ([day, times]) => (
-                            <div key={day} className="mb-6">
-                              <h4 className="font-medium mb-2">{day}</h4>
+                          ([hunDay, times]) => (
+                            <div key={hunDay} className="mb-6">
+                              <h4 className="font-medium mb-2">{hunDay}</h4>
                               <div className="flex flex-wrap gap-2">
-                                {times.map((time) => (
-                                  <button
-                                    key={`${day}-${time}`}
-                                    className={`px-3 py-1 text-sm border border-gray-200 rounded-md transition-colors ${
-                                      selectedDay === day &&
-                                      selectedTime === time
-                                        ? "bg-black text-white border-black"
-                                        : "bg-white bg-opacity-80 backdrop-blur-sm hover:bg-gray-100"
-                                    }`}
-                                    onClick={() => handleTimeSelect(day, time)}
-                                  >
-                                    {time}
-                                  </button>
-                                ))}
+                                {times.map((time) => {
+                                  return (
+                                    <button
+                                      key={`${hunDay}-${time}`}
+                                      className={`px-3 py-1 text-sm border border-gray-200 rounded-md transition-colors ${
+                                        selectedDay === hunDay &&
+                                        selectedTime === time
+                                          ? "bg-black text-white border-black"
+                                          : "bg-white bg-opacity-80 backdrop-blur-sm hover:bg-gray-100"
+                                      }`}
+                                      onClick={() =>
+                                        handleTimeSelect(hunDay, time)
+                                      }
+                                    >
+                                      {time}
+                                    </button>
+                                  );
+                                })}
                               </div>
                             </div>
                           ),
@@ -303,9 +350,18 @@ const BookingSystem = () => {
                           className="w-full bg-black hover:bg-gray-800 text-white py-3 px-4 rounded-md font-medium flex items-center justify-center transition-colors"
                           onClick={handleOpenDialog}
                         >
-                          Foglalás {selectedDay} {selectedTime}
+                          Foglalás{" "}
+                          {dayTranslations[
+                            reverseDayTranslations[selectedDay || ""] || ""
+                          ] || selectedDay}{" "}
+                          {selectedTime}
                           <ChevronRight className="ml-2 h-5 w-5" />
                         </button>
+                      </div>
+                    )}
+                    {bookingSuccess && (
+                      <div className="mt-4 p-3 bg-green-50 border border-green-200 text-green-600 rounded-md">
+                        Sikeres foglalás!
                       </div>
                     )}
                   </>
@@ -324,6 +380,8 @@ const BookingSystem = () => {
         selectedDay={selectedDay}
         selectedTime={selectedTime}
         storeData={storeData}
+        onBookingSuccessful={handleBookingSuccessful}
+        selectedAvailabilityId={selectedAvailabilityId}
       />
     </div>
   );

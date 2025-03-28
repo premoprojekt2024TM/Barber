@@ -10,11 +10,13 @@ import {
   LogOut,
   ChevronDown,
   Store,
+  User,
 } from "lucide-react";
 import {
   getInfoFromToken,
   isWorkerAuthenticated,
 } from "../../utils/axiosinstance";
+import ProfileModal from "../shared/Profile/ProfileModal";
 
 type UserInfo = {
   username: string;
@@ -36,11 +38,12 @@ export default function Sidebar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [isWorker, setIsWorker] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false); // State for profile modal visibility
 
   const menuItems: MenuItem[] = [
     { name: "Irányítópult", icon: Home, path: "/dashboard" },
     { name: "Időpont hozzáadása", icon: CirclePlus, path: "/add" },
-    { name: "Foglalások", icon: Calendar, path: "/appointments" },
+    { name: "Naptár", icon: Calendar, path: "/calendar" },
     { name: "Keresés", icon: Search, path: "/search" },
     { name: "Üzlet", icon: Store, path: "/store" },
   ];
@@ -88,6 +91,15 @@ export default function Sidebar() {
     document.cookie =
       "jwt_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
     window.location.href = "/login";
+  };
+
+  const handleOpenProfileModal = () => {
+    setIsProfileModalOpen(true);
+    setShowUserMenu(false); // Close the user menu when opening the profile modal
+  };
+
+  const handleCloseProfileModal = () => {
+    setIsProfileModalOpen(false);
   };
 
   if (isMobile) {
@@ -169,6 +181,15 @@ export default function Sidebar() {
                 </button>
               </div>
 
+              {/* Profile Button */}
+              <button
+                onClick={handleOpenProfileModal}
+                className="flex items-center gap-2 w-full p-4"
+              >
+                <User size={20} />
+                <span className="text-sm font-medium">Profilom</span>
+              </button>
+
               <button
                 onClick={handleLogout}
                 className="flex items-center gap-2 w-full p-4 text-red-600"
@@ -178,6 +199,9 @@ export default function Sidebar() {
               </button>
             </div>
           </div>
+        )}
+        {isProfileModalOpen && (
+          <ProfileModal onClose={handleCloseProfileModal} />
         )}
       </>
     );
@@ -276,6 +300,14 @@ export default function Sidebar() {
             </button>
             {showUserMenu && (
               <div className="absolute bottom-full left-0 right-0 bg-white border-t border-gray-100 shadow-lg rounded-t-md overflow-hidden">
+                {/*Profile button here inside usermenu dropdown*/}
+                <button
+                  onClick={handleOpenProfileModal}
+                  className="flex items-center gap-2 w-full p-3 hover:bg-gray-50 transition-colors"
+                >
+                  <User size={16} />
+                  <span className="text-sm font-medium">Profilom</span>
+                </button>
                 <button
                   onClick={handleLogout}
                   className="flex items-center gap-2 w-full p-3 text-red-600 hover:bg-gray-50 transition-colors"
@@ -298,6 +330,9 @@ export default function Sidebar() {
           </div>
         )}
       </div>
+
+      {/* Render the ProfileModal conditionally */}
+      {isProfileModalOpen && <ProfileModal onClose={handleCloseProfileModal} />}
     </div>
   );
 }

@@ -20,6 +20,7 @@ export interface Worker {
 }
 
 export interface AvailabilitySlot {
+  availabilityId: number;
   day: string;
   timeSlot: string;
   status: "available" | "unavailable";

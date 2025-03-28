@@ -1,16 +1,13 @@
-import { ArrowLeft, LogOut, PlusCircle } from "lucide-react";
+import { ArrowLeft, LogOut } from "lucide-react";
 import Sidebar from "../sidebar";
 
 export default function NoEditRightsPage() {
   return (
     <div className="flex h-screen bg-gray-50">
       <Sidebar />
-
-      <div className="flex-1 flex items-center justify-center relative overflow-hidden">
-        <div className="absolute inset-0 w-full h-full z-0">
-          <div className="bg-gradient-to-b from-white to-gray-50 w-full h-full" />
-        </div>
-        <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-md z-10 mx-4">
+      <div className="flex-1 flex items-center justify-center relative">
+        <div className="absolute inset-0 bg-gradient-to-b from-white to-gray-50 z-0" />
+        <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-md  mx-4 relative">
           <div className="space-y-6">
             <div className="space-y-2">
               <h1 className="text-3xl font-bold text-gray-900">
@@ -20,7 +17,6 @@ export default function NoEditRightsPage() {
                 Nincs jogosultsága az üzlet szerkesztésére
               </h2>
             </div>
-
             <div className="py-6">
               <div className="flex flex-col items-center justify-center space-y-4 py-8">
                 <div className="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center">
@@ -56,7 +52,6 @@ export default function NoEditRightsPage() {
                 </p>
               </div>
             </div>
-
             <div className="space-y-4">
               <button
                 className="w-full bg-black hover:bg-gray-800 text-white rounded-full flex items-center justify-center gap-2 py-5 px-4 font-medium transition-colors"
@@ -65,15 +60,6 @@ export default function NoEditRightsPage() {
                 <LogOut size={18} />
                 Kilépés az üzletből
               </button>
-
-              <button
-                className="w-full border border-gray-300 hover:bg-gray-50 text-gray-800 rounded-full flex items-center justify-center gap-2 py-5 px-4 font-medium transition-colors"
-                onClick={() => {}}
-              >
-                <PlusCircle size={18} />
-                Saját üzlet létrehozása
-              </button>
-
               <div className="pt-4">
                 <a
                   href="/"

@@ -190,6 +190,8 @@ export const updateUser = async (
   }
 };
 
+import { getConnection } from "typeorm"; // Import getConnection
+
 export const deleteUser = async (
   request: AuthenticatedRequest,
   reply: FastifyReply,
@@ -199,6 +201,7 @@ export const deleteUser = async (
   if (!userId) {
     return reply.status(400).send({ message: "User ID is missing" });
   }
+
   try {
     const userRepository = AppDataSource.getRepository(model.User);
     const user = await userRepository.findOneBy({ userId: userId });
@@ -207,47 +210,76 @@ export const deleteUser = async (
       return reply.status(404).send({ message: "User not found" });
     }
 
-    // **Crucial: Handle Appointments and AvailabilityTimes before deleting the user**
+    // Check if the user is a store owner
+    const storeWorker = await AppDataSource.getRepository(
+      model.StoreWorker,
+    ).findOne({
+      where: { user: { userId }, role: "owner" },
+      relations: ["store"],
+    });
 
-    // 1. Update Appointment status (if necessary - you might prefer cascading delete)
-    const appointmentRepository = AppDataSource.getRepository(
+    if (storeWorker) {
+      const store = storeWorker.store;
+
+      // Delete all store workers
+      await AppDataSource.getRepository(model.StoreWorker).delete({
+        store: { storeId: store.storeId },
+      });
+
+      // Delete all store-related appointments
+      await AppDataSource.getRepository(model.Appointment).delete({
+        worker: { userId: storeWorker.user.userId },
+      });
+
+      // Delete all store-related availability times
+      await AppDataSource.getRepository(model.AvailabilityTimes).delete({
+        user: { userId: storeWorker.user.userId },
+      });
+
+      // Delete the store itself
+      await AppDataSource.getRepository(model.Store).delete({
+        storeId: store.storeId,
+      });
+    }
+
+    // Delete all user-related appointments
+    const appointments = await AppDataSource.getRepository(
       model.Appointment,
-    );
-    const appointments = await appointmentRepository.find({
-      where: [{ client: { userId: userId } }, { worker: { userId: userId } }], // Find appointments where the user is either the client or the worker
-      relations: ["timeSlot"], // Load the related timeSlot for each appointment.  VERY IMPORTANT
+    ).find({
+      where: [{ client: { userId: userId } }, { worker: { userId: userId } }],
+      relations: ["timeSlot"],
     });
 
     for (const appointment of appointments) {
-      // Update associated AvailabilityTimes to 'available' if the timeSlot exists
       if (appointment.timeSlot) {
         appointment.timeSlot.status = "available";
-        const availabilityTimesRepository = AppDataSource.getRepository(
-          model.AvailabilityTimes,
+        await AppDataSource.getRepository(model.AvailabilityTimes).save(
+          appointment.timeSlot,
         );
-        await availabilityTimesRepository.save(appointment.timeSlot);
       }
-      // Optionally, you can delete the appointment if you don't want to keep it
-      // await appointmentRepository.remove(appointment);
     }
 
-    //2.  Update AvailabilityTimes to available  (the cascade delete should handle this now because of the onDelete: "CASCADE" on the AvailabilityTime entity. The code below is probably redundant but leaving it here for explicitness)
-    const availabilityTimesRepository = AppDataSource.getRepository(
-      model.AvailabilityTimes,
-    );
-    const availabilityTimes = await availabilityTimesRepository.find({
-      where: { user: { userId: userId } },
+    // Delete user's availability times
+    await AppDataSource.getRepository(model.AvailabilityTimes).delete({
+      user: { userId: userId },
     });
 
-    for (const timeSlot of availabilityTimes) {
-      timeSlot.status = "available";
-      await availabilityTimesRepository.save(timeSlot);
+    // Delete friendships manually
+    const friendships = await AppDataSource.getRepository(
+      model.Friendship,
+    ).find({
+      where: [{ user: { userId: userId } }, { friend: { userId: userId } }],
+    });
+    for (const friendship of friendships) {
+      await AppDataSource.getRepository(model.Friendship).remove(friendship);
     }
 
-    // 3.  Now delete the user (after handling related data).  The cascade delete should take care of things from here.
+    // Delete user account
     await userRepository.remove(user);
 
-    return reply.send({ message: "User deleted successfully" });
+    return reply.send({
+      message: "User and related data deleted successfully",
+    });
   } catch (error) {
     console.error("Error during user deletion:", error);
     return reply
@@ -335,5 +367,46 @@ export const getCurrentUser = async (
     return reply
       .status(500)
       .send({ message: "An error occurred while retrieving user data" });
+  }
+};
+
+export const isStoreOwner = async (
+  request: AuthenticatedRequest,
+  reply: FastifyReply,
+) => {
+  const userId = request.user?.userId;
+
+  if (!userId) {
+    return reply.status(400).send({ message: "User ID is missing" });
+  }
+
+  try {
+    const storeWorkerRepository = AppDataSource.getRepository(
+      model.StoreWorker,
+    );
+    const storeWorker = await storeWorkerRepository.findOne({
+      where: {
+        user: { userId: userId },
+        role: "owner",
+      },
+      relations: ["store"],
+    });
+
+    if (storeWorker) {
+      return reply.send({
+        isStoreOwner: true,
+        storeId: storeWorker.store.storeId,
+        storeName: storeWorker.store.name,
+      });
+    }
+
+    return reply.send({
+      isStoreOwner: false,
+    });
+  } catch (error) {
+    console.error("Error checking if user is store owner:", error);
+    return reply.status(500).send({
+      message: "An error occurred while checking if user is a store owner",
+    });
   }
 };

@@ -1,5 +1,4 @@
 import type { Hairdresser } from "./hairdresser";
-import { Calendar, Star } from "lucide-react";
 
 interface HairdresserListProps {
   hairdressers: Hairdresser[];
@@ -23,12 +22,6 @@ export default function HairdresserList({
               src={hairdresser.profilePic}
               alt={`${hairdresser.name}'s profile`}
               className="w-full h-full object-cover"
-              onError={(e) => {
-                const imgElement = e.target as HTMLImageElement;
-                imgElement.src =
-                  "https://ui-avatars.com/api/?name=" +
-                  encodeURIComponent(hairdresser.name);
-              }}
             />
           </div>
           <div className="flex-grow">

@@ -274,3 +274,283 @@ export const getStoreById = async (
       .send({ message: "An error occurred while retrieving the store" });
   }
 };
+
+export const getStoreWorkerDetails = async (
+  request: AuthenticatedRequest,
+  reply: FastifyReply,
+) => {
+  const userId = request.user?.userId;
+
+  if (!userId) {
+    return reply.status(401).send({ message: "User not authenticated" });
+  }
+
+  try {
+    const user = await AppDataSource.getRepository(model.User).findOne({
+      where: { userId },
+    });
+
+    if (!user) {
+      return reply.status(404).send({ message: "User not found" });
+    }
+
+    const storeWorker = await AppDataSource.getRepository(
+      model.StoreWorker,
+    ).findOne({
+      where: {
+        user: user,
+      },
+      relations: ["store"],
+    });
+
+    if (!storeWorker) {
+      return reply
+        .status(404)
+        .send({ message: "User is not assigned to any store" });
+    }
+
+    const store = storeWorker.store;
+    const role = storeWorker.role;
+
+    return reply.status(200).send({
+      message: "Store worker details retrieved successfully",
+      store: {
+        storeId: store.storeId,
+        name: store.name,
+        address: store.address,
+        city: store.city,
+        postalCode: store.postalCode,
+        phone: store.phone,
+        email: store.email,
+        picture: store.picture,
+      },
+      role: role,
+    });
+  } catch (error) {
+    console.error("Error getting store worker details:", error);
+    return reply.status(500).send({
+      message: "An error occurred while retrieving store worker details",
+    });
+  }
+};
+
+export const getStoreWorkersAndAppointments = async (
+  request: AuthenticatedRequest,
+  reply: FastifyReply,
+) => {
+  const userId = request.user?.userId;
+
+  if (!userId) {
+    return reply.status(401).send({ message: "User not authenticated" });
+  }
+
+  try {
+    const storeWorker = await AppDataSource.getRepository(
+      model.StoreWorker,
+    ).findOne({
+      where: { user: { userId } },
+      relations: ["store"],
+    });
+
+    if (!storeWorker) {
+      return reply
+        .status(404)
+        .send({ message: "User is not assigned to any store" });
+    }
+
+    if (!storeWorker.store || !storeWorker.store.storeId) {
+      return reply.status(500).send({
+        message: "Failed to retrieve store information for the worker.",
+      });
+    }
+
+    const storeId = storeWorker.store.storeId;
+
+    if (typeof storeId !== "number") {
+      return reply
+        .status(500)
+        .send({ message: "Internal error: Invalid store identifier found." });
+    }
+
+    const storeWorkers = await AppDataSource.getRepository(
+      model.StoreWorker,
+    ).find({
+      where: { store: { storeId } },
+      relations: [
+        "user",
+        "user.workerAppointments",
+        "user.workerAppointments.client",
+        "user.workerAppointments.timeSlot", // Add this line
+      ],
+    });
+
+    const workersWithAppointments = storeWorkers
+      .map((worker) => {
+        if (!worker.user) return null;
+        if (!worker.user.workerAppointments) {
+          worker.user.workerAppointments = [];
+        }
+
+        return {
+          workerId: worker.user.userId,
+          workerName: worker.user.username,
+          workerFirstName: worker.user.firstName,
+          workerLastName: worker.user.lastName,
+          workerImage: worker.user.profilePic,
+          appointments: worker.user.workerAppointments.map((appointment) => {
+            if (!appointment.client) {
+              return {
+                appointmentId: appointment.appointmentId,
+                client: null,
+                day: null, // Add Day
+                timeSlot: null, // Add Timeslot
+                status: appointment.status,
+              };
+            }
+
+            return {
+              appointmentId: appointment.appointmentId,
+              client: {
+                profilePic: appointment.client.profilePic,
+                username: appointment.client.username,
+                lastName: appointment.client.lastName,
+                firstName: appointment.client.firstName,
+              },
+              day: appointment.timeSlot?.day || null, // Add Day
+              timeSlot: appointment.timeSlot?.timeSlot || null, // Add Timeslot
+              status: appointment.status,
+            };
+          }),
+        };
+      })
+      .filter((worker) => worker !== null);
+
+    return reply.status(200).send({
+      message: "Store workers and their appointments retrieved successfully",
+      storeId,
+      workers: workersWithAppointments,
+    });
+  } catch (error) {
+    return reply
+      .status(500)
+      .send({ message: "An error occurred while retrieving data" });
+  }
+};
+
+export const deleteStore = async (
+  request: AuthenticatedRequest,
+  reply: FastifyReply,
+) => {
+  const userId = request.user?.userId;
+
+  if (!userId) {
+    return reply.status(401).send({ message: "User not authenticated" });
+  }
+
+  try {
+    const storeWorker = await AppDataSource.getRepository(
+      model.StoreWorker,
+    ).findOne({
+      where: {
+        user: { userId },
+        role: "owner",
+      },
+      relations: ["store"],
+    });
+
+    if (!storeWorker) {
+      return reply
+        .status(403)
+        .send({ message: "Only store owners can delete the store" });
+    }
+
+    const store = storeWorker.store;
+    const storeWorkers = await AppDataSource.getRepository(
+      model.StoreWorker,
+    ).find({
+      where: { store: { storeId: store.storeId } },
+      relations: ["user"],
+    });
+
+    for (const worker of storeWorkers) {
+      await AppDataSource.getRepository(model.Appointment).delete({
+        worker: { userId: worker.user.userId },
+      });
+    }
+
+    for (const worker of storeWorkers) {
+      await AppDataSource.getRepository(model.AvailabilityTimes).delete({
+        user: { userId: worker.user.userId },
+      });
+    }
+
+    await AppDataSource.getRepository(model.StoreWorker).delete({
+      store: { storeId: store.storeId },
+    });
+
+    await AppDataSource.getRepository(model.Store).delete({
+      storeId: store.storeId,
+    });
+
+    return reply.status(200).send({
+      message: "Store and all related data deleted successfully",
+    });
+  } catch (error) {
+    console.error("Error deleting store:", error);
+    return reply.status(500).send({
+      message: "An error occurred while deleting the store",
+    });
+  }
+};
+
+export const exitStore = async (
+  request: AuthenticatedRequest,
+  reply: FastifyReply,
+) => {
+  const userId = request.user?.userId;
+
+  if (!userId) {
+    return reply.status(401).send({ message: "User not authenticated" });
+  }
+
+  try {
+    const storeWorker = await AppDataSource.getRepository(
+      model.StoreWorker,
+    ).findOne({
+      where: {
+        user: { userId },
+        role: "worker",
+      },
+      relations: ["store", "user"],
+    });
+
+    if (!storeWorker) {
+      return reply.status(403).send({
+        message: "Only workers can exit the store. Store owners cannot exit.",
+      });
+    }
+
+    await AppDataSource.getRepository(model.Appointment).delete({
+      worker: { userId },
+    });
+
+    await AppDataSource.getRepository(model.AvailabilityTimes).delete({
+      user: { userId },
+    });
+
+    await AppDataSource.getRepository(model.StoreWorker).delete({
+      user: { userId },
+      store: { storeId: storeWorker.store.storeId },
+    });
+
+    return reply.status(200).send({
+      message:
+        "Successfully exited the store. Appointments and availability cleared.",
+    });
+  } catch (error) {
+    console.error("Error exiting store:", error);
+    return reply.status(500).send({
+      message: "An error occurred while exiting the store",
+    });
+  }
+};

@@ -4,6 +4,7 @@ import {
   createAppointment,
   getAppointment,
   getWorkerStore,
+  getAppointmentsByWorker,
 } from "../controllers/appointmentController";
 
 export const appointmentRoutes = async (fastify: FastifyInstance) => {
@@ -18,4 +19,9 @@ export const appointmentRoutes = async (fastify: FastifyInstance) => {
     getAppointment,
   );
   fastify.get("/worker/:workerId/store", getWorkerStore);
+  fastify.get(
+    "/appointment",
+    { preHandler: authenticateJwt },
+    getAppointmentsByWorker,
+  );
 };

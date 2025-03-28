@@ -1,7 +1,25 @@
 import type React from "react";
-
 import { useState, useRef, useCallback } from "react";
 import { CloudUpload, Trash2 } from "lucide-react";
+
+const useSnackbar = () => {
+  const [snackbarMessage, setSnackbarMessage] = useState<string | null>(null);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+
+  const showSnackbar = (message: string) => {
+    setSnackbarMessage(message);
+    setSnackbarOpen(true);
+    setTimeout(() => {
+      setSnackbarOpen(false);
+    }, 3000);
+  };
+
+  const closeSnackbar = () => {
+    setSnackbarOpen(false);
+  };
+
+  return { snackbarMessage, snackbarOpen, showSnackbar, closeSnackbar };
+};
 
 interface AddImageProps {
   onImageChange: (
@@ -16,6 +34,9 @@ export const AddImage = ({ onImageChange }: AddImageProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
+  const { snackbarMessage, snackbarOpen, showSnackbar, closeSnackbar } =
+    useSnackbar();
+
   const convertToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -27,6 +48,15 @@ export const AddImage = ({ onImageChange }: AddImageProps) => {
 
   const processFile = async (file: File) => {
     if (file) {
+      if (file.size > 1024 * 1024) {
+        showSnackbar("A fálj nem lehet nagyobb ,mint 1 MB.");
+        return;
+      }
+      if (file.type !== "image/jpeg") {
+        showSnackbar("Csak JPEG fájl engedélyezett.");
+        return;
+      }
+
       try {
         const fileUrl = URL.createObjectURL(file);
         const base64String = await convertToBase64(file);
@@ -35,7 +65,7 @@ export const AddImage = ({ onImageChange }: AddImageProps) => {
         setIsUploaded(true);
         onImageChange(base64String, fileUrl);
       } catch (error) {
-        console.error("Error converting file to base64:", error);
+        showSnackbar("Hiba történt a fájl feldolgozása közben.");
       }
     }
   };
@@ -92,15 +122,20 @@ export const AddImage = ({ onImageChange }: AddImageProps) => {
         const files = e.dataTransfer.files;
         if (files && files.length > 0) {
           const droppedFile = files[0];
-          if (droppedFile.type.match("image.*")) {
-            processFile(droppedFile);
-          } else {
-            console.error("Please drop an image file");
+          // Perform validation checks directly in the drop handler.
+          if (droppedFile.size > 1024 * 1024) {
+            showSnackbar("A fálj nem lehet nagyobb mint 1 MB");
+            return;
           }
+          if (droppedFile.type !== "image/jpeg") {
+            showSnackbar("Csak JPEG fájl típus engedélyezett.");
+            return;
+          }
+          processFile(droppedFile);
         }
       }
     },
-    [isUploaded],
+    [isUploaded, showSnackbar, processFile],
   );
 
   return (
@@ -138,7 +173,7 @@ export const AddImage = ({ onImageChange }: AddImageProps) => {
         <input
           type="file"
           ref={fileInputRef}
-          accept="image/*"
+          accept="image/jpeg"
           className="hidden"
           onChange={handleFileChange}
           disabled={isUploaded}
@@ -160,6 +195,13 @@ export const AddImage = ({ onImageChange }: AddImageProps) => {
           </div>
         )}
       </div>
+
+      {snackbarOpen && (
+        <div className="snackbar">
+          {snackbarMessage}
+          <button onClick={closeSnackbar}></button>{" "}
+        </div>
+      )}
     </div>
   );
 };

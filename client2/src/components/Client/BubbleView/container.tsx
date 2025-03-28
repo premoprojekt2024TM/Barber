@@ -1,7 +1,4 @@
-"use client";
-
 import type React from "react";
-
 import { useEffect, useRef, useState } from "react";
 //@ts-ignore
 import BubbleUI from "react-bubble-ui";
@@ -58,14 +55,12 @@ export default function BubbleContainer({
             const element = bubbleElements[index] as HTMLElement;
             setSelectedBubbleElement(element);
 
-            // Get the bubble container
-            const container = document.querySelector("._2MD0k") as HTMLElement;
+            const container = document.querySelector(
+              "._2MD0k",
+            ) as HTMLDivElement;
             if (container && element) {
-              // Calculate the center position of the element relative to the container
               const rect = element.getBoundingClientRect();
               const containerRect = container.getBoundingClientRect();
-
-              // Scroll to center the element
               container.scrollTo({
                 left:
                   rect.left -
@@ -80,13 +75,11 @@ export default function BubbleContainer({
                 behavior: "smooth",
               });
 
-              // Highlight the bubble
               element.classList.add("scale-110");
               setTimeout(() => {
                 element.classList.remove("scale-110");
               }, 1000);
 
-              // Set popover position based on the bubble's position
               const bubbleRect = element.getBoundingClientRect();
               setPopoverPosition({
                 x: bubbleRect.left + bubbleRect.width / 2,
@@ -99,17 +92,7 @@ export default function BubbleContainer({
     }
   }, [selectedHairdresserId, items]);
 
-  useEffect(() => {
-    const bubbles = document.querySelector("._2MD0k") as HTMLElement;
-    if (!bubbles) return;
-
-    bubblesRef.current = bubbles;
-
-    const images = document.querySelectorAll(".bubble-item");
-    images.forEach((img) => {
-      img.ondragstart = () => false;
-    });
-
+  const setupDragAndScroll = (bubbles: HTMLDivElement) => {
     const dragSpeed = 2;
     let isDown = false;
     let startX: number;
@@ -117,26 +100,26 @@ export default function BubbleContainer({
     let scrollLeft: number;
     let scrollTop: number;
 
-    bubbles.addEventListener("mousedown", (e) => {
+    const handleMouseDown = (e: MouseEvent) => {
       isDown = true;
       bubbles.classList.add("active");
       startX = e.pageX - bubbles.offsetLeft;
       startY = e.pageY - bubbles.offsetTop;
       scrollLeft = bubbles.scrollLeft;
       scrollTop = bubbles.scrollTop;
-    });
+    };
 
-    bubbles.addEventListener("mouseleave", () => {
+    const handleMouseLeave = () => {
       isDown = false;
       bubbles.classList.remove("active");
-    });
+    };
 
-    bubbles.addEventListener("mouseup", () => {
+    const handleMouseUp = () => {
       isDown = false;
       bubbles.classList.remove("active");
-    });
+    };
 
-    bubbles.addEventListener("mousemove", (e) => {
+    const handleMouseMove = (e: MouseEvent) => {
       if (!isDown) return;
       e.preventDefault();
       const x = e.pageX - bubbles.offsetLeft;
@@ -145,33 +128,58 @@ export default function BubbleContainer({
       const walkY = (y - startY) * dragSpeed;
       bubbles.scrollLeft = scrollLeft - walkX;
       bubbles.scrollTop = scrollTop - walkY;
+    };
+
+    bubbles.addEventListener("mousedown", handleMouseDown);
+    bubbles.addEventListener("mouseleave", handleMouseLeave);
+    bubbles.addEventListener("mouseup", handleMouseUp);
+    bubbles.addEventListener("mousemove", handleMouseMove);
+
+    return () => {
+      bubbles.removeEventListener("mousedown", handleMouseDown);
+      bubbles.removeEventListener("mouseleave", handleMouseLeave);
+      bubbles.removeEventListener("mouseup", handleMouseUp);
+      bubbles.removeEventListener("mousemove", handleMouseMove);
+    };
+  };
+
+  useEffect(() => {
+    const bubbles = document.querySelector("._2MD0k") as HTMLDivElement;
+
+    if (!bubbles) return;
+
+    bubblesRef.current = bubbles;
+
+    const images = document.querySelectorAll(".bubble-item");
+    images.forEach((img) => {
+      (img as HTMLElement).ondragstart = () => false;
     });
+
+    const cleanup = setupDragAndScroll(bubbles);
+
+    return () => {
+      cleanup();
+    };
   }, []);
 
   const handleBubbleClick = (
     hairdresser: Hairdresser,
     event: React.MouseEvent,
   ) => {
-    // Close popover if clicking the same hairdresser again
     if (selectedHairdresser?.id === hairdresser.id) {
       setSelectedHairdresser(null);
       setSelectedBubbleElement(null);
       onSelectHairdresser(null);
       return;
     }
-
-    // Set the selected bubble element
     const element = event.currentTarget as HTMLElement;
     setSelectedBubbleElement(element);
-
-    // Set position for popover based on the bubble's position
     const rect = element.getBoundingClientRect();
     setPopoverPosition({
       x: rect.left + rect.width / 2,
       y: rect.top + rect.height / 2,
     });
 
-    // Set selected hairdresser
     setSelectedHairdresser(hairdresser);
     onSelectHairdresser(hairdresser);
   };
@@ -181,8 +189,6 @@ export default function BubbleContainer({
     setSelectedBubbleElement(null);
     onSelectHairdresser(null);
   };
-
-  // Update popover position when scrolling or resizing
   useEffect(() => {
     const updatePopoverPosition = () => {
       if (selectedBubbleElement && selectedHairdresser) {
@@ -197,7 +203,7 @@ export default function BubbleContainer({
     window.addEventListener("scroll", updatePopoverPosition);
     window.addEventListener("resize", updatePopoverPosition);
 
-    const bubbles = document.querySelector("._2MD0k") as HTMLElement;
+    const bubbles = document.querySelector("._2MD0k") as HTMLDivElement;
     if (bubbles) {
       bubbles.addEventListener("scroll", updatePopoverPosition);
     }

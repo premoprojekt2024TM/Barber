@@ -1,11 +1,15 @@
 export interface Hairdresser {
   id: number;
   name: string;
-  specialty: string;
-  rating: number;
   hasAvailability: boolean;
-  nextAvailable: string;
   appointments?: string[];
+  profilePic: string;
+  availability?: {
+    [key: string]: {
+      timeSlot: string;
+      status: string;
+    }[];
+  };
 }
 
 export interface SearchBarProps {
