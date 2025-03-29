@@ -5,6 +5,7 @@ import SearchBar from "./search-bar";
 import HairdresserList from "./list";
 import type { Hairdresser } from "./hairdresser";
 import BackButton from "../Map/back-button";
+import { axiosInstance } from "../../../utils/axiosinstance";
 
 export default function Home() {
   const navigate = useNavigate();
@@ -20,17 +21,10 @@ export default function Home() {
     const fetchHairdressers = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch(
-          "http://localhost:8080/api/v1/available-workers",
-        );
+        const response = await axiosInstance.get("/api/v1/available-workers");
 
-        if (!response.ok) {
-          throw new Error("Nem sikerült lekérdezni a fodrászokat.");
-        }
-
-        const data = await response.json();
-        const transformedHairdressers: Hairdresser[] = data.workers.map(
-          (worker: any) => {
+        const transformedHairdressers: Hairdresser[] =
+          response.data.workers.map((worker: any) => {
             const hasAvailableSlot =
               worker.availability &&
               Object.keys(worker.availability).some(
@@ -49,8 +43,7 @@ export default function Home() {
               profilePic: worker.profilePic,
               availability: worker.availability || {},
             };
-          },
-        );
+          });
 
         setHairdressers(transformedHairdressers);
       } catch (err) {
