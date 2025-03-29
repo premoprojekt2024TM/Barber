@@ -1,9 +1,9 @@
 import type React from "react";
-import type { AppointmentPopoverProps as AppointmentPopoverPropsType } from "./hairdresser"; // Renamed the imported type
+import type { AppointmentPopoverProps as AppointmentPopoverPropsType } from "./hairdresser";
 import { Clock, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import { axiosInstance } from "../../../utils/axiosinstance";
 
 const dayTranslations: Record<string, string> = {
   monday: "Hétfő",
@@ -31,8 +31,8 @@ export default function AppointmentPopover({
   useEffect(() => {
     const fetchWorkerStore = async () => {
       try {
-        const response = await axios.get(
-          `http://localhost:8080/api/v1/worker/${hairdresser.id}/store`,
+        const response = await axiosInstance.get(
+          `/api/v1/worker/${hairdresser.id}/store`,
         );
 
         if (response.data.store) {
