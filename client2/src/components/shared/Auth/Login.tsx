@@ -3,7 +3,7 @@ import { ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { axiosInstance } from "../../../utils/axiosinstance";
 import Cookies from "js-cookie";
-import Snackbar from "../snackbar";
+import Snackbar from "../Snackbar";
 import { AxiosError } from "axios";
 interface ErrorResponse {
   message: string;
@@ -243,7 +243,7 @@ export default function Login() {
       <Snackbar
         open={snackbar.open}
         message={snackbar.message}
-        severity={snackbar.severity}
+        severity={snackbar.severity as "success" | "error" | "warning" | "info"}
         onClose={closeSnackbar}
       />
     </div>

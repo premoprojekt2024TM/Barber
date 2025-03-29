@@ -4,7 +4,7 @@ import {
   Routes,
   Navigate,
 } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useState, ReactNode } from "react";
 import Bubble from "./components/Client/BubbleView/bubblepage";
 import Register from "./components/shared/Auth/register";
 import BookingSystem from "./components/Client/Booking/Booking";
@@ -25,23 +25,29 @@ import {
   checkClientAccess,
   checkWorkerAccess,
   checkStoreConnection,
-  checkStoreOwner, // Import the new function
+  checkStoreOwner,
 } from "./utils/axiosinstance";
 
-// Protected route for clients
-const ClientRoute = ({ children }) => {
-  const [loading, setLoading] = useState(true);
-  const [authorized, setAuthorized] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false); // Track synchronous auth
+interface ProtectedRouteProps {
+  children: ReactNode;
+}
+
+interface WorkerStoreRouteProps {
+  children: ReactNode;
+  routePath?: string;
+}
+
+const ClientRoute = ({ children }: ProtectedRouteProps) => {
+  const [loading, setLoading] = useState<boolean>(true);
+  const [authorized, setAuthorized] = useState<boolean>(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false); // Track synchronous auth
 
   useEffect(() => {
     const checkAuth = async () => {
-      // First, check synchronous authentication
       const isAuthenticatedResult = isClientAuthenticated();
-      setIsAuthenticated(isAuthenticatedResult); // Set isAuhenticated immediately
+      setIsAuthenticated(isAuthenticatedResult);
 
       if (isAuthenticatedResult) {
-        // Only if synchronously authenticated, check API endpoint
         const result = await checkClientAccess();
         setAuthorized(result.status === 200);
       } else {
@@ -59,47 +65,45 @@ const ClientRoute = ({ children }) => {
   }
 
   if (!isAuthenticated) {
-    // Redirect if not synchronously authenticated
     return <Navigate to="/login" />;
   }
 
-  return authorized ? children : <Navigate to="/login" />;
+  return authorized ? <>{children}</> : <Navigate to="/login" />;
 };
 
-// Enhanced WorkerStoreRoute to check both store connection and owner status
-const WorkerStoreRoute = ({ children, routePath = "" }) => {
-  const [loading, setLoading] = useState(true);
-  const [authorized, setAuthorized] = useState(false);
-  const [isOwner, setIsOwner] = useState(false); // State to track owner status
-  const [isConnected, setIsConnected] = useState(false);
-  const [checksFinished, setChecksFinished] = useState(false); // New state variable
+const WorkerStoreRoute = ({
+  children,
+  routePath = "",
+}: WorkerStoreRouteProps) => {
+  const [loading, setLoading] = useState<boolean>(true);
+  const [authorized, setAuthorized] = useState<boolean>(false);
+  const [isOwner, setIsOwner] = useState<boolean>(false);
+  const [isConnected, setIsConnected] = useState<boolean>(false);
+  const [checksFinished, setChecksFinished] = useState<boolean>(false);
 
   useEffect(() => {
     const checkAuth = async () => {
-      // First check worker authentication
       const workerResult = await checkWorkerAccess();
-
-      // If worker is authenticated, decide access based on `allowWithoutStore`
       if (workerResult.status === 200) {
-        setAuthorized(true); // Set authorized to true if worker is authenticated
+        setAuthorized(true);
 
         const storeConnection = await checkStoreConnection();
         setIsConnected(storeConnection.isConnectedToStore);
 
         if (storeConnection.isConnectedToStore) {
           const ownerCheck = await checkStoreOwner();
-          setIsOwner(ownerCheck.isStoreOwner); // Update isOwner state
+          setIsOwner(ownerCheck.isStoreOwner);
         } else {
           setIsOwner(false);
         }
       } else {
         setAuthorized(false);
-        setIsOwner(false); // Not authenticated, so definitely not an owner
+        setIsOwner(false);
         setIsConnected(false);
       }
 
       setLoading(false);
-      setChecksFinished(true); //Mark it finished when everything completed
+      setChecksFinished(true);
     };
 
     checkAuth();
@@ -109,12 +113,10 @@ const WorkerStoreRoute = ({ children, routePath = "" }) => {
     return <div>Betöltés...</div>;
   }
 
-  // Allow access to /search if worker is authenticated, regardless of store connection
   if (routePath === "/search" && authorized) {
-    return <>{children}</>; // Render the children if it's the /search route and authorized
+    return <>{children}</>;
   }
 
-  // Redirect to /noedit if connected to a store but NOT an owner and the route is /store
   if (
     checksFinished &&
     authorized &&
@@ -124,22 +126,17 @@ const WorkerStoreRoute = ({ children, routePath = "" }) => {
   ) {
     return <Navigate to="/noedit" />;
   }
-
-  //Redirect to nostore if not connected to store
   if (checksFinished && authorized && !isConnected && routePath !== "/store") {
     return <Navigate to="/nostore" />;
   }
-
-  //Redirect to nostore if not connected to store or authorized
   if (checksFinished && !authorized) {
     return <Navigate to="/nostore" />;
   }
 
-  return authorized ? children : <Navigate to="/nostore" />;
+  return authorized ? <>{children}</> : <Navigate to="/nostore" />;
 };
 
-// Route that redirects authenticated users to their appropriate dashboard
-const PublicOnlyRoute = ({ children }) => {
+const PublicOnlyRoute = ({ children }: ProtectedRouteProps) => {
   if (isClientAuthenticated()) {
     return <Navigate to="/main" />;
   }
@@ -147,22 +144,21 @@ const PublicOnlyRoute = ({ children }) => {
     return <Navigate to="/dashboard" />;
   }
 
-  return children;
+  return <>{children}</>;
 };
 
-const PublicOrClientRoute = ({ children }) => {
+const PublicOrClientRoute = ({ children }: ProtectedRouteProps) => {
   if (isWorkerAuthenticated()) {
     return <Navigate to="/dashboard" />;
   }
 
-  return children;
+  return <>{children}</>;
 };
 
 function App() {
   return (
     <Router>
       <Routes>
-        {/* Public only routes - redirect authenticated users */}
         <Route
           path="/login"
           element={
@@ -179,7 +175,6 @@ function App() {
             </PublicOnlyRoute>
           }
         />
-        {/* Public or Client routes */}
         <Route
           path="/"
           element={
@@ -204,7 +199,6 @@ function App() {
             </PublicOrClientRoute>
           }
         />
-        {/* Client-specific routes */}
         <Route
           path="/booking/:storeId"
           element={
@@ -213,7 +207,6 @@ function App() {
             </ClientRoute>
           }
         />
-        {/* Worker routes */}
         <Route
           path="/dashboard"
           element={
@@ -230,7 +223,6 @@ function App() {
             </WorkerStoreRoute>
           }
         />
-        {/* Allow access to /store and /search even without a store */}
         <Route
           path="/store"
           element={
@@ -247,7 +239,6 @@ function App() {
             </WorkerStoreRoute>
           }
         />
-        {/* Routes requiring store connection */}
         <Route
           path="/add"
           element={
@@ -265,11 +256,8 @@ function App() {
             </WorkerStoreRoute>
           }
         />
-
-        {/* Error and special routes */}
         <Route path="/noedit" element={<NoEditRightsPage />} />
         <Route path="/nostore" element={<NotInStorePage />} />
-        {/* Catch-all redirect to homepage */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>

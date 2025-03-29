@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from "react";
-import { LogOut, Trash2 } from "lucide-react"; // Import Trash2 for delete icon
+import { LogOut, Trash2 } from "lucide-react";
 
 interface WorkplaceProps {
   store: {

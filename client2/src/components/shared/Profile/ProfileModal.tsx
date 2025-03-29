@@ -40,6 +40,18 @@ interface IsStoreOwnerResponse {
   storeName: string;
 }
 
+// Added missing Booking interface
+interface Booking {
+  id: number;
+  type: string;
+  date: string;
+  time: string;
+  customer: string;
+  address: string;
+  cityName: string;
+  storeName: string;
+}
+
 export function ProfileModal({ onClose }: ProfileModalProps) {
   const [avatar, setAvatar] = useState("/placeholder.svg?height=100&width=100");
   const [activeTab, setActiveTab] = useState("profile");
@@ -53,7 +65,7 @@ export function ProfileModal({ onClose }: ProfileModalProps) {
   const [isMobile, setIsMobile] = useState(false);
   const [showMobileContent, setShowMobileContent] = useState(false);
   const [myStore, setMyStore] = useState<StoreData | null>(null);
-  const [myRole, setMyRole] = useState<string | null>(null);
+  // Removed unused myRole variable, directly use response.data.role when needed
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -90,10 +102,10 @@ export function ProfileModal({ onClose }: ProfileModalProps) {
       const response =
         await axiosInstance.get<MyStoreResponse>("/api/v1/mystore");
       setMyStore(response.data.store);
-      setMyRole(response.data.role);
+      // Removed setMyRole call since the variable is removed
     } catch (error) {
       setMyStore(null);
-      setMyRole(null);
+      // Removed setMyRole call
     }
   }, []);
 
@@ -194,15 +206,12 @@ export function ProfileModal({ onClose }: ProfileModalProps) {
         payload.profilePic = avatar;
       }
 
-      const response = await axiosInstance.put(
-        "/api/v1/update",
-        JSON.stringify(payload),
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
+      // Fix for unused response variable
+      await axiosInstance.put("/api/v1/update", JSON.stringify(payload), {
+        headers: {
+          "Content-Type": "application/json",
         },
-      );
+      });
 
       await fetchUserData();
       const response2 = await axiosInstance.get("/api/v1/me");

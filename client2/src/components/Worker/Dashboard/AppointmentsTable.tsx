@@ -24,6 +24,12 @@ interface PaginationProps {
   onPageChange: (page: number) => void;
 }
 
+interface AppointmentsTableProps {
+  appointmentData: Appointment[];
+  // Made toggleAppointmentStatus optional with ? operator
+  toggleAppointmentStatus?: (id: string) => void;
+}
+
 const dayTranslations: { [key: string]: string } = {
   monday: "Hétfő",
   tuesday: "Kedd",
@@ -62,10 +68,7 @@ const Pagination = ({
 const AppointmentsTable = ({
   appointmentData,
   toggleAppointmentStatus,
-}: {
-  appointmentData: Appointment[];
-  toggleAppointmentStatus?: (id: string) => void;
-}) => {
+}: AppointmentsTableProps) => {
   const [currentPage, setCurrentPage] = useState(1);
   const appointmentsPerPage = 4;
 
@@ -136,6 +139,11 @@ const AppointmentsTable = ({
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Időpont
               </th>
+              {toggleAppointmentStatus && (
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Állapot
+                </th>
+              )}
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
@@ -180,6 +188,20 @@ const AppointmentsTable = ({
                     {appointment.time}
                   </div>
                 </td>
+                {toggleAppointmentStatus && (
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <button
+                      onClick={() => toggleAppointmentStatus(appointment.id)}
+                      className={`px-3 py-1 rounded-full text-xs font-medium ${
+                        appointment.completed
+                          ? "bg-green-100 text-green-800"
+                          : "bg-yellow-100 text-yellow-800"
+                      }`}
+                    >
+                      {appointment.completed ? "Teljesítve" : "Folyamatban"}
+                    </button>
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>

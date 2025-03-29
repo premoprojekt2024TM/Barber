@@ -7,7 +7,7 @@ import {
   validateFullForm,
   mapUserTypeToRole,
   type RegisterFormData,
-} from "../../../../../server/src/shared/registervalidation";
+} from "./registervalidation";
 import Snackbar from "../Snackbar";
 
 type UserType = "kliens" | "fodrasz";

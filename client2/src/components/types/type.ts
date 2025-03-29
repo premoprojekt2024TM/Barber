@@ -1,7 +1,3 @@
-// src/types.ts
-import { ZodError } from "zod";
-import { MouseEvent } from "react";
-
 export interface ErrorResponse {
   message: string;
 }

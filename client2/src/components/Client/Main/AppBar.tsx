@@ -30,7 +30,16 @@ export default function AppBar() {
 
       if (isAuth) {
         const userInformation = getInfoFromToken();
-        setUserInfo(userInformation);
+        if (userInformation) {
+          const userInfoData: UserInfo = {
+            username: userInformation.username || undefined,
+            email: userInformation.email || undefined,
+            profilePic: userInformation.profilePic || undefined,
+          };
+          setUserInfo(userInfoData);
+        } else {
+          setUserInfo(null);
+        }
       } else {
         setUserInfo(null);
       }

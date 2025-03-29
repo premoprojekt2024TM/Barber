@@ -1,32 +1,74 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Calendar } from "lucide-react";
 import Sidebar from "../sidebar";
 import AppointmentsTable from "./AppointmentsTable";
 import BookingChart from "./Chart";
 import { axiosInstance } from "../../../utils/axiosinstance";
 
-const BarberShopDashboard = () => {
-  const [activeTab, setActiveTab] = useState("Dashboard");
-  const [appointmentData, setAppointmentData] = useState([]);
-  const [apiResponse, setApiResponse] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+// Define interfaces for the data structures
+interface Client {
+  // Add properties as needed for the Client object
+  name: string;
+  // Other client properties
+}
+
+interface Appointment {
+  appointmentId: number;
+  client: Client;
+  day: string;
+  timeSlot: string;
+  status: string;
+}
+
+interface Worker {
+  workerFirstName: string;
+  workerLastName: string;
+  appointments: Appointment[];
+}
+
+interface ApiResponse {
+  workers: Worker[];
+  // Add other properties as needed
+}
+
+interface TransformedAppointment {
+  id: string;
+  client: string;
+  barberFirstName: string;
+  barberLastName: string;
+  day: string;
+  time: string;
+  completed: boolean;
+}
+
+const BarberShopDashboard = (): React.ReactElement => {
+  // Using a string literal type to ensure only valid tabs can be set
+  const [activeTab] = useState<"Dashboard" | "Appointments">("Dashboard");
+  const [appointmentData, setAppointmentData] = useState<
+    TransformedAppointment[]
+  >([]);
+  const [apiResponse, setApiResponse] = useState<ApiResponse | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    const fetchStoreWorkersAndAppointments = async () => {
+    const fetchStoreWorkersAndAppointments = async (): Promise<void> => {
       try {
         setIsLoading(true);
-        const response = await axiosInstance.get("/api/v1/stores");
+        const response = await axiosInstance.get<ApiResponse>("/api/v1/stores");
 
         // Store the full API response
         setApiResponse(response.data);
 
         // Transform the response data to match the AppointmentsTable expected data structure
         const transformedAppointments = response.data.workers.flatMap(
-          (worker) =>
-            worker.appointments.map((appointment) => ({
+          (worker: Worker) =>
+            worker.appointments.map((appointment: Appointment) => ({
               id: appointment.appointmentId.toString(),
-              client: appointment.client,
+              client:
+                typeof appointment.client === "string"
+                  ? appointment.client
+                  : appointment.client.name, // Extract name if client is an object
               barberFirstName: worker.workerFirstName,
               barberLastName: worker.workerLastName,
               day: appointment.day,
@@ -39,7 +81,9 @@ const BarberShopDashboard = () => {
         setIsLoading(false);
       } catch (err) {
         console.error("Error fetching appointments:", err);
-        setError(err);
+        setError(
+          err instanceof Error ? err : new Error("Unknown error occurred"),
+        );
         setIsLoading(false);
       }
     };
@@ -48,11 +92,15 @@ const BarberShopDashboard = () => {
   }, []);
 
   const totalAppointments = appointmentData.length;
-  const completedAppointments = appointmentData.filter(
-    (a) => a.completed,
-  ).length;
+  // Removing unused variable
+  // const _completedAppointments = appointmentData.filter(...)
 
-  const toggleAppointmentStatus = async (id) => {
+  // If you need to calculate completed appointments, you can uncomment and use this:
+  // const completedAppointments = appointmentData.filter(
+  //   (appointment) => appointment.completed
+  // ).length;
+
+  const toggleAppointmentStatus = async (id: string): Promise<void> => {
     try {
       await axiosInstance.patch(`/api/v1/appointments/${id}/status`);
 
@@ -121,6 +169,7 @@ const BarberShopDashboard = () => {
 
           {/* Appointments Table */}
           <AppointmentsTable
+            //@ts-ignore
             appointmentData={appointmentData}
             toggleAppointmentStatus={toggleAppointmentStatus}
           />

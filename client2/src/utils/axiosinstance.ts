@@ -1,6 +1,44 @@
-import axios from "axios";
+import axios, {
+  AxiosError,
+  AxiosResponse,
+  InternalAxiosRequestConfig,
+} from "axios";
 import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
+
+interface JwtToken {
+  userId?: string;
+  email?: string;
+  role?: string;
+  username?: string;
+  profilePic?: string;
+  [key: string]: any;
+}
+
+interface TokenInfo {
+  userId: string | null;
+  email: string | null;
+  role: string | null;
+  username: string | null;
+  profilePic: string | null;
+}
+
+interface ApiResponse {
+  status: number;
+  data: any;
+}
+
+interface StoreOwnerResponse {
+  isStoreOwner: boolean;
+  storeId: string | null;
+  storeName: string | null;
+}
+
+interface StoreConnectionResponse {
+  isConnectedToStore: boolean;
+  store: any | null;
+  role: string | null;
+}
 
 export const axiosInstance = axios.create({
   baseURL: "http://localhost:8080",
@@ -10,22 +48,20 @@ export const axiosInstance = axios.create({
   },
 });
 
-// Add Authorization Header if Token Exists
 axiosInstance.interceptors.request.use(
-  (config) => {
+  (config: InternalAxiosRequestConfig): InternalAxiosRequestConfig => {
     const token = getJWTToken();
-    if (token) {
-      config.headers!.Authorization = `Bearer ${token}`;
+    if (token && config.headers) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
-  (error) => Promise.reject(error),
+  (error: AxiosError) => Promise.reject(error),
 );
 
-// Handle Unauthorized Responses (401/403)
 axiosInstance.interceptors.response.use(
-  (response) => response,
-  (error) => {
+  (response: AxiosResponse): AxiosResponse => response,
+  (error: AxiosError) => {
     if (
       error.response &&
       (error.response.status === 401 || error.response.status === 403)
@@ -36,13 +72,13 @@ axiosInstance.interceptors.response.use(
   },
 );
 
-export const getJWTToken = () => Cookies.get("jwt_token");
+export const getJWTToken = (): string | undefined => Cookies.get("jwt_token");
 
-export const getInfoFromToken = () => {
+export const getInfoFromToken = (): TokenInfo | null => {
   const token = getJWTToken();
   if (token) {
     try {
-      const decoded = jwtDecode(token);
+      const decoded = jwtDecode<JwtToken>(token);
       return {
         userId: decoded.userId || null,
         email: decoded.email || null,
@@ -57,11 +93,12 @@ export const getInfoFromToken = () => {
   return null;
 };
 
-export const isClientAuthenticated = () => {
+export const isClientAuthenticated = (): boolean => {
   const token = getJWTToken();
   if (token) {
     try {
-      return jwtDecode(token).role === "client";
+      const decoded = jwtDecode<JwtToken>(token);
+      return decoded.role === "client";
     } catch {
       return false;
     }
@@ -69,11 +106,12 @@ export const isClientAuthenticated = () => {
   return false;
 };
 
-export const isWorkerAuthenticated = () => {
+export const isWorkerAuthenticated = (): boolean => {
   const token = getJWTToken();
   if (token) {
     try {
-      return jwtDecode(token).role === "worker";
+      const decoded = jwtDecode<JwtToken>(token);
+      return decoded.role === "worker";
     } catch {
       return false;
     }
@@ -81,7 +119,7 @@ export const isWorkerAuthenticated = () => {
   return false;
 };
 
-export const checkClientAccess = async () => {
+export const checkClientAccess = async (): Promise<ApiResponse> => {
   try {
     if (!isClientAuthenticated()) {
       return { status: 403, data: { message: "Not authenticated as client" } };
@@ -89,24 +127,24 @@ export const checkClientAccess = async () => {
     const response = await axiosInstance.get("/api/v1/client");
     return { status: 200, data: response.data };
   } catch (error) {
+    const axiosError = error as AxiosError;
     return {
-      status: error.response?.status || 500,
-      data: error.response?.data || { message: "Server error" },
+      status: axiosError.response?.status || 500,
+      data: axiosError.response?.data || { message: "Server error" },
     };
   }
 };
 
-// Updated checkStoreOwner function
-export const checkStoreOwner = async () => {
+export const checkStoreOwner = async (): Promise<StoreOwnerResponse> => {
   try {
     const response = await axiosInstance.get("/api/v1/isStoreOwner");
     return {
       isStoreOwner: response.data.isStoreOwner,
-      storeId: response.data.storeId || null, // Handle potential null
+      storeId: response.data.storeId || null,
       storeName: response.data.storeName || null,
     };
   } catch (error) {
-    console.error("Error checking store owner:", error); // Log the error
+    console.error("Error checking store owner:", error);
     return {
       isStoreOwner: false,
       storeId: null,
@@ -115,24 +153,25 @@ export const checkStoreOwner = async () => {
   }
 };
 
-export const checkStoreConnection = async () => {
-  try {
-    const response = await axiosInstance.get("/api/v1/is-connected-to-store");
-    return {
-      isConnectedToStore: response.data.isConnectedToStore,
-      store: response.data.store,
-      role: response.data.role,
-    };
-  } catch (error) {
-    return {
-      isConnectedToStore: false,
-      store: null,
-      role: null,
-    };
-  }
-};
+export const checkStoreConnection =
+  async (): Promise<StoreConnectionResponse> => {
+    try {
+      const response = await axiosInstance.get("/api/v1/is-connected-to-store");
+      return {
+        isConnectedToStore: response.data.isConnectedToStore,
+        store: response.data.store,
+        role: response.data.role,
+      };
+    } catch (error) {
+      return {
+        isConnectedToStore: false,
+        store: null,
+        role: null,
+      };
+    }
+  };
 
-export const checkWorkerAccess = async () => {
+export const checkWorkerAccess = async (): Promise<ApiResponse> => {
   try {
     if (!isWorkerAuthenticated()) {
       return { status: 403, data: { message: "Not authenticated as worker" } };
@@ -140,9 +179,10 @@ export const checkWorkerAccess = async () => {
     const response = await axiosInstance.get("/api/v1/hair");
     return { status: 200, data: response.data };
   } catch (error) {
+    const axiosError = error as AxiosError;
     return {
-      status: error.response?.status || 500,
-      data: error.response?.data || { message: "Server error" },
+      status: axiosError.response?.status || 500,
+      data: axiosError.response?.data || { message: "Server error" },
     };
   }
 };

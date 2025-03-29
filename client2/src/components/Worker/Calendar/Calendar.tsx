@@ -40,8 +40,7 @@ interface ClusteredAppointments {
 export default function AppointmentCalendar() {
   const [startHour, setStartHour] = useState(8);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+  // Removed the unused loading and error state variables
   const [popoverAnchor, setPopoverAnchor] = useState<HTMLElement | null>(null);
   const [popoverAppointments, setPopoverAppointments] = useState<Appointment[]>(
     [],
@@ -92,18 +91,13 @@ export default function AppointmentCalendar() {
 
   useEffect(() => {
     const fetchAppointments = async () => {
-      setLoading(true);
-      setError(null);
-
       try {
         const response = await axiosInstance.get("/api/v1/appointment");
         const appointmentsData: Appointment[] =
           response.data?.appointments || [];
         setAppointments(appointmentsData);
-      } catch (err: any) {
-        setError(err);
-      } finally {
-        setLoading(false);
+      } catch (err) {
+        console.error("Error fetching appointments:", err);
       }
     };
 

@@ -30,7 +30,6 @@ function WorkerRoute({ children }: WorkerRouteProps) {
   return <>{children}</>;
 }
 
-// Typing the ClientRoute component using a regular function
 interface ClientRouteProps {
   children: React.ReactNode;
 }
@@ -88,7 +87,6 @@ function App() {
           }
         />
 
-        {/* Routes for any authenticated user (worker or client) */}
         <Route
           path="/store"
           element={
@@ -111,7 +109,6 @@ function App() {
           }
         />
 
-        {/* Public routes */}
         <Route path="/register" element={<SignUp />} />
         <Route path="/login" element={<SignIn />} />
         <Route path="/main" element={<MainPage />} />

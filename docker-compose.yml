@@ -1,0 +1,55 @@
+version: "3.8"
+
+services:
+  app:
+    build:
+      context: ./server
+    container_name: fastify
+    ports:
+      - "8080:8080"
+    environment:
+      # Use a single Database URL. Format: postgresql://user:password@host:port/database
+      # Note: The host here MUST be the service name 'postgres'
+      - DATABASE_URL=postgresql://root:root@postgres:5432/root
+    depends_on:
+      postgres:
+        condition: service_started # Consider a proper wait script for production
+    volumes:
+      - ./server:/usr/src/app
+    working_dir: /usr/src/app
+    networks:
+      - app-network
+
+  postgres:
+    image: postgres:latest
+    container_name: postgres-db
+    environment:
+      # These are needed by the postgres image itself to initialize
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: root
+    ports:
+      - "5432:5432" # For optional host access
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+  frontend:
+    build:
+      context: ./client2
+    container_name: react-app
+    ports:
+      - "80:80"
+    depends_on:
+      - app
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local

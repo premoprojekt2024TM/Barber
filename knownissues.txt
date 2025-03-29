@@ -1,0 +1,5 @@
+Időpontok
+Ügyfél	Fodrász	Nap	Időpont	Állapot
+Nincs Kliens
+
+userworker role owner deletion

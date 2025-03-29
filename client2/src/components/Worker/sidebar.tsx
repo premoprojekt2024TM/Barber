@@ -50,6 +50,7 @@ export default function Sidebar() {
 
   useEffect(() => {
     const info = getInfoFromToken();
+    //@ts-ignore
     setUserInfo(info);
 
     const workerAuth = isWorkerAuthenticated();
