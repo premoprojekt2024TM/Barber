@@ -22,10 +22,10 @@ fastify.register(websocket, {
 });
 
 fastify.register(cors, {
-  origin: "http://localhost:5173",
+  origin: "*", // Allow all origins
   methods: ["GET", "POST", "PUT", "DELETE"],
   allowedHeaders: ["Content-Type", "Authorization"],
-  credentials: true,
+  credentials: true, // Ensure credentials (cookies, auth headers) are sent with requests
 });
 
 const routes = [
@@ -41,7 +41,7 @@ routes.forEach((route) => fastify.register(route, { prefix: "/api/v1" }));
 
 fastify.register(chatController);
 
-fastify.listen({ port: 8080 }, (err, address) => {
+fastify.listen({ port: 8080, host: "0.0.0.0" }, (err, address) => {
   if (err) {
     console.error(err);
     process.exit(1);
