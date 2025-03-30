@@ -5,11 +5,11 @@ import AppointmentsTable from "./AppointmentsTable";
 import BookingChart from "./Chart";
 import { axiosInstance } from "../../../utils/axiosinstance";
 
-// Define interfaces for the data structures
 interface Client {
-  // Add properties as needed for the Client object
-  name: string;
-  // Other client properties
+  profilePic: string;
+  username: string;
+  lastName: string;
+  firstName: string;
 }
 
 interface Appointment {
@@ -28,12 +28,11 @@ interface Worker {
 
 interface ApiResponse {
   workers: Worker[];
-  // Add other properties as needed
 }
 
 interface TransformedAppointment {
   id: string;
-  client: string;
+  client: Client | null;
   barberFirstName: string;
   barberLastName: string;
   day: string;
@@ -42,7 +41,6 @@ interface TransformedAppointment {
 }
 
 const BarberShopDashboard = (): React.ReactElement => {
-  // Using a string literal type to ensure only valid tabs can be set
   const [activeTab] = useState<"Dashboard" | "Appointments">("Dashboard");
   const [appointmentData, setAppointmentData] = useState<
     TransformedAppointment[]
@@ -65,15 +63,14 @@ const BarberShopDashboard = (): React.ReactElement => {
           (worker: Worker) =>
             worker.appointments.map((appointment: Appointment) => ({
               id: appointment.appointmentId.toString(),
-              client:
-                typeof appointment.client === "string"
-                  ? appointment.client
-                  : appointment.client.name, // Extract name if client is an object
+              client: appointment.client, // Pass the entire client object
               barberFirstName: worker.workerFirstName,
               barberLastName: worker.workerLastName,
               day: appointment.day,
               time: appointment.timeSlot,
-              completed: appointment.status === "confirmed",
+              completed:
+                appointment.status === "completed" ||
+                appointment.status === "confirmed",
             })),
         );
 
@@ -92,29 +89,6 @@ const BarberShopDashboard = (): React.ReactElement => {
   }, []);
 
   const totalAppointments = appointmentData.length;
-  // Removing unused variable
-  // const _completedAppointments = appointmentData.filter(...)
-
-  // If you need to calculate completed appointments, you can uncomment and use this:
-  // const completedAppointments = appointmentData.filter(
-  //   (appointment) => appointment.completed
-  // ).length;
-
-  const toggleAppointmentStatus = async (id: string): Promise<void> => {
-    try {
-      await axiosInstance.patch(`/api/v1/appointments/${id}/status`);
-
-      setAppointmentData(
-        appointmentData.map((appointment) =>
-          appointment.id === id
-            ? { ...appointment, completed: !appointment.completed }
-            : appointment,
-        ),
-      );
-    } catch (err) {
-      console.error("Error updating appointment status:", err);
-    }
-  };
 
   if (isLoading) {
     return (
@@ -168,11 +142,7 @@ const BarberShopDashboard = (): React.ReactElement => {
           {apiResponse && <BookingChart apiResponse={apiResponse} />}
 
           {/* Appointments Table */}
-          <AppointmentsTable
-            //@ts-ignore
-            appointmentData={appointmentData}
-            toggleAppointmentStatus={toggleAppointmentStatus}
-          />
+          <AppointmentsTable appointmentData={appointmentData} />
         </div>
       </div>
     </div>
