@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { UserPlus, Check, Clock, UserMinus, UserX } from "lucide-react";
-import axios from "axios";
-import Cookies from "js-cookie";
+import { axiosInstance } from "../../../utils/axiosinstance";
 import type { Friend } from "./friends";
 
 interface FriendCardProps {
@@ -23,18 +22,10 @@ export default function FriendCard({
   const handleSendFriendRequest = async () => {
     try {
       setLoading(true);
-      const token = Cookies.get("jwt_token");
 
-      await axios.post(
-        "http://localhost:8080/api/v1/sendFriendRequest",
-        { friendId: friend.userId },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
+      await axiosInstance.post("/api/v1/sendFriendRequest", {
+        friendId: friend.userId,
+      });
 
       setNotification({
         open: true,
@@ -61,18 +52,10 @@ export default function FriendCard({
   const handleAcceptFriendRequest = async () => {
     try {
       setLoading(true);
-      const token = Cookies.get("jwt_token");
 
-      await axios.post(
-        "http://localhost:8080/api/v1/acceptFriendRequest",
-        { friendId: friend.userId },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
+      await axiosInstance.post("/api/v1/acceptFriendRequest", {
+        friendId: friend.userId,
+      });
 
       setNotification({
         open: true,
@@ -99,13 +82,8 @@ export default function FriendCard({
   const handleDeleteFriendship = async () => {
     try {
       setLoading(true);
-      const token = Cookies.get("jwt_token");
 
-      await axios.delete("http://localhost:8080/api/v1/deleteFriendship", {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+      await axiosInstance.delete("/api/v1/deleteFriendship", {
         data: { friendId: friend.userId },
       });
 
