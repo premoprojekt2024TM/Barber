@@ -100,7 +100,6 @@ export default function Register() {
           ...(firstNameError ? { firstName: firstNameError } : {}),
           ...(lastNameError ? { lastName: lastNameError } : {}),
         });
-        showSnackbar("Name validation failed", "error");
         return;
       }
     }
@@ -207,19 +206,16 @@ export default function Register() {
         />
       </div>
       <div className="absolute top-10 left-10 z-10">
-        <div className="flex items-center gap-2">
-          <svg
+        <div
+          className="flex items-center gap-2 cursor-pointer"
+          onClick={() => navigate("/")}
+        >
+          <img
+            src="https://pub-f0fa5b4b544643998cb832c3f9d449bc.r2.dev/static/logo.svg"
+            alt="Barber & Blade Logo"
             width="32"
             height="32"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M12.5 2C10.5 2 9.5 3 8.5 5C7.5 7 7 8 5 8.5C3 9 2 10 2 12C2 14 3 15 5 15.5C7 16 7.5 17 8.5 19C9.5 21 10.5 22 12.5 22C14.5 22 15.5 21 16.5 19C17.5 17 18 16 20 15.5C22 15 23 14 23 12C23 10 22 9 20 8.5C18 8 17.5 7 16.5 5C15.5 3 14.5 2 12.5 2Z"
-              fill="#E02F2F"
-            />
-          </svg>
+          />
           <span className="text-xl font-semibold text-gray-900">
             Barber & Blade
           </span>
@@ -244,9 +240,6 @@ export default function Register() {
                 className={`h-2 w-8 rounded-full ${currentStep >= 3 ? "bg-black" : "bg-gray-300"}`}
               ></div>
             </div>
-            <span className="text-sm text-gray-500">
-              {currentStep}. lépés a 3-ból
-            </span>
           </div>
 
           <div className="space-y-4">

@@ -84,7 +84,9 @@ export default function Home() {
   if (error) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-xl text-red-600">Hiba: {error}</div>
+        <div className="text-xl text-red-600">
+          Hiba ,nem sikerült betölteni.
+        </div>
       </div>
     );
   }

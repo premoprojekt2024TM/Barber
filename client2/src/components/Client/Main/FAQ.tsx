@@ -18,7 +18,7 @@ export default function FAQPage() {
         className="absolute inset-0 bg-cover bg-center bg-no-repeat z-0"
         style={{
           backgroundImage:
-            "url(https://pub-f0fa5b4b544643998cb832c3f9d449bc.r2.dev/static/authbg.png)",
+            "url(https://pub-f0fa5b4b544643998cb832c3f9d449bc.r2.dev/static/authbgbw.png)",
           maxHeight: "100%",
         }}
       />
@@ -51,13 +51,12 @@ export default function FAQPage() {
                     <p className="text-gray-700">
                       Az ügyfélszolgálatunkat e-mailben érheted el a{" "}
                       <a
-                        href="mailto:support@email.com"
+                        href="mailto:support@barberandblade.com"
                         className="text-blue-600 hover:underline"
                       >
-                        support@email.com
+                        support@barberandblade.com
                       </a>{" "}
-                      címen, vagy telefonon, a toll-free számunkon keresztül.
-                      Munkatársaink gyorsan segítenek.
+                      címen.
                     </p>
                   </div>
                 )}
@@ -81,8 +80,8 @@ export default function FAQPage() {
                   <div className="p-4 bg-gray-50/80 border-t border-gray-200">
                     <p className="text-gray-700">
                       A szolgáltatás lemondására lehetőség van, kérjük, vedd fel
-                      a kapcsolatot az alkalmazásunkon keresztül a
-                      szolgáltatóval.
+                      a kapcsolatot a lefoglalt szakembernél a szalon email
+                      címén vagy telefonszámán.
                     </p>
                   </div>
                 )}
@@ -96,7 +95,7 @@ export default function FAQPage() {
                   <div className="flex justify-between items-center p-4 hover:bg-gray-50/80">
                     <span className="font-medium text-gray-900">
                       Milyen szolgáltatásokat találhatok az alkalmazásban, és
-                      hogyan tudok rendelni?
+                      hogyan tudok foglalni?
                     </span>
                     <ChevronDown
                       className={`h-5 w-5 text-gray-500 transition-transform ${expanded.includes("panel3") ? "rotate-180" : ""}`}
@@ -106,10 +105,9 @@ export default function FAQPage() {
                 {expanded.includes("panel3") && (
                   <div className="p-4 bg-gray-50/80 border-t border-gray-200">
                     <p className="text-gray-700">
-                      Az alkalmazásban különböző kategóriákban találhatók
-                      szolgáltatások, például éttermek, wellness, szépségápolás
-                      és egyéb. A rendeléshez válaszd ki a kívánt szolgáltatást,
-                      majd kövesd az egyszerű lépéseket a foglaláshoz.
+                      Az alkalmazásban különböző barber és fodrász időpontokat
+                      találhatsz. Válaszd ki a kívánt szolgáltatást, majd kövesd
+                      az egyszerű lépéseket a foglaláshoz.
                     </p>
                   </div>
                 )}
@@ -122,7 +120,7 @@ export default function FAQPage() {
                 >
                   <div className="flex justify-between items-center p-4 hover:bg-gray-50/80">
                     <span className="font-medium text-gray-900">
-                      Hogyan találom meg a legközelebbi szolgáltatásokat az
+                      Hogyan találom meg a legközelebbi szalonokat az
                       alkalmazásban?
                     </span>
                     <ChevronDown
@@ -133,35 +131,8 @@ export default function FAQPage() {
                 {expanded.includes("panel4") && (
                   <div className="p-4 bg-gray-50/80 border-t border-gray-200">
                     <p className="text-gray-700">
-                      Az alkalmazásban a legközelebbi szolgáltatásokat a
-                      tartózkodási helyed alapján találhatod meg, vagy
-                      manuálisan beállíthatod a helyszínt a szűrők segítségével.
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              <div className="border border-gray-200 rounded-lg overflow-hidden bg-white/90">
-                <div
-                  className="cursor-pointer"
-                  onClick={() => handleChange("panel5")}
-                >
-                  <div className="flex justify-between items-center p-4 hover:bg-gray-50/80">
-                    <span className="font-medium text-gray-900">
-                      Milyen visszajelzéseket találhatok más felhasználóktól a
-                      szolgáltatásokról?
-                    </span>
-                    <ChevronDown
-                      className={`h-5 w-5 text-gray-500 transition-transform ${expanded.includes("panel5") ? "rotate-180" : ""}`}
-                    />
-                  </div>
-                </div>
-                {expanded.includes("panel5") && (
-                  <div className="p-4 bg-gray-50/80 border-t border-gray-200">
-                    <p className="text-gray-700">
-                      Az alkalmazásban felhasználói értékelések és vélemények
-                      találhatók minden szolgáltatásról, melyek segítenek a
-                      legjobb döntés meghozatalában.
+                      Az alkalmazásban a legközelebbi szalonokat a térkép
+                      segítségével találhatod meg.
                     </p>
                   </div>
                 )}

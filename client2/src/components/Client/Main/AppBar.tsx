@@ -273,7 +273,7 @@ export default function AppBar() {
                 {!isAuthenticated ? (
                   <div className="py-4 space-y-3">
                     <RouterLink to="/login" onClick={toggleDrawer}>
-                      <button className="w-full py-2 text-center border border-black text-black rounded-full hover:bg-indigo-50 transition-colors duration-200">
+                      <button className="w-full py-2 mb-2 text-center border border-black text-black rounded-full hover:bg-indigo-50 transition-colors duration-200">
                         Bejelentkezés
                       </button>
                     </RouterLink>
