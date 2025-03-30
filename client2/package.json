@@ -4,6 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "start": "serve -s client2/dist -l 80",
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
