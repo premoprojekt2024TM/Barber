@@ -190,14 +190,11 @@ export const updateUser = async (
   }
 };
 
-import { getConnection } from "typeorm"; // Import getConnection
-
 export const deleteUser = async (
   request: AuthenticatedRequest,
   reply: FastifyReply,
 ) => {
   const userId = request.user?.userId;
-
   if (!userId) {
     return reply.status(400).send({ message: "User ID is missing" });
   }
@@ -210,7 +207,6 @@ export const deleteUser = async (
       return reply.status(404).send({ message: "User not found" });
     }
 
-    // Check if the user is a store owner
     const storeWorker = await AppDataSource.getRepository(
       model.StoreWorker,
     ).findOne({
@@ -218,35 +214,39 @@ export const deleteUser = async (
       relations: ["store"],
     });
 
-    if (storeWorker) {
-      const store = storeWorker.store;
+    if (storeWorker && storeWorker.store) {
+      const storeId = storeWorker.store.storeId;
 
-      // Delete all store workers
+      const storeWorkers = await AppDataSource.getRepository(
+        model.StoreWorker,
+      ).find({
+        where: { store: { storeId } },
+        relations: ["user"],
+      });
+
+      for (const worker of storeWorkers) {
+        const workerId = worker.user.userId;
+
+        await AppDataSource.getRepository(model.Appointment).delete({
+          worker: { userId: workerId },
+        });
+
+        await AppDataSource.getRepository(model.AvailabilityTimes).delete({
+          user: { userId: workerId },
+        });
+      }
+
       await AppDataSource.getRepository(model.StoreWorker).delete({
-        store: { storeId: store.storeId },
+        store: { storeId },
       });
 
-      // Delete all store-related appointments
-      await AppDataSource.getRepository(model.Appointment).delete({
-        worker: { userId: storeWorker.user.userId },
-      });
-
-      // Delete all store-related availability times
-      await AppDataSource.getRepository(model.AvailabilityTimes).delete({
-        user: { userId: storeWorker.user.userId },
-      });
-
-      // Delete the store itself
-      await AppDataSource.getRepository(model.Store).delete({
-        storeId: store.storeId,
-      });
+      await AppDataSource.getRepository(model.Store).delete({ storeId });
     }
 
-    // Delete all user-related appointments
     const appointments = await AppDataSource.getRepository(
       model.Appointment,
     ).find({
-      where: [{ client: { userId: userId } }, { worker: { userId: userId } }],
+      where: [{ client: { userId } }, { worker: { userId } }],
       relations: ["timeSlot"],
     });
 
@@ -259,22 +259,36 @@ export const deleteUser = async (
       }
     }
 
-    // Delete user's availability times
-    await AppDataSource.getRepository(model.AvailabilityTimes).delete({
-      user: { userId: userId },
+    await AppDataSource.getRepository(model.Appointment).delete({
+      client: { userId },
     });
 
-    // Delete friendships manually
+    await AppDataSource.getRepository(model.Appointment).delete({
+      worker: { userId },
+    });
+
+    await AppDataSource.getRepository(model.AvailabilityTimes).delete({
+      user: { userId },
+    });
+
+    await AppDataSource.getRepository(model.ChatRoom).delete({
+      user1: { userId },
+    });
+
+    await AppDataSource.getRepository(model.ChatRoom).delete({
+      user2: { userId },
+    });
+
     const friendships = await AppDataSource.getRepository(
       model.Friendship,
     ).find({
-      where: [{ user: { userId: userId } }, { friend: { userId: userId } }],
+      where: [{ user: { userId } }, { friend: { userId } }],
     });
+
     for (const friendship of friendships) {
       await AppDataSource.getRepository(model.Friendship).remove(friendship);
     }
 
-    // Delete user account
     await userRepository.remove(user);
 
     return reply.send({
