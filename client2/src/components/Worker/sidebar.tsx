@@ -1,14 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
   Home,
   Calendar,
   Search,
   CirclePlus,
   X,
-  ChevronRight,
-  ChevronLeft,
   LogOut,
-  ChevronDown,
   Store,
   User,
 } from "lucide-react";
@@ -18,12 +15,6 @@ import {
 } from "../../utils/axiosinstance";
 import ProfileModal from "../shared/Profile/ProfileModal";
 
-type UserInfo = {
-  username: string;
-  email: string;
-  profilePic?: string;
-};
-
 type MenuItem = {
   name: string;
   icon: any;
@@ -31,14 +22,17 @@ type MenuItem = {
 };
 
 export default function Sidebar() {
-  const [isCollapsed, setIsCollapsed] = useState(false);
   const [activeItem, setActiveItem] = useState("Dashboard");
-  const [showUserMenu, setShowUserMenu] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+  const [userInfo, setUserInfo] = useState<any>(null);
   const [isWorker, setIsWorker] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
+  const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+  const accountMenuRef = useRef<HTMLDivElement>(null);
+  const sidebarRef = useRef<HTMLDivElement>(null);
+  const tooltipRef = useRef<HTMLDivElement>(null);
+  const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
 
   const menuItems: MenuItem[] = [
     { name: "Irányítópult", icon: Home, path: "/dashboard" },
@@ -48,9 +42,30 @@ export default function Sidebar() {
     { name: "Üzlet", icon: Store, path: "/store" },
   ];
 
+  const calculateTooltipPosition = useCallback(() => {
+    if (!sidebarRef.current || !tooltipRef.current || !hoveredItem) {
+      return;
+    }
+
+    const sidebarRect = sidebarRef.current.getBoundingClientRect();
+    const listItem = Array.from(sidebarRef.current.querySelectorAll("li")).find(
+      (li) => li.textContent?.trim() === hoveredItem,
+    );
+
+    if (!listItem) return;
+
+    const listItemRect = listItem.getBoundingClientRect();
+    const top =
+      listItemRect.top +
+      listItemRect.height / 2 -
+      tooltipRef.current.offsetHeight / 2;
+    const left = sidebarRect.right + 8;
+
+    setTooltipPosition({ top, left });
+  }, [hoveredItem]);
+
   useEffect(() => {
     const info = getInfoFromToken();
-    //@ts-ignore
     setUserInfo(info);
 
     const workerAuth = isWorkerAuthenticated();
@@ -67,20 +82,42 @@ export default function Sidebar() {
     };
     checkIfMobile();
     window.addEventListener("resize", checkIfMobile);
-    return () => window.removeEventListener("resize", checkIfMobile);
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        accountMenuRef.current &&
+        !accountMenuRef.current.contains(event.target as Node)
+      ) {
+        setAccountMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      window.removeEventListener("resize", checkIfMobile);
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
   }, []);
+
+  useEffect(() => {
+    calculateTooltipPosition();
+  }, [hoveredItem, calculateTooltipPosition]);
 
   if (!isWorker) {
     return null;
   }
 
-  const getUserInitials = () => {
-    if (!userInfo || !userInfo.username) return "?";
-    const nameParts = userInfo.username.split(" ");
-    if (nameParts.length > 1) {
-      return `${nameParts[0][0]}${nameParts[1][0]}`.toUpperCase();
+  const renderAvatar = () => {
+    if (userInfo?.profilePic) {
+      return (
+        <img
+          src={userInfo.profilePic}
+          alt="Profile"
+          className="h-8 w-8 rounded-full object-cover"
+        />
+      );
     }
-    return userInfo.username.substring(0, 2).toUpperCase();
   };
 
   const handleNavigation = (path: string, name: string) => {
@@ -96,11 +133,11 @@ export default function Sidebar() {
 
   const handleOpenProfileModal = () => {
     setIsProfileModalOpen(true);
-    setShowUserMenu(false);
+    setAccountMenuOpen(false);
   };
 
-  const handleCloseProfileModal = () => {
-    setIsProfileModalOpen(false);
+  const toggleAccountMenu = () => {
+    setAccountMenuOpen(!accountMenuOpen);
   };
 
   if (isMobile) {
@@ -124,29 +161,19 @@ export default function Sidebar() {
               );
             })}
             <button
-              onClick={() => setMobileMenuOpen(true)}
+              onClick={toggleAccountMenu}
               className="flex flex-col items-center justify-center p-2 text-gray-500"
             >
-              {userInfo?.profilePic ? (
-                <img
-                  src={userInfo.profilePic}
-                  alt="Profile"
-                  className="h-6 w-6 rounded-full object-cover"
-                />
-              ) : (
-                <div className="h-6 w-6 rounded-full bg-gray-200 flex items-center justify-center text-gray-700 font-semibold text-xs">
-                  {getUserInitials()}
-                </div>
-              )}
+              {renderAvatar()}
               <span className="text-xs mt-1">Profile</span>
             </button>
           </div>
         </div>
 
-        {mobileMenuOpen && (
+        {accountMenuOpen && (
           <div
             className="fixed inset-0 bg-black bg-opacity-50 z-20"
-            onClick={() => setMobileMenuOpen(false)}
+            onClick={() => setAccountMenuOpen(false)}
           >
             <div
               className="absolute bottom-0 left-0 right-0 bg-white rounded-t-xl p-4"
@@ -155,34 +182,21 @@ export default function Sidebar() {
               <div className="w-12 h-1 bg-gray-300 mx-auto mb-4 rounded-full"></div>
 
               <div className="flex items-center gap-3 p-4 border-b border-gray-100">
-                {userInfo?.profilePic ? (
-                  <img
-                    src={userInfo.profilePic}
-                    alt="Profile"
-                    className="h-12 w-12 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="h-12 w-12 rounded-full bg-gray-200 flex items-center justify-center text-gray-700 font-semibold">
-                    {getUserInitials()}
-                  </div>
-                )}
+                {renderAvatar()}
                 <div className="text-left">
                   <h3 className="text-sm font-medium text-gray-900">
-                    {userInfo?.username || "Guest User"}
+                    {userInfo?.username}
                   </h3>
-                  <p className="text-xs text-gray-500">
-                    {userInfo?.email || "No email"}
-                  </p>
+                  <p className="text-xs text-gray-500">{userInfo?.email}</p>
                 </div>
                 <button
-                  onClick={() => setMobileMenuOpen(false)}
+                  onClick={() => setAccountMenuOpen(false)}
                   className="ml-auto"
                 >
                   <X size={20} />
                 </button>
               </div>
 
-              {/* Profile Button */}
               <button
                 onClick={handleOpenProfileModal}
                 className="flex items-center gap-2 w-full p-4"
@@ -202,7 +216,7 @@ export default function Sidebar() {
           </div>
         )}
         {isProfileModalOpen && (
-          <ProfileModal onClose={handleCloseProfileModal} />
+          <ProfileModal onClose={() => setIsProfileModalOpen(false)} />
         )}
       </>
     );
@@ -210,29 +224,16 @@ export default function Sidebar() {
 
   return (
     <div
-      className={`${
-        isCollapsed ? "w-16" : "w-64"
-      } h-screen sticky top-0 bg-white shadow-lg transition-all duration-300 flex flex-col z-10`}
+      className="w-16 h-screen sticky top-0 bg-white shadow-lg flex flex-col z-10"
+      ref={sidebarRef}
     >
-      <button
-        onClick={() => setIsCollapsed(!isCollapsed)}
-        className="absolute -right-3 top-12 bg-black text-white rounded-full p-1 shadow-md z-10"
-      >
-        {isCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
-      </button>
-
-      <div className="flex items-center gap-2 p-4 border-b border-gray-100">
+      <div className="flex justify-center p-4 border-b border-gray-100">
         <img
           src="https://pub-f0fa5b4b544643998cb832c3f9d449bc.r2.dev/static/logo.svg"
           alt="Barber & Blade Logo"
-          width={isCollapsed ? "24" : "32"}
-          height={isCollapsed ? "24" : "32"}
+          width="24"
+          height="24"
         />
-        {!isCollapsed && (
-          <span className="text-xl font-semibold text-gray-900">
-            Barber & Blade
-          </span>
-        )}
       </div>
 
       <nav className="flex-grow mt-6 px-2 overflow-y-auto">
@@ -240,94 +241,106 @@ export default function Sidebar() {
           {menuItems.map((item) => {
             const Icon = item.icon;
             return (
-              <li key={item.name}>
+              <li key={item.name} className="relative">
                 <button
                   onClick={() => handleNavigation(item.path, item.name)}
-                  className={`flex items-center w-full rounded-md p-2 transition-colors duration-200 ${
+                  onMouseEnter={() => setHoveredItem(item.name)}
+                  onMouseLeave={() => setHoveredItem(null)}
+                  className={`flex items-center justify-center w-full rounded-md p-2 transition-colors duration-200 ${
                     activeItem === item.name
                       ? "bg-gray-100 text-gray-700"
                       : "text-gray-700 hover:bg-gray-100"
                   }`}
                 >
-                  <div className={`${isCollapsed ? "mx-auto" : ""}`}>
+                  <div className="mx-auto">
                     <Icon size={20} />
                   </div>
-                  {!isCollapsed && (
-                    <span className="ml-3 font-medium">{item.name}</span>
-                  )}
                 </button>
+                {hoveredItem === item.name && sidebarRef.current && (
+                  <div
+                    className="fixed bg-gray-800 text-white text-xs py-1 px-2 rounded z-30 whitespace-nowrap"
+                    style={{
+                      top: `${tooltipPosition.top}px`,
+                      left: `${tooltipPosition.left}px`,
+                    }}
+                    ref={tooltipRef}
+                  >
+                    {item.name}
+                  </div>
+                )}
               </li>
             );
           })}
         </ul>
       </nav>
 
-      <div className="border-t border-gray-100 mt-auto">
-        {!isCollapsed ? (
-          <div className="relative">
-            <button
-              onClick={() => setShowUserMenu(!showUserMenu)}
-              className="flex items-center gap-3 w-full p-4 hover:bg-gray-50 transition-colors"
-            >
-              {userInfo?.profilePic ? (
+      <div className="border-t border-gray-100 mt-auto" ref={accountMenuRef}>
+        <div className="relative flex justify-center p-4">
+          <button
+            onClick={toggleAccountMenu}
+            onMouseEnter={() => setHoveredItem("Account")}
+            onMouseLeave={() => setHoveredItem(null)}
+            className="flex items-center justify-center text-gray-700 hover:bg-gray-50 rounded-full transition-colors"
+          >
+            {renderAvatar()}
+          </button>
+          {hoveredItem === "Account" &&
+            !accountMenuOpen &&
+            sidebarRef.current && (
+              <div
+                className="fixed bg-gray-800 text-white text-xs py-1 px-2 rounded z-30 whitespace-nowrap"
+                style={{
+                  top: `${sidebarRef.current.getBoundingClientRect().bottom - 44}px`,
+                  left: `${sidebarRef.current.offsetLeft + sidebarRef.current.offsetWidth + 8}px`, // Added 8px margin
+                }}
+              >
+                Fiók
+              </div>
+            )}
+        </div>
+
+        {accountMenuOpen && (
+          <div className="absolute bottom-16 left-16 w-64 bg-white rounded-lg shadow-lg border border-gray-200 z-30">
+            <div className="p-4 border-b border-gray-100">
+              <div className="flex items-center gap-3">
                 <img
                   src={userInfo.profilePic}
                   alt="Profile"
                   className="h-10 w-10 rounded-full object-cover"
                 />
-              ) : (
-                <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-700 font-semibold">
-                  {getUserInitials()}
+                <div>
+                  <p className="text-sm font-medium">{userInfo?.username}</p>
+                  <p className="text-xs text-gray-500 truncate max-w-40">
+                    {userInfo?.email}
+                  </p>
                 </div>
-              )}
-              <div className="text-left">
-                <h3 className="text-sm font-medium text-gray-900">
-                  {userInfo?.username || "Guest User"}
-                </h3>
-                <p className="text-xs text-gray-500">
-                  {userInfo?.email || "No email"}
-                </p>
               </div>
-              <ChevronDown
-                size={16}
-                className={`ml-auto text-gray-400 transition-transform ${showUserMenu ? "rotate-180" : ""}`}
-              />
-            </button>
-            {showUserMenu && (
-              <div className="absolute bottom-full left-0 right-0 bg-white border-t border-gray-100 shadow-lg rounded-t-md overflow-hidden">
-                {/*Profile button here inside usermenu dropdown*/}
-                <button
-                  onClick={handleOpenProfileModal}
-                  className="flex items-center gap-2 w-full p-3 hover:bg-gray-50 transition-colors"
-                >
-                  <User size={16} />
-                  <span className="text-sm font-medium">Profilom</span>
-                </button>
-                <button
-                  onClick={handleLogout}
-                  className="flex items-center gap-2 w-full p-3 text-red-600 hover:bg-gray-50 transition-colors"
-                >
-                  <LogOut size={16} />
-                  <span className="text-sm font-medium">Kijelentkezés</span>
-                </button>
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="flex justify-center p-4">
-            <button
-              onClick={handleLogout}
-              className="flex items-center justify-center p-2 text-red-600 hover:bg-gray-50 rounded-full transition-colors"
-              title="Logout"
-            >
-              <LogOut size={20} />
-            </button>
+            </div>
+
+            <div className="py-2">
+              <button
+                onClick={handleOpenProfileModal}
+                className="flex items-center w-full px-4 py-3 text-left hover:bg-gray-50"
+              >
+                <User size={18} className="mr-3" />
+                <span>Profilom</span>
+              </button>
+
+              <button
+                onClick={handleLogout}
+                className="flex items-center w-full px-4 py-3 text-left text-red-600 hover:bg-gray-50"
+              >
+                <LogOut size={18} className="mr-3" />
+                <span>Kijelentkezés</span>
+              </button>
+            </div>
           </div>
         )}
       </div>
 
-      {/* Render the ProfileModal conditionally */}
-      {isProfileModalOpen && <ProfileModal onClose={handleCloseProfileModal} />}
+      {isProfileModalOpen && (
+        <ProfileModal onClose={() => setIsProfileModalOpen(false)} />
+      )}
     </div>
   );
 }
