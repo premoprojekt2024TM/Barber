@@ -40,8 +40,31 @@ interface TransformedAppointment {
   completed: boolean;
 }
 
+const DashboardStats = ({
+  totalAppointments,
+}: {
+  totalAppointments: number;
+}) => {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+      <div className="bg-white rounded-lg shadow-sm p-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm text-gray-500">Összes Foglalás</p>
+            <h3 className="text-2xl font-bold text-gray-900 mt-1">
+              {totalAppointments}
+            </h3>
+          </div>
+          <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center text-green-600">
+            <Calendar size={24} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const BarberShopDashboard = (): React.ReactElement => {
-  const [activeTab] = useState<"Dashboard" | "Appointments">("Dashboard");
   const [appointmentData, setAppointmentData] = useState<
     TransformedAppointment[]
   >([]);
@@ -109,40 +132,23 @@ const BarberShopDashboard = (): React.ReactElement => {
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex">
+      {/* Sidebar: Fixed width and sticks to the side */}
       <Sidebar />
 
-      <div className="flex-1 p-6">
-        <div className="grid gap-6">
-          <div className="flex justify-between items-center">
-            <h1 className="text-3xl font-bold text-gray-900">
-              {activeTab === "Dashboard" ? "Irányítópult" : activeTab}
-            </h1>
-            <div className="flex items-center gap-3"></div>
+      {/* Main content area: Takes up the remaining space */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex-1 overflow-y-auto">
+          <div className="container mx-auto p-6 pb-16">
+            {/* Stats cards */}
+            <DashboardStats totalAppointments={totalAppointments} />
+
+            {/* Booking chart */}
+            {apiResponse && <BookingChart apiResponse={apiResponse} />}
+
+            {/* Appointments Table */}
+            <AppointmentsTable appointmentData={appointmentData} />
           </div>
-
-          {/* Stats cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-500">Összes Foglalás</p>
-                  <h3 className="text-2xl font-bold text-gray-900 mt-1">
-                    {totalAppointments}
-                  </h3>
-                </div>
-                <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center text-green-600">
-                  <Calendar size={24} />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Booking chart */}
-          {apiResponse && <BookingChart apiResponse={apiResponse} />}
-
-          {/* Appointments Table */}
-          <AppointmentsTable appointmentData={appointmentData} />
         </div>
       </div>
     </div>
