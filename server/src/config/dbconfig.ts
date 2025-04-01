@@ -9,8 +9,6 @@ export const AppDataSource = new DataSource({
     model.User,
     model.Store,
     model.Friendship,
-    model.ChatRoom,
-    model.Message,
     model.StoreWorker,
     model.AvailabilityTimes,
     model.Appointment,
