@@ -2,14 +2,12 @@ import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
-  OneToMany,
-  DeleteDateColumn,
+  OneToMany
 } from "typeorm";
 import { AvailabilityTimes } from "./Availability";
 import { Appointment } from "./Appointment";
 import { Friendship } from "./Friendship";
 import { StoreWorker } from "./StoreWorker";
-import { ChatRoom } from "./ChatRoom";
 
 @Entity("User")
 export class User {
@@ -80,18 +78,4 @@ export class User {
     onDelete: "CASCADE",
   })
   storeWorkers!: StoreWorker[];
-
-  @OneToMany(() => ChatRoom, (chatRoom) => chatRoom.user1, {
-    cascade: true,
-    onDelete: "CASCADE",
-  })
-  chatRooms!: ChatRoom[];
-
-  @OneToMany(() => ChatRoom, (chatRoom) => chatRoom.user2, {
-    cascade: true,
-    onDelete: "CASCADE",
-  })
-  chatRooms2!: ChatRoom[];
-
-  extendedWorker: any;
 }
