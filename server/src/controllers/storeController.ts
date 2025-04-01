@@ -554,3 +554,87 @@ export const exitStore = async (
     });
   }
 };
+
+export const isConnectedToStore = async (
+  request: AuthenticatedRequest,
+  reply: FastifyReply,
+) => {
+  const userId = request.user?.userId;
+
+  if (!userId) {
+    return reply.status(400).send({ message: "Hiányzó Felhasználó ID." });
+  }
+
+  try {
+    const storeWorkerRepository = AppDataSource.getRepository(
+      model.StoreWorker,
+    );
+
+    const storeConnection = await storeWorkerRepository.findOne({
+      where: {
+        user: { userId: userId },
+      },
+      relations: ["store"],
+    });
+
+    if (storeConnection) {
+      return reply.send({
+        isConnectedToStore: true,
+        store: storeConnection.store,
+        role: storeConnection.role,
+      });
+    }
+
+    return reply.send({
+      isConnectedToStore: false,
+    });
+  } catch (error) {
+    console.error("Error checking store connection:", error);
+    return reply
+      .status(500)
+      .send({ message: "An error occurred while checking store connection" });
+  }
+};
+
+export const isStoreOwner = async (
+  request: AuthenticatedRequest,
+  reply: FastifyReply,
+) => {
+  const userId = request.user?.userId;
+
+  if (!userId) {
+    return reply.status(400).send({ message: "User ID is missing" });
+  }
+
+  try {
+    const storeWorkerRepository = AppDataSource.getRepository(
+      model.StoreWorker,
+    );
+    const storeWorker = await storeWorkerRepository.findOne({
+      where: {
+        user: { userId: userId },
+        role: "owner",
+      },
+      relations: ["store"],
+    });
+
+    if (storeWorker) {
+      return reply.send({
+        isStoreOwner: true,
+        storeId: storeWorker.store.storeId,
+        storeName: storeWorker.store.name,
+      });
+    }
+
+    return reply.send({
+      isStoreOwner: false,
+    });
+  } catch (error) {
+    console.error("Error checking if user is store owner:", error);
+    return reply.status(500).send({
+      message: "An error occurred while checking if user is a store owner",
+    });
+  }
+};
+
+
