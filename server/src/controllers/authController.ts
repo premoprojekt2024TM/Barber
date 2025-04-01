@@ -11,6 +11,8 @@ import {
 } from "../shared/validation/userValidation";
 import { AuthenticatedRequest } from "../interfaces/interfaces";
 
+
+//regisztráció
 export const registerUser = async (
   request: FastifyRequest,
   reply: FastifyReply,
@@ -25,7 +27,7 @@ export const registerUser = async (
   if (role !== "client" && role !== "worker") {
     return reply
       .status(400)
-      .send({ message: 'Invalid role. Must be either "client" or "worker".' });
+      .send({ message: 'Érvénytelen szerep. A szerepnek „client” vagy „worker” kell lennie.' });
   }
 
   const existingEmail = await AppDataSource.getRepository(model.User).findOneBy(
@@ -46,8 +48,12 @@ export const registerUser = async (
       .send({ message: "Ez a felhasználónév már létezik" });
   }
 
+
+  //profilekép
   const generateProfilepic = `https://ui-avatars.com/api/?name=${username[0]}&size=128`;
 
+
+  //adatbázisba beillesztés
   try {
     const salt = await bcrypt.genSalt(12);
     const hashedPassword = await bcrypt.hash(password, salt);
@@ -70,6 +76,9 @@ export const registerUser = async (
   }
 };
 
+
+
+//bejelentkezés
 export const loginUser = async (
   request: FastifyRequest,
   reply: FastifyReply,
@@ -78,7 +87,7 @@ export const loginUser = async (
   if (!result.success) {
     return reply
       .status(400)
-      .send({ message: "Validation failed", errors: result.error.errors });
+      .send({ message: "Sikertelen validáció"});
   }
 
   const { email, password } = result.data;
@@ -107,6 +116,7 @@ export const loginUser = async (
   }
 };
 
+//frissités
 export const updateUser = async (
   request: AuthenticatedRequest,
   reply: FastifyReply,
@@ -114,14 +124,14 @@ export const updateUser = async (
   const userId = request.user?.userId;
 
   if (!userId) {
-    return reply.status(400).send({ message: "User ID is missing." });
+    return reply.status(400).send({ message: "Hiányzó Felhasználó ID" });
   }
 
   const result = updateSchema.safeParse(request.body);
   if (!result.success) {
     return reply
       .status(400)
-      .send({ message: "Validation failed", errors: result.error.errors });
+      .send({ message: "Sikertelen validáció" });
   }
 
   const { username, email, password, firstName, lastName, profilePic } =
@@ -135,38 +145,34 @@ export const updateUser = async (
       return reply.status(404).send({ message: "User not found" });
     }
 
-    // Check if the username is already taken (only if it's being updated)
+    // Ellenőrizze, hogy a felhasználónév már foglalt-e (csak ha frissítés történik)
     if (username && username !== user.username) {
       const checkUsername = await userRepository.findOneBy({ username });
       if (checkUsername) {
-        return reply.status(400).send({ message: "Username already exists!" });
+        return reply.status(400).send({ message: "Ez a felhasználónév már létezik!" });
       }
     }
 
-    // Handle profile picture upload
     let profilePictureUrl: string | undefined;
     if (profilePic) {
-      // Check if profilePic data exists
       try {
         profilePictureUrl = await uploadProfilePicture(
-          profilePic, // Assuming profilePic is the base64 encoded image
-          `${userId}-${Date.now()}.png`, // Generate a unique filename
-          "image/png", // Adjust contentType as needed based on your image format
+          profilePic, 
+          `${userId}-${Date.now()}.png`, 
+          "image/png", 
         );
       } catch (uploadError) {
-        console.error("Error uploading profile picture:", uploadError);
         return reply
           .status(500)
-          .send({ message: "Failed to upload profile picture" });
+          .send({ message: "Nem sikerült feltölteni a profilképet." });
       }
     }
 
-    // Update user properties conditionally
     if (username) user.username = username;
     if (email) user.email = email;
     if (firstName) user.firstName = firstName;
     if (lastName) user.lastName = lastName;
-    if (profilePictureUrl) user.profilePic = profilePictureUrl; // Save the URL from S3
+    if (profilePictureUrl) user.profilePic = profilePictureUrl;
 
     if (password) {
       const salt = await bcrypt.genSalt(12);
@@ -174,29 +180,28 @@ export const updateUser = async (
     }
 
     await userRepository.save(user);
-
-    // Remove password from response
+    
     const { password: removedPassword, ...userWithoutPassword } = user;
 
     return reply.send({
-      message: "User updated successfully",
+      message: "Sikeres Felhasználói profil frissités",
       user: userWithoutPassword,
     });
   } catch (error) {
-    console.error("Error during user update:", error);
     return reply
       .status(500)
-      .send({ message: "An error occurred while updating user" });
+      .send({ message: "Hiba lépett fel frissités közben" });
   }
 };
 
+//Törlés
 export const deleteUser = async (
   request: AuthenticatedRequest,
   reply: FastifyReply,
 ) => {
   const userId = request.user?.userId;
   if (!userId) {
-    return reply.status(400).send({ message: "User ID is missing" });
+    return reply.status(400).send({ message: "Hiányzó Felhasználó ID." });
   }
 
   try {
@@ -204,7 +209,7 @@ export const deleteUser = async (
     const user = await userRepository.findOneBy({ userId: userId });
 
     if (!user) {
-      return reply.status(404).send({ message: "User not found" });
+      return reply.status(404).send({ message: "Nem található felhasználó." });
     }
 
     const storeWorker = await AppDataSource.getRepository(
@@ -271,14 +276,6 @@ export const deleteUser = async (
       user: { userId },
     });
 
-    await AppDataSource.getRepository(model.ChatRoom).delete({
-      user1: { userId },
-    });
-
-    await AppDataSource.getRepository(model.ChatRoom).delete({
-      user2: { userId },
-    });
-
     const friendships = await AppDataSource.getRepository(
       model.Friendship,
     ).find({
@@ -292,55 +289,12 @@ export const deleteUser = async (
     await userRepository.remove(user);
 
     return reply.send({
-      message: "User and related data deleted successfully",
+      message: "Fiók és adatai sikeresen törölve",
     });
   } catch (error) {
-    console.error("Error during user deletion:", error);
     return reply
       .status(500)
-      .send({ message: "An error occurred while deleting user" });
-  }
-};
-
-export const isConnectedToStore = async (
-  request: AuthenticatedRequest,
-  reply: FastifyReply,
-) => {
-  const userId = request.user?.userId;
-
-  if (!userId) {
-    return reply.status(400).send({ message: "User ID is missing" });
-  }
-
-  try {
-    const storeWorkerRepository = AppDataSource.getRepository(
-      model.StoreWorker,
-    );
-
-    // Check if the user is connected to any store (either as owner or worker)
-    const storeConnection = await storeWorkerRepository.findOne({
-      where: {
-        user: { userId: userId },
-      },
-      relations: ["store"],
-    });
-
-    if (storeConnection) {
-      return reply.send({
-        isConnectedToStore: true,
-        store: storeConnection.store,
-        role: storeConnection.role,
-      });
-    }
-
-    return reply.send({
-      isConnectedToStore: false,
-    });
-  } catch (error) {
-    console.error("Error checking store connection:", error);
-    return reply
-      .status(500)
-      .send({ message: "An error occurred while checking store connection" });
+      .send({ message: "Hiba történt a fiók törlése közben" });
   }
 };
 
@@ -351,13 +305,13 @@ export const getCurrentUser = async (
   const userId = request.user?.userId;
 
   if (!userId) {
-    return reply.status(400).send({ message: "User ID is missing" });
+    return reply.status(400).send({ message: "Hiányzó Felhasználó ID." });
   }
 
   try {
     const userRepository = AppDataSource.getRepository(model.User);
 
-    // Find the user by ID, excluding sensitive information like password
+    //Felhasználói profil keresése ID alapján
     const user = await userRepository.findOne({
       where: { userId },
       select: [
@@ -371,56 +325,14 @@ export const getCurrentUser = async (
     });
 
     if (!user) {
-      return reply.status(404).send({ message: "User not found" });
+      return reply.status(404).send({ message: "Felhasználói profil nem található" });
     }
 
     // Return the user data
     return reply.send(user);
   } catch (error) {
-    console.error("Error retrieving user:", error);
     return reply
       .status(500)
-      .send({ message: "An error occurred while retrieving user data" });
-  }
-};
-
-export const isStoreOwner = async (
-  request: AuthenticatedRequest,
-  reply: FastifyReply,
-) => {
-  const userId = request.user?.userId;
-
-  if (!userId) {
-    return reply.status(400).send({ message: "User ID is missing" });
-  }
-
-  try {
-    const storeWorkerRepository = AppDataSource.getRepository(
-      model.StoreWorker,
-    );
-    const storeWorker = await storeWorkerRepository.findOne({
-      where: {
-        user: { userId: userId },
-        role: "owner",
-      },
-      relations: ["store"],
-    });
-
-    if (storeWorker) {
-      return reply.send({
-        isStoreOwner: true,
-        storeId: storeWorker.store.storeId,
-        storeName: storeWorker.store.name,
-      });
-    }
-
-    return reply.send({
-      isStoreOwner: false,
-    });
-  } catch (error) {
-    console.error("Error checking if user is store owner:", error);
-    return reply.status(500).send({
-      message: "An error occurred while checking if user is a store owner",
-    });
+      .send({ message: "Hiba történt a felhasználói adatok lekérése közben." });
   }
 };
