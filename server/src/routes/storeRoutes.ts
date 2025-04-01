@@ -7,9 +7,11 @@ import {
   getStoreWorkersAndAppointments,
   deleteStore,
   exitStore,
+  isConnectedToStore,
+  isStoreOwner,
 } from "../controllers/storeController";
 import { RateLimiterMemory } from "rate-limiter-flexible";
-import { authenticateJwt } from "../middlewares/authMiddleware";
+import { authenticateJwt,authorizeRole} from "../middlewares/authMiddleware";
 
 export const storeRoutes = async (fastify: FastifyInstance) => {
   const rateLimiter = new RateLimiterMemory({
@@ -44,4 +46,14 @@ export const storeRoutes = async (fastify: FastifyInstance) => {
   );
   fastify.delete("/deletestore", { preHandler: authenticateJwt }, deleteStore);
   fastify.delete("/exitstore", { preHandler: authenticateJwt }, exitStore);
+  fastify.get(
+    "/isStoreOwner",
+    { preHandler: [authenticateJwt, authorizeRole(["worker"])] },
+    isStoreOwner,
+  );
+  fastify.get(
+    "/is-connected-to-store",
+    { preHandler: authenticateJwt },
+    isConnectedToStore,
+  );
 };
