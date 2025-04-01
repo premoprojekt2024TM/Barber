@@ -40,7 +40,7 @@ interface WorkerStoreRouteProps {
 const ClientRoute = ({ children }: ProtectedRouteProps) => {
   const [loading, setLoading] = useState<boolean>(true);
   const [authorized, setAuthorized] = useState<boolean>(false);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false); // Track synchronous auth
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false); 
 
   useEffect(() => {
     const checkAuth = async () => {

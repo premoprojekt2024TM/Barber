@@ -298,6 +298,7 @@ export const deleteUser = async (
   }
 };
 
+
 export const getCurrentUser = async (
   request: AuthenticatedRequest,
   reply: FastifyReply,
@@ -328,7 +329,6 @@ export const getCurrentUser = async (
       return reply.status(404).send({ message: "Felhasználói profil nem található" });
     }
 
-    // Return the user data
     return reply.send(user);
   } catch (error) {
     return reply
