@@ -7,6 +7,8 @@ import {
   FriendRequestBody,
 } from "../interfaces/interfaces";
 
+
+//barátkérelem küldése
 export const sendFriendRequest = async (
   request: AuthenticatedRequest,
   reply: FastifyReply,
@@ -17,7 +19,7 @@ export const sendFriendRequest = async (
   if (userId === friendId) {
     return reply
       .status(400)
-      .send({ message: "You cannot send a friend request to yourself" });
+      .send({ message: "Magadnak nem tudsz barátkérelmet küldeni" });
   }
 
   try {
@@ -29,13 +31,13 @@ export const sendFriendRequest = async (
     });
 
     if (!user || !friend) {
-      return reply.status(404).send({ message: "User or Friend not found" });
+      return reply.status(404).send({ message: "Nem található" });
     }
 
     if (friend.role === "client") {
       return reply
         .status(400)
-        .send({ message: "You cannot send a friend request to a client" });
+        .send({ message: "Nem küldhetsz egy kliensnek barátkérelmet" });
     }
 
     const existingFriendRequest = await AppDataSource.getRepository(
@@ -58,7 +60,7 @@ export const sendFriendRequest = async (
     if (existingFriendRequest) {
       return reply
         .status(400)
-        .send({ message: "Friendship request already exists or is pending" });
+        .send({ message: "Barátkérelem létezik vagy függőben van" });
     }
 
     const friendRequest = new model.Friendship();
@@ -70,15 +72,15 @@ export const sendFriendRequest = async (
 
     return reply
       .status(201)
-      .send({ message: "Friend request sent successfully" });
+      .send({ message: "Barátkérelem sikeresen elküldve" });
   } catch (error) {
-    console.error("Error sending friend request:", error);
     return reply
       .status(500)
-      .send({ message: "An error occurred while sending friend request" });
+      .send({ message: "Hiba történt barátkérelem elküldése folyamán" });
   }
 };
 
+//barátkérelem elfogadása
 export const acceptFriendRequest = async (
   request: AuthenticatedRequest,
   reply: FastifyReply,
@@ -89,7 +91,7 @@ export const acceptFriendRequest = async (
   if (userId === friendId) {
     return reply
       .status(400)
-      .send({ message: "You cannot accept a friend request from yourself" });
+      .send({ message: "Nem tudod a saját magad elküldött barátkérelmet elfogadni" });
   }
 
   try {
@@ -113,7 +115,7 @@ export const acceptFriendRequest = async (
     if (!friendRequest) {
       return reply
         .status(404)
-        .send({ message: "No pending friend request found" });
+        .send({ message: "Nem található elküldött barátkérelem" });
     }
 
     friendRequest.status = "accepted";
@@ -142,13 +144,11 @@ export const acceptFriendRequest = async (
         reciprocalRequest,
       );
     }
-
-    return reply.status(200).send({ message: "Friend request accepted" });
+    return reply.status(200).send({ message: "Barátkérelem elfogadva" });
   } catch (error) {
-    console.error("Error accepting friend request:", error);
     return reply
       .status(500)
-      .send({ message: "An error occurred while accepting friend request" });
+      .send({ message: "Hiba történt barátkérelem elfogadása közben" });
   }
 };
 
