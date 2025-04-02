@@ -601,11 +601,9 @@ export const isStoreOwner = async (
   reply: FastifyReply,
 ) => {
   const userId = request.user?.userId;
-
   if (!userId) {
     return reply.status(400).send({ message: "User ID is missing" });
   }
-
   try {
     const storeWorkerRepository = AppDataSource.getRepository(
       model.StoreWorker,
@@ -619,10 +617,42 @@ export const isStoreOwner = async (
     });
 
     if (storeWorker) {
+      // Get all store workers for this store including their user information
+      const allStoreWorkers = await storeWorkerRepository.find({
+        where: {
+          store: { storeId: storeWorker.store.storeId },
+          role: "worker",
+        },
+        relations: ["user", "store"],
+      });
+
+      // Format the workers data
+      const workers = allStoreWorkers.map((worker) => ({
+        userId: worker.user.userId,
+        username: worker.user.username,
+        email: worker.user.email,
+        role: worker.role,
+        storeWorkerId: worker.storeWorkerId,
+        profilepic: worker.user.profilePic,
+      }));
+
+      // Return complete store information along with workers
       return reply.send({
         isStoreOwner: true,
-        storeId: storeWorker.store.storeId,
-        storeName: storeWorker.store.name,
+        store: {
+          storeId: storeWorker.store.storeId,
+          name: storeWorker.store.name,
+          description: storeWorker.store.description,
+          address: storeWorker.store.address,
+          city: storeWorker.store.city,
+          postalCode: storeWorker.store.postalCode,
+          phone: storeWorker.store.phone,
+          email: storeWorker.store.email,
+          latitude: storeWorker.store.latitude,
+          longitude: storeWorker.store.longitude,
+          picture: storeWorker.store.picture,
+        },
+        workers: workers,
       });
     }
 
@@ -636,5 +666,3 @@ export const isStoreOwner = async (
     });
   }
 };
-
-

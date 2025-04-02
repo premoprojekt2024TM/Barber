@@ -126,7 +126,7 @@ export function ProfileModal({ onClose }: ProfileModalProps) {
       const appointments = response.data.appointments;
 
       const bookingsTransformed = appointments.map((appointment: any) => {
-        const workerName = `${appointment.worker.firstName} ${appointment.worker.lastName}`;
+        const workerName = `${appointment.worker.lastName} ${appointment.worker.firstName}`;
         const appointmentDate = appointment.timeSlot.day;
         const appointmentTime = appointment.timeSlot.timeSlot;
         const store = appointment.worker.storeWorkers?.[0]?.store;

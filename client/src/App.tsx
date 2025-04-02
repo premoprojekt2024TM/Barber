@@ -16,6 +16,7 @@ import FriendsPage from "./components/Worker/Friend/friendpage";
 import Sidebar from "./components/Worker/sidebar";
 import { Store } from "./components/Worker/Store/Store";
 import Login from "./components/shared/Auth/Login";
+import { EditStore } from "./components/Worker/Store/Edit/EditStore";
 import NoEditRightsPage from "./components/Worker/404/noedit";
 import NotInStorePage from "./components/Worker/404/nointhestore";
 import AppointmentCalendar from "./components/Worker/Calendar/Calendar";
@@ -40,7 +41,7 @@ interface WorkerStoreRouteProps {
 const ClientRoute = ({ children }: ProtectedRouteProps) => {
   const [loading, setLoading] = useState<boolean>(true);
   const [authorized, setAuthorized] = useState<boolean>(false);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false); 
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -61,7 +62,7 @@ const ClientRoute = ({ children }: ProtectedRouteProps) => {
   }, []);
 
   if (loading) {
-    return <div>Betöltés...</div>;
+    return <div></div>;
   }
 
   if (!isAuthenticated) {
@@ -110,7 +111,7 @@ const WorkerStoreRoute = ({
   }, []);
 
   if (loading) {
-    return <div>Betöltés...</div>;
+    return <div></div>;
   }
 
   if (routePath === "/search" && authorized) {
@@ -126,9 +127,22 @@ const WorkerStoreRoute = ({
   ) {
     return <Navigate to="/noedit" />;
   }
+
+  // New condition: Redirect store owners from /store to /edit
+  if (
+    checksFinished &&
+    authorized &&
+    isConnected &&
+    isOwner &&
+    routePath === "/store"
+  ) {
+    return <Navigate to="/edit" />;
+  }
+
   if (checksFinished && authorized && !isConnected && routePath !== "/store") {
     return <Navigate to="/nostore" />;
   }
+
   if (checksFinished && !authorized) {
     return <Navigate to="/nostore" />;
   }
@@ -231,6 +245,7 @@ function App() {
             </WorkerStoreRoute>
           }
         />
+
         <Route
           path="/search"
           element={
@@ -256,6 +271,7 @@ function App() {
             </WorkerStoreRoute>
           }
         />
+        <Route path="/edit" element={<EditStore />} />
         <Route path="/noedit" element={<NoEditRightsPage />} />
         <Route path="/nostore" element={<NotInStorePage />} />
         <Route path="*" element={<Navigate to="/" replace />} />

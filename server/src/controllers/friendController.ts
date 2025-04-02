@@ -1,12 +1,11 @@
 import { FastifyReply } from "fastify";
 import { AppDataSource } from "../config/dbconfig";
 import * as model from "../models/index";
-import { Not } from "typeorm";
+import { Not, In } from "typeorm";
 import {
   AuthenticatedRequest,
   FriendRequestBody,
 } from "../interfaces/interfaces";
-
 
 //barátkérelem küldése
 export const sendFriendRequest = async (
@@ -89,9 +88,9 @@ export const acceptFriendRequest = async (
   const { friendId } = request.body as FriendRequestBody;
 
   if (userId === friendId) {
-    return reply
-      .status(400)
-      .send({ message: "Nem tudod a saját magad elküldött barátkérelmet elfogadni" });
+    return reply.status(400).send({
+      message: "Nem tudod a saját magad elküldött barátkérelmet elfogadni",
+    });
   }
 
   try {
@@ -230,8 +229,8 @@ export const getFriends = async (
   reply: FastifyReply,
 ) => {
   const userId = request.user?.userId;
-
   try {
+    // First, get all friendships
     const friendships = await AppDataSource.getRepository(
       model.Friendship,
     ).find({
@@ -246,11 +245,46 @@ export const getFriends = async (
       return reply.status(200).send({ message: "You have no friends" });
     }
 
-    const friends = friendships.map((friendship) => {
+    // Extract friend IDs
+    const friendIds = friendships.map((friendship) => {
       return friendship.user.userId === userId
-        ? friendship.friend
-        : friendship.user;
+        ? friendship.friend.userId
+        : friendship.user.userId;
     });
+
+    // Get all storeWorkers that have any of these friends as users
+    const storeWorkers = await AppDataSource.getRepository(
+      model.StoreWorker,
+    ).find({
+      where: {
+        user: { userId: In(friendIds) },
+      },
+      relations: ["user"],
+    });
+
+    // Create a Set of user IDs who are store workers
+    const storeWorkerUserIds = new Set(
+      storeWorkers.map((worker) => worker.user.userId),
+    );
+
+    // Filter friends to only include those who are not store workers
+    const friends = friendships
+      .map((friendship) => {
+        const friendData =
+          friendship.user.userId === userId
+            ? friendship.friend
+            : friendship.user;
+        // Remove password from friend data
+        const { password, ...friendWithoutPassword } = friendData;
+        return friendWithoutPassword;
+      })
+      .filter((friend) => !storeWorkerUserIds.has(friend.userId));
+
+    if (friends.length === 0) {
+      return reply
+        .status(200)
+        .send({ message: "You have no friends who aren't store workers" });
+    }
 
     return reply.status(200).send({ friends });
   } catch (error) {
@@ -444,5 +478,41 @@ export const listAllWorkers = async (
     return reply
       .status(500)
       .send({ message: "An error occurred while fetching workers" });
+  }
+};
+
+export const getFriendsv2 = async (
+  request: AuthenticatedRequest,
+  reply: FastifyReply,
+) => {
+  const userId = request.user?.userId;
+
+  try {
+    const friendships = await AppDataSource.getRepository(
+      model.Friendship,
+    ).find({
+      where: [
+        { user: { userId }, status: "accepted" },
+        { friend: { userId }, status: "accepted" },
+      ],
+      relations: ["user", "friend"],
+    });
+
+    if (friendships.length === 0) {
+      return reply.status(200).send({ message: "You have no friends" });
+    }
+
+    const friends = friendships.map((friendship) => {
+      return friendship.user.userId === userId
+        ? friendship.friend
+        : friendship.user;
+    });
+
+    return reply.status(200).send({ friends });
+  } catch (error) {
+    console.error("Error fetching friends:", error);
+    return reply
+      .status(500)
+      .send({ message: "An error occurred while fetching friends" });
   }
 };

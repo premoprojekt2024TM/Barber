@@ -8,6 +8,7 @@ import {
   deleteFriendship,
   getSentFriendRequests,
   listAllWorkers,
+  getFriendsv2,
 } from "../controllers/friendController";
 import { authenticateJwt } from "../middlewares/authMiddleware";
 
@@ -39,6 +40,7 @@ export const friendRoutes = async (fastify: FastifyInstance) => {
   );
   fastify.get("/list", { preHandler: authenticateJwt }, listAllWorkers);
   fastify.get("/getFriends", { preHandler: authenticateJwt }, getFriends);
+  fastify.get("/getFriendsv2", { preHandler: authenticateJwt }, getFriendsv2);
   fastify.get(
     "/checkFriendshipStatus",
     { preHandler: authenticateJwt },

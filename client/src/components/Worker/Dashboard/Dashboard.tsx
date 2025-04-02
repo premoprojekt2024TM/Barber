@@ -77,16 +77,13 @@ const BarberShopDashboard = (): React.ReactElement => {
       try {
         setIsLoading(true);
         const response = await axiosInstance.get<ApiResponse>("/api/v1/stores");
-
-        // Store the full API response
         setApiResponse(response.data);
 
-        // Transform the response data to match the AppointmentsTable expected data structure
         const transformedAppointments = response.data.workers.flatMap(
           (worker: Worker) =>
             worker.appointments.map((appointment: Appointment) => ({
               id: appointment.appointmentId.toString(),
-              client: appointment.client, // Pass the entire client object
+              client: appointment.client,
               barberFirstName: worker.workerFirstName,
               barberLastName: worker.workerLastName,
               day: appointment.day,
@@ -98,12 +95,12 @@ const BarberShopDashboard = (): React.ReactElement => {
         );
 
         setAppointmentData(transformedAppointments);
-        setIsLoading(false);
       } catch (err) {
         console.error("Error fetching appointments:", err);
         setError(
           err instanceof Error ? err : new Error("Unknown error occurred"),
         );
+      } finally {
         setIsLoading(false);
       }
     };
@@ -116,7 +113,10 @@ const BarberShopDashboard = (): React.ReactElement => {
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-indigo-500"></div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900 mx-auto"></div>
+          <p className="mt-4 text-gray-700">Adatok betöltése...</p>
+        </div>
       </div>
     );
   }
@@ -133,20 +133,12 @@ const BarberShopDashboard = (): React.ReactElement => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      {/* Sidebar: Fixed width and sticks to the side */}
       <Sidebar />
-
-      {/* Main content area: Takes up the remaining space */}
       <div className="flex-1 flex flex-col overflow-hidden">
         <div className="flex-1 overflow-y-auto">
           <div className="container mx-auto p-6 pb-16">
-            {/* Stats cards */}
             <DashboardStats totalAppointments={totalAppointments} />
-
-            {/* Booking chart */}
             {apiResponse && <BookingChart apiResponse={apiResponse} />}
-
-            {/* Appointments Table */}
             <AppointmentsTable appointmentData={appointmentData} />
           </div>
         </div>

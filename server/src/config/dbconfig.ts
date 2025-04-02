@@ -4,7 +4,9 @@ import * as model from "../models/index";
 
 export const AppDataSource = new DataSource({
   type: "postgres",
-  url: process.env.DATABASE_URL,
+  url:
+    process.env.DATABASE_URL ||
+    "postgresql://root:root@34.116.142.204:5432/root",
   entities: [
     model.User,
     model.Store,

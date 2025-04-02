@@ -1,6 +1,5 @@
-"use client";
-
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Sidebar from "../sidebar";
 import { AddImage } from "./AddImage";
 import { AddWorker } from "./AddWorker";
@@ -33,7 +32,7 @@ interface AlertState {
 }
 
 export const Store = () => {
-  // Store form state
+  const navigate = useNavigate();
   const [storeData, setStoreData] = useState<StoreDataType>({
     name: "",
     phone: "",
@@ -129,7 +128,7 @@ export const Store = () => {
         message: "Bolt sikeresen létrehozva!",
         severity: "success",
       });
-
+      navigate("/edit");
       // Optional: Clear form after successful submission
       setStoreData({
         name: "",

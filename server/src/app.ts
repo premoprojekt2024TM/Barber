@@ -12,13 +12,11 @@ dotenv.config();
 
 const fastify = Fastify();
 
-
-
 fastify.register(cors, {
-  origin: "*", 
+  origin: "*",
   methods: ["GET", "POST", "PUT", "DELETE"],
   allowedHeaders: ["Content-Type", "Authorization"],
-  credentials: true, 
+  credentials: true,
 });
 
 const routes = [
@@ -30,7 +28,6 @@ const routes = [
 ];
 
 routes.forEach((route) => fastify.register(route, { prefix: "/api/v1" }));
-
 
 fastify.listen({ port: 8080, host: "0.0.0.0" }, (err, address) => {
   if (err) {
