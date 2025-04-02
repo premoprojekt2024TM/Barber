@@ -1,121 +1,266 @@
-import { Routes, Route, Navigate } from "react-router-dom";
-import Dashboard from "./components/Dashboard/Dashboard";
-import StoreUpload from "./components/StoreUpload/Store";
-import Finder from "./components/Finder/Finder";
-import SignUp from "./components/Auth/SignUp";
-import SignIn from "./components/Auth/SignIn";
-import Addd from "./components/Availability/Add";
-import MainPage from "./components/MainPage/MainPage";
-import SearchPage from "./components/SearchFriends/SearchPage";
-import BookingSystem from "./components/Booking/Booking";
+import {
+  Route,
+  BrowserRouter as Router,
+  Routes,
+  Navigate,
+} from "react-router-dom";
+import { useEffect, useState, ReactNode } from "react";
+import Bubble from "./components/Client/BubbleView/bubblepage";
+import Register from "./components/shared/Auth/register";
+import BookingSystem from "./components/Client/Booking/Booking";
+import MainPage from "./components/Client/Main/MainPage";
+import Map from "./components/Client/Map/Map";
+import AvailabilityPage from "./components/Worker/Availability/avpage";
+import BarberShopDashboard from "./components/Worker/Dashboard/Dashboard";
+import FriendsPage from "./components/Worker/Friend/friendpage";
+import Sidebar from "./components/Worker/sidebar";
+import { Store } from "./components/Worker/Store/Store";
+import Login from "./components/shared/Auth/Login";
+import NoEditRightsPage from "./components/Worker/404/noedit";
+import NotInStorePage from "./components/Worker/404/nointhestore";
+import AppointmentCalendar from "./components/Worker/Calendar/Calendar";
 import {
   isClientAuthenticated,
   isWorkerAuthenticated,
-} from "./utils/axiosInstance";
+  checkClientAccess,
+  checkWorkerAccess,
+  checkStoreConnection,
+  checkStoreOwner,
+} from "./utils/axiosinstance";
 
-// Typing the WorkerRoute component using a regular function
-interface WorkerRouteProps {
-  children: React.ReactNode;
+interface ProtectedRouteProps {
+  children: ReactNode;
 }
 
-function WorkerRoute({ children }: WorkerRouteProps) {
-  const isWorker = isWorkerAuthenticated();
+interface WorkerStoreRouteProps {
+  children: ReactNode;
+  routePath?: string;
+}
 
-  if (!isWorker) {
-    return (
-      <Navigate to="/login" state={{ message: "Worker access required" }} />
-    );
+const ClientRoute = ({ children }: ProtectedRouteProps) => {
+  const [loading, setLoading] = useState<boolean>(true);
+  const [authorized, setAuthorized] = useState<boolean>(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false); 
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const isAuthenticatedResult = isClientAuthenticated();
+      setIsAuthenticated(isAuthenticatedResult);
+
+      if (isAuthenticatedResult) {
+        const result = await checkClientAccess();
+        setAuthorized(result.status === 200);
+      } else {
+        setAuthorized(false);
+      }
+
+      setLoading(false);
+    };
+
+    checkAuth();
+  }, []);
+
+  if (loading) {
+    return <div>Betöltés...</div>;
   }
-
-  return <>{children}</>;
-}
-
-interface ClientRouteProps {
-  children: React.ReactNode;
-}
-
-function ClientRoute({ children }: ClientRouteProps) {
-  const isClient = isClientAuthenticated();
-
-  if (!isClient) {
-    return (
-      <Navigate to="/login" state={{ message: "Client access required" }} />
-    );
-  }
-
-  return <>{children}</>;
-}
-
-// Typing the AuthRoute component using a regular function
-interface AuthRouteProps {
-  children: React.ReactNode;
-}
-
-function AuthRoute({ children }: AuthRouteProps) {
-  const isAuthenticated = isClientAuthenticated() || isWorkerAuthenticated();
 
   if (!isAuthenticated) {
-    return (
-      <Navigate to="/login" state={{ message: "Please login to continue" }} />
-    );
+    return <Navigate to="/login" />;
+  }
+
+  return authorized ? <>{children}</> : <Navigate to="/login" />;
+};
+
+const WorkerStoreRoute = ({
+  children,
+  routePath = "",
+}: WorkerStoreRouteProps) => {
+  const [loading, setLoading] = useState<boolean>(true);
+  const [authorized, setAuthorized] = useState<boolean>(false);
+  const [isOwner, setIsOwner] = useState<boolean>(false);
+  const [isConnected, setIsConnected] = useState<boolean>(false);
+  const [checksFinished, setChecksFinished] = useState<boolean>(false);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const workerResult = await checkWorkerAccess();
+      if (workerResult.status === 200) {
+        setAuthorized(true);
+
+        const storeConnection = await checkStoreConnection();
+        setIsConnected(storeConnection.isConnectedToStore);
+
+        if (storeConnection.isConnectedToStore) {
+          const ownerCheck = await checkStoreOwner();
+          setIsOwner(ownerCheck.isStoreOwner);
+        } else {
+          setIsOwner(false);
+        }
+      } else {
+        setAuthorized(false);
+        setIsOwner(false);
+        setIsConnected(false);
+      }
+
+      setLoading(false);
+      setChecksFinished(true);
+    };
+
+    checkAuth();
+  }, []);
+
+  if (loading) {
+    return <div>Betöltés...</div>;
+  }
+
+  if (routePath === "/search" && authorized) {
+    return <>{children}</>;
+  }
+
+  if (
+    checksFinished &&
+    authorized &&
+    isConnected &&
+    !isOwner &&
+    routePath === "/store"
+  ) {
+    return <Navigate to="/noedit" />;
+  }
+  if (checksFinished && authorized && !isConnected && routePath !== "/store") {
+    return <Navigate to="/nostore" />;
+  }
+  if (checksFinished && !authorized) {
+    return <Navigate to="/nostore" />;
+  }
+
+  return authorized ? <>{children}</> : <Navigate to="/nostore" />;
+};
+
+const PublicOnlyRoute = ({ children }: ProtectedRouteProps) => {
+  if (isClientAuthenticated()) {
+    return <Navigate to="/main" />;
+  }
+  if (isWorkerAuthenticated()) {
+    return <Navigate to="/dashboard" />;
   }
 
   return <>{children}</>;
-}
+};
+
+const PublicOrClientRoute = ({ children }: ProtectedRouteProps) => {
+  if (isWorkerAuthenticated()) {
+    return <Navigate to="/dashboard" />;
+  }
+
+  return <>{children}</>;
+};
 
 function App() {
   return (
-    <div>
+    <Router>
       <Routes>
-        {/* Worker-only routes */}
         <Route
-          path="/dashboard"
+          path="/login"
           element={
-            <WorkerRoute>
-              <Dashboard />
-            </WorkerRoute>
+            <PublicOnlyRoute>
+              <Login />
+            </PublicOnlyRoute>
           }
         />
-
-        {/* Client-only routes */}
         <Route
-          path="/search"
+          path="/register"
+          element={
+            <PublicOnlyRoute>
+              <Register />
+            </PublicOnlyRoute>
+          }
+        />
+        <Route
+          path="/"
+          element={
+            <PublicOrClientRoute>
+              <MainPage />
+            </PublicOrClientRoute>
+          }
+        />
+        <Route
+          path="/map"
+          element={
+            <PublicOrClientRoute>
+              <Map />
+            </PublicOrClientRoute>
+          }
+        />
+        <Route
+          path="/bubble"
+          element={
+            <PublicOrClientRoute>
+              <Bubble />
+            </PublicOrClientRoute>
+          }
+        />
+        <Route
+          path="/booking/:storeId"
           element={
             <ClientRoute>
-              <SearchPage />
+              <BookingSystem />
             </ClientRoute>
           }
         />
-
+        <Route
+          path="/dashboard"
+          element={
+            <WorkerStoreRoute routePath="/dashboard">
+              <BarberShopDashboard />
+            </WorkerStoreRoute>
+          }
+        />
+        <Route
+          path="/sidebar"
+          element={
+            <WorkerStoreRoute routePath="/sidebar">
+              <Sidebar />
+            </WorkerStoreRoute>
+          }
+        />
         <Route
           path="/store"
           element={
-            <AuthRoute>
-              <StoreUpload />
-            </AuthRoute>
+            <WorkerStoreRoute routePath="/store">
+              <Store />
+            </WorkerStoreRoute>
           }
         />
-
-        <Route path="/booking/:storeId" element={<BookingSystem />} />
-
-        <Route path="/finder" element={<Finder />} />
-
+        <Route
+          path="/search"
+          element={
+            <WorkerStoreRoute routePath="/search">
+              <FriendsPage />
+            </WorkerStoreRoute>
+          }
+        />
         <Route
           path="/add"
           element={
-            <AuthRoute>
-              <Addd />
-            </AuthRoute>
+            <WorkerStoreRoute routePath="/add">
+              <AvailabilityPage />
+            </WorkerStoreRoute>
           }
         />
 
-        <Route path="/register" element={<SignUp />} />
-        <Route path="/login" element={<SignIn />} />
-        <Route path="/main" element={<MainPage />} />
-        <Route path="/" element={<Navigate to="/main" />} />
-        <Route path="*" element={<Navigate to="/main" />} />
+        <Route
+          path="/calendar"
+          element={
+            <WorkerStoreRoute>
+              <AppointmentCalendar />
+            </WorkerStoreRoute>
+          }
+        />
+        <Route path="/noedit" element={<NoEditRightsPage />} />
+        <Route path="/nostore" element={<NotInStorePage />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-    </div>
+    </Router>
   );
 }
 
