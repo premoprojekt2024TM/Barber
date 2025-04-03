@@ -587,14 +587,14 @@ export const isConnectedToStore = async (
       .send({ message: "Hiba történt a bolt kapcsolatának ellenőrzése közben" });
   }
 };
-
+//Bolt tulajdonos
 export const isStoreOwner = async (
   request: AuthenticatedRequest,
   reply: FastifyReply,
 ) => {
   const userId = request.user?.userId;
   if (!userId) {
-    return reply.status(400).send({ message: "User ID is missing" });
+    return reply.status(400).send({ message: "A felhasználói ID hiányzik" });
   }
   try {
     const storeWorkerRepository = AppDataSource.getRepository(
@@ -609,7 +609,6 @@ export const isStoreOwner = async (
     });
 
     if (storeWorker) {
-      // Get all store workers for this store including their user information
       const allStoreWorkers = await storeWorkerRepository.find({
         where: {
           store: { storeId: storeWorker.store.storeId },
@@ -618,7 +617,6 @@ export const isStoreOwner = async (
         relations: ["user", "store"],
       });
 
-      // Format the workers data
       const workers = allStoreWorkers.map((worker) => ({
         userId: worker.user.userId,
         username: worker.user.username,
@@ -628,7 +626,6 @@ export const isStoreOwner = async (
         profilepic: worker.user.profilePic,
       }));
 
-      // Return complete store information along with workers
       return reply.send({
         isStoreOwner: true,
         store: {
@@ -652,9 +649,8 @@ export const isStoreOwner = async (
       isStoreOwner: false,
     });
   } catch (error) {
-    console.error("Error checking if user is store owner:", error);
     return reply.status(500).send({
-      message: "An error occurred while checking if user is a store owner",
+      message: "Hiba történt annak ellenőrzése közben, hogy a felhasználó bolt tulajdonos-e",
     });
   }
 };
