@@ -91,22 +91,17 @@ export const createAppointment = async (
   }
 };
 
+//foglalások lekérdezése
 export const getAppointment = async (
   request: AuthenticatedRequest,
   reply: FastifyReply,
 ) => {
   const clientId = request.user?.userId;
   if (!clientId) {
-    return reply.status(401).send({ message: "User not authenticated" }); // Use 401 for Unauthorized
+    return reply.status(401).send({ message: "Felhasználó nincs hitelesitve" }); 
   }
 
   try {
-    // Retrieve appointments for the authenticated client.
-    // Include relations:
-    // - worker: The worker performing the appointment.
-    // - timeSlot: The timeslot of the appointment.
-    // - worker.storeWorkers: The join entity instances linking the worker to stores.
-    // - worker.storeWorkers.store: The actual Store entity where the worker works.
     const appointments = await AppDataSource.getRepository(
       model.Appointment,
     ).find({
@@ -114,38 +109,18 @@ export const getAppointment = async (
       relations: [
         "worker",
         "timeSlot",
-        "worker.storeWorkers", // Load the link table entries for the worker
-        "worker.storeWorkers.store", // Load the actual Store via the link table
+        "worker.storeWorkers", 
+        "worker.storeWorkers.store", 
       ],
-      // Optional: Add ordering if needed, e.g., by appointment date
-      // order: { appointmentDate: "ASC" }
     });
 
-    // The resulting 'appointments' array will now have each appointment object structured like:
-    // appointment: {
-    //   ...,
-    //   worker: {
-    //     ...,
-    //     storeWorkers: [
-    //       {
-    //         ..., // StoreWorker properties
-    //         store: { storeId: ..., name: ..., address: ..., ... } // The Store details
-    //       },
-    //       // Potentially more if the worker is linked to multiple stores via StoreWorker
-    //     ]
-    //   },
-    //   timeSlot: { ... }
-    // }
-
     return reply.status(200).send({
-      message: "Appointments retrieved successfully",
+      message: "Időpontok sikeresen lekérdezve",
       appointments,
     });
   } catch (error) {
-    console.error("Error retrieving appointments:", error);
     return reply.status(500).send({
-      message: "Error retrieving appointments",
-      error: error instanceof Error ? error.message : "Unknown error", // Include error details cautiously
+      message: "Hiba törént időpontok lekérdezése során",
     });
   }
 };
