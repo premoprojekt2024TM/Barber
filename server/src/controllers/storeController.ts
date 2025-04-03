@@ -431,7 +431,7 @@ export const getStoreWorkersAndAppointments = async (
       .send({ message: "Hiba történt az adatok lekérdezése közben" });
   }
 };
-
+//Bolt törlés
 export const deleteStore = async (
   request: AuthenticatedRequest,
   reply: FastifyReply,
@@ -439,7 +439,7 @@ export const deleteStore = async (
   const userId = request.user?.userId;
 
   if (!userId) {
-    return reply.status(401).send({ message: "User not authenticated" });
+    return reply.status(401).send({ message: "A felhasználó nincs hitelesítve" });
   }
 
   try {
@@ -456,7 +456,7 @@ export const deleteStore = async (
     if (!storeWorker) {
       return reply
         .status(403)
-        .send({ message: "Only store owners can delete the store" });
+        .send({ message: "Csak a bolt tulajdonosai törölhetik a boltot" });
     }
 
     const store = storeWorker.store;
@@ -488,12 +488,11 @@ export const deleteStore = async (
     });
 
     return reply.status(200).send({
-      message: "Store and all related data deleted successfully",
+      message: "A bolt és minden kapcsolódó adat sikeresen törölve",
     });
   } catch (error) {
-    console.error("Error deleting store:", error);
     return reply.status(500).send({
-      message: "An error occurred while deleting the store",
+      message: "Hiba történt a bolt törlése közben",
     });
   }
 };
