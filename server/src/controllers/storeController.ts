@@ -496,7 +496,7 @@ export const deleteStore = async (
     });
   }
 };
-
+//Bolt elhagyása
 export const exitStore = async (
   request: AuthenticatedRequest,
   reply: FastifyReply,
@@ -504,7 +504,7 @@ export const exitStore = async (
   const userId = request.user?.userId;
 
   if (!userId) {
-    return reply.status(401).send({ message: "User not authenticated" });
+    return reply.status(401).send({ message: "A felhasználó nincs hitelesítve." });
   }
 
   try {
@@ -520,7 +520,7 @@ export const exitStore = async (
 
     if (!storeWorker) {
       return reply.status(403).send({
-        message: "Only workers can exit the store. Store owners cannot exit.",
+        message: "Csak a munkavállalók hagyhatják el a boltot. A bolt tulajdonosai nem hagyhatják el a boltot.",
       });
     }
 
@@ -539,12 +539,11 @@ export const exitStore = async (
 
     return reply.status(200).send({
       message:
-        "Successfully exited the store. Appointments and availability cleared.",
+        "Sikeresen elhagytad a boltot. Az időpontok és a foglalások törlésre kerültek.",
     });
   } catch (error) {
-    console.error("Error exiting store:", error);
     return reply.status(500).send({
-      message: "An error occurred while exiting the store",
+      message: "Hiba történt a bolt elhagyása közben.",
     });
   }
 };
