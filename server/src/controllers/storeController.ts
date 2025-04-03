@@ -139,7 +139,7 @@ export const createStore = async (
       .send({ message: "Hiba történt a bolt létrehozása közben" });
   }
 };
-
+//Cím alapján geokodolás
 const geocodeAddress = async (
   address: string,
 ): Promise<{
