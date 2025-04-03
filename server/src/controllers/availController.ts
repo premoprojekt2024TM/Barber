@@ -199,7 +199,7 @@ export const getMyAvailability = async (
   }
 };
 
-//szakkemberek időpontokkal,lekérdezés
+//szakemberek időpontokkal,lekérdezés
 export const getAvailableWorkers = async (
   request: FastifyRequest,
   reply: FastifyReply,
@@ -237,18 +237,18 @@ export const getAvailableWorkers = async (
 
     if (workersWithAvailability.length === 0) {
       return reply.status(200).send({
-        message: "Nem található szakkember időpontokkal",
+        message: "Nem található szakember időpontokkal",
         workers: [],
       });
     }
 
     return reply.status(200).send({
-      message: "A szakkember sikeresen lekérdezve",
+      message: "A szakember sikeresen lekérdezve",
       workers: workersWithAvailability,
     });
   } catch (error) {
     return reply.status(500).send({
-      message: "Hiba a szakkember lekérdezésekor",
+      message: "Hiba a szakember lekérdezésekor",
     });
   }
 };
