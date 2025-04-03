@@ -151,6 +151,7 @@ export const acceptFriendRequest = async (
   }
 };
 
+//barátkérelem elutasítva
 export const rejectFriendRequest = async (
   request: AuthenticatedRequest,
   reply: FastifyReply,
@@ -161,7 +162,7 @@ export const rejectFriendRequest = async (
   if (userId === friendId) {
     return reply
       .status(400)
-      .send({ message: "You cannot reject a friend request from yourself" });
+      .send({ message: "Nem tudod elutasítani a saját barátkérelmed." });
   }
 
   try {
@@ -185,7 +186,7 @@ export const rejectFriendRequest = async (
     if (!friendRequest) {
       return reply
         .status(404)
-        .send({ message: "No pending friend request found" });
+        .send({ message: "Nincs ilyen barátkérelem" });
     }
 
     friendRequest.status = "rejected";
@@ -215,22 +216,21 @@ export const rejectFriendRequest = async (
       );
     }
 
-    return reply.status(200).send({ message: "Friend request rejected" });
+    return reply.status(200).send({ message: "Barátkérelem elutasítva" });
   } catch (error) {
-    console.error("Error rejecting friend request:", error);
     return reply
       .status(500)
-      .send({ message: "An error occurred while rejecting friend request" });
+      .send({ message: "Hiba lépett fel barátkérelem elutasítása közben." });
   }
 };
 
+//összes barát megjelenítése
 export const getFriends = async (
   request: AuthenticatedRequest,
   reply: FastifyReply,
 ) => {
   const userId = request.user?.userId;
   try {
-    // First, get all friendships
     const friendships = await AppDataSource.getRepository(
       model.Friendship,
     ).find({
@@ -242,17 +242,14 @@ export const getFriends = async (
     });
 
     if (friendships.length === 0) {
-      return reply.status(200).send({ message: "You have no friends" });
+      return reply.status(200).send({ message: "Nincsen ismerösőd." });
     }
-
-    // Extract friend IDs
     const friendIds = friendships.map((friendship) => {
       return friendship.user.userId === userId
         ? friendship.friend.userId
         : friendship.user.userId;
     });
 
-    // Get all storeWorkers that have any of these friends as users
     const storeWorkers = await AppDataSource.getRepository(
       model.StoreWorker,
     ).find({
@@ -262,19 +259,16 @@ export const getFriends = async (
       relations: ["user"],
     });
 
-    // Create a Set of user IDs who are store workers
     const storeWorkerUserIds = new Set(
       storeWorkers.map((worker) => worker.user.userId),
     );
 
-    // Filter friends to only include those who are not store workers
     const friends = friendships
       .map((friendship) => {
         const friendData =
           friendship.user.userId === userId
             ? friendship.friend
             : friendship.user;
-        // Remove password from friend data
         const { password, ...friendWithoutPassword } = friendData;
         return friendWithoutPassword;
       })
@@ -283,18 +277,18 @@ export const getFriends = async (
     if (friends.length === 0) {
       return reply
         .status(200)
-        .send({ message: "You have no friends who aren't store workers" });
+        .send({ message: "Nincsen olyan ismerösőd aki nem dolgozna." });
     }
 
     return reply.status(200).send({ friends });
   } catch (error) {
-    console.error("Error fetching friends:", error);
     return reply
       .status(500)
-      .send({ message: "An error occurred while fetching friends" });
+      .send({ message: "Hiba történt az ismerősök lekérdezése közben." });
   }
 };
 
+//elküldött barátkérelem megjelenítése
 export const getPendingFriendRequests = async (
   request: AuthenticatedRequest,
   reply: FastifyReply,
@@ -312,20 +306,20 @@ export const getPendingFriendRequests = async (
     });
 
     if (pendingRequests.length === 0) {
-      return reply.status(404).send({ message: "No pending friend requests" });
+      return reply.status(404).send({ message: "Nincsen függőben lévő barétkérelmed." });
     }
 
     const pendingFriends = pendingRequests.map((request) => request.user);
 
     return reply.status(200).send({ pendingFriends });
   } catch (error) {
-    console.error("Error fetching pending friend requests:", error);
     return reply.status(500).send({
-      message: "An error occurred while fetching pending friend requests",
+      message: "Hiba lépett fel lekérdezés közben.",
     });
   }
 };
 
+//barátság törlése
 export const deleteFriendship = async (
   request: AuthenticatedRequest,
   reply: FastifyReply,
@@ -336,7 +330,6 @@ export const deleteFriendship = async (
   if (userId === friendId) {
     return reply
       .status(400)
-      .send({ message: "You cannot delete a friendship with yourself" });
   }
 
   try {
@@ -350,22 +343,22 @@ export const deleteFriendship = async (
     });
 
     if (friendships.length === 0) {
-      return reply.status(404).send({ message: "Friendship not found" });
+      return reply.status(404).send({ message: "Barátság nem található." });
     }
 
     await AppDataSource.getRepository(model.Friendship).remove(friendships);
 
     return reply
       .status(200)
-      .send({ message: "Friendship deleted successfully" });
+      .send({ message: "Barátság sikeresen törölve" });
   } catch (error) {
-    console.error("Error deleting friendship:", error);
     return reply
       .status(500)
-      .send({ message: "An error occurred while deleting the friendship" });
+      .send({ message: "Hiba történt" });
   }
 };
 
+//elküldött barátság megjelenítése
 export const getSentFriendRequests = async (
   request: AuthenticatedRequest,
   reply: FastifyReply,
@@ -373,7 +366,6 @@ export const getSentFriendRequests = async (
   const userId = request.user?.userId;
 
   try {
-    // Find all friend requests where the user sent the request and the status is "pending"
     const sentRequests = await AppDataSource.getRepository(
       model.Friendship,
     ).find({
@@ -381,25 +373,24 @@ export const getSentFriendRequests = async (
         user: { userId: userId },
         status: "pending",
       },
-      relations: ["friend"], // Ensure that you get the friend details
+      relations: ["friend"], 
     });
 
     if (sentRequests.length === 0) {
-      return reply.status(404).send({ message: "No sent friend requests" });
+      return reply.status(404).send({ message: "Nincs elküldött ismeröskérelmed." });
     }
 
-    // Extract only the friend IDs from the requests
     const friendIds = sentRequests.map((request) => request.friend.userId);
 
     return reply.status(200).send({ sentFriendRequestIds: friendIds });
   } catch (error) {
-    console.error("Error fetching sent friend requests:", error);
     return reply.status(500).send({
-      message: "An error occurred while fetching sent friend requests",
+      message: "Hiba történt a lekérdezésben.",
     });
   }
 };
 
+//összes szakember megjelenítése
 export const listAllWorkers = async (
   request: AuthenticatedRequest,
   reply: FastifyReply,
@@ -409,7 +400,6 @@ export const listAllWorkers = async (
     const userRepository = AppDataSource.getRepository(model.User);
     const friendshipRepository = AppDataSource.getRepository(model.Friendship);
 
-    // Get all workers except the current user
     const workers = await userRepository.find({
       where: {
         role: "worker",
@@ -419,10 +409,8 @@ export const listAllWorkers = async (
     });
 
     if (!workers || workers.length === 0) {
-      return reply.status(404).send({ message: "No workers found" });
+      return reply.status(404).send({ message: "Nem található szakember." });
     }
-
-    // Get all friendships involving the current user
     const friendships = await friendshipRepository.find({
       where: [
         { user: { userId: currentUserId } },
@@ -431,9 +419,7 @@ export const listAllWorkers = async (
       relations: ["user", "friend"],
     });
 
-    // Add friendship status to each worker
     const workersWithStatus = workers.map((worker) => {
-      // Find friendship where current user and this worker are involved
       const friendship = friendships.find(
         (fs) =>
           (fs.user.userId === currentUserId &&
@@ -455,7 +441,6 @@ export const listAllWorkers = async (
         } else if (friendship.status === "rejected") {
           friendshipStatus = "rejected";
         } else if (friendship.status === "pending") {
-          // Check if current user sent the request or received it
           friendshipStatus =
             friendship.user.userId === currentUserId
               ? "pending_sent"
@@ -470,17 +455,17 @@ export const listAllWorkers = async (
     });
 
     return reply.status(200).send({
-      message: "Workers retrieved successfully",
+      message: "Siker.",
       data: workersWithStatus,
     });
   } catch (error) {
-    console.error("Error fetching workers:", error);
     return reply
       .status(500)
-      .send({ message: "An error occurred while fetching workers" });
+      .send({ message: "Hiba történt a szakemberek lekérdezése során." });
   }
 };
 
+//szakember megjelenítése aki nem dolgozik jelenleg
 export const getFriendsv2 = async (
   request: AuthenticatedRequest,
   reply: FastifyReply,
@@ -499,7 +484,7 @@ export const getFriendsv2 = async (
     });
 
     if (friendships.length === 0) {
-      return reply.status(200).send({ message: "You have no friends" });
+      return reply.status(200).send({ message: "Nincsen ismerösőd" });
     }
 
     const friends = friendships.map((friendship) => {
@@ -510,9 +495,8 @@ export const getFriendsv2 = async (
 
     return reply.status(200).send({ friends });
   } catch (error) {
-    console.error("Error fetching friends:", error);
     return reply
       .status(500)
-      .send({ message: "An error occurred while fetching friends" });
+      .send({ message: "Hiba történt a barátok megjelenítése során" });
   }
 };
