@@ -6,13 +6,14 @@ import {
   CreateAppointmentRequestBody,
 } from "../interfaces/interfaces";
 
+//foglalás
 export const createAppointment = async (
   request: AuthenticatedRequest,
   reply: FastifyReply,
 ) => {
   const clientId = request.user?.userId;
   if (!clientId) {
-    return reply.status(400).send({ message: "User not authenticated" });
+    return reply.status(400).send({ message: "Felhasználó nincs hitelesitve" });
   }
 
   const { workerId, availabilityId } =
@@ -28,17 +29,14 @@ export const createAppointment = async (
   if (!storeworker) {
     return reply
       .status(404)
-      .send({ message: "Store worker (hairdresser) not found" });
+      .send({ message: "Szakember nem található" });
   }
 
-  // Prevent booking with self
   if (clientId === storeworker.userId) {
     return reply
       .status(400)
-      .send({ message: "Client cannot be the same as the hairdresser" });
   }
 
-  // Find available time slot by its ID
   const timeSlotEntity = await AppDataSource.getRepository(
     model.AvailabilityTimes,
   ).findOne({
@@ -47,38 +45,32 @@ export const createAppointment = async (
       user: { userId: workerId },
       status: "available",
     },
-    relations: ["user"], // Ensure user relation is loaded
+    relations: ["user"], 
   });
 
   if (!timeSlotEntity) {
     return reply.status(404).send({
-      message: "Selected time slot is not available",
+      message: "A kiválasztott időpont nem választható",
     });
   }
 
-  // Create new appointment
   const newAppointment = new model.Appointment();
   newAppointment.client = { userId: clientId } as any;
   newAppointment.worker = storeworker;
   newAppointment.timeSlot = timeSlotEntity;
   newAppointment.status = "confirmed";
   newAppointment.notes = "";
-
-  // Update time slot status
   timeSlotEntity.status = "accepted";
 
   try {
-    // Save time slot status
     await AppDataSource.getRepository(model.AvailabilityTimes).save(
       timeSlotEntity,
     );
 
-    // Save new appointment
     const savedAppointment = await AppDataSource.getRepository(
       model.Appointment,
     ).save(newAppointment);
 
-    // Prepare response with simplified worker object
     const workerResponse = {
       userId: storeworker.userId,
       firstName: storeworker.firstName,
@@ -86,17 +78,15 @@ export const createAppointment = async (
     };
 
     return reply.status(201).send({
-      message: "Appointment created successfully",
+      message: "Időpont sikeresen lefoglalva",
       appointment: {
         ...savedAppointment,
         worker: workerResponse,
       },
     });
   } catch (error) {
-    console.error("Error creating appointment:", error);
     return reply.status(500).send({
-      message: "Error creating appointment",
-      error: error instanceof Error ? error.message : "Unknown error",
+      message: "Hiba történt időpont lefoglalása közben.",
     });
   }
 };
