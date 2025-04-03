@@ -328,7 +328,7 @@ export const getStoreWorkerDetails = async (
     });
   }
 };
-
+//Bolt dolgozai és időpontjai
 export const getStoreWorkersAndAppointments = async (
   request: AuthenticatedRequest,
   reply: FastifyReply,
@@ -336,7 +336,7 @@ export const getStoreWorkersAndAppointments = async (
   const userId = request.user?.userId;
 
   if (!userId) {
-    return reply.status(401).send({ message: "User not authenticated" });
+    return reply.status(401).send({ message: "A felhasználó nincs hitelesítve" });
   }
 
   try {
@@ -350,12 +350,12 @@ export const getStoreWorkersAndAppointments = async (
     if (!storeWorker) {
       return reply
         .status(404)
-        .send({ message: "User is not assigned to any store" });
+        .send({ message: "A felhasználó nincs hozzárendelve egy bolthoz" });
     }
 
     if (!storeWorker.store || !storeWorker.store.storeId) {
       return reply.status(500).send({
-        message: "Failed to retrieve store information for the worker.",
+        message: "Nem sikerült lekérdezni a bolt információit a munkavállaló számára.",
       });
     }
 
@@ -364,7 +364,7 @@ export const getStoreWorkersAndAppointments = async (
     if (typeof storeId !== "number") {
       return reply
         .status(500)
-        .send({ message: "Internal error: Invalid store identifier found." });
+        .send({ message: "Belső hiba: Érvénytelen boltazonosító található." });
     }
 
     const storeWorkers = await AppDataSource.getRepository(
@@ -375,7 +375,7 @@ export const getStoreWorkersAndAppointments = async (
         "user",
         "user.workerAppointments",
         "user.workerAppointments.client",
-        "user.workerAppointments.timeSlot", // Add this line
+        "user.workerAppointments.timeSlot", 
       ],
     });
 
@@ -397,8 +397,8 @@ export const getStoreWorkersAndAppointments = async (
               return {
                 appointmentId: appointment.appointmentId,
                 client: null,
-                day: null, // Add Day
-                timeSlot: null, // Add Timeslot
+                day: null, 
+                timeSlot: null, 
                 status: appointment.status,
               };
             }
@@ -411,8 +411,8 @@ export const getStoreWorkersAndAppointments = async (
                 lastName: appointment.client.lastName,
                 firstName: appointment.client.firstName,
               },
-              day: appointment.timeSlot?.day || null, // Add Day
-              timeSlot: appointment.timeSlot?.timeSlot || null, // Add Timeslot
+              day: appointment.timeSlot?.day || null, 
+              timeSlot: appointment.timeSlot?.timeSlot || null, 
               status: appointment.status,
             };
           }),
@@ -421,14 +421,14 @@ export const getStoreWorkersAndAppointments = async (
       .filter((worker) => worker !== null);
 
     return reply.status(200).send({
-      message: "Store workers and their appointments retrieved successfully",
+      message: "A bolt munkavállalói és azok időpontjai sikeresen lekérdezve",
       storeId,
       workers: workersWithAppointments,
     });
   } catch (error) {
     return reply
       .status(500)
-      .send({ message: "An error occurred while retrieving data" });
+      .send({ message: "Hiba történt az adatok lekérdezése közben" });
   }
 };
 
