@@ -193,7 +193,7 @@ const geocodeAddress = async (
     return null;
   }
 };
-//Boltok lekérdezése
+//Bolt lekérdezés
 export const getAllStores = async (
   request: FastifyRequest,
   reply: FastifyReply,
@@ -211,7 +211,7 @@ export const getAllStores = async (
       .send({ message: "Hiba történt a boltok lekérdezése közben" });
   }
 };
-
+//Bolt lekérdezés Id alapján
 export const getStoreById = async (
   request: FastifyRequest,
   reply: FastifyReply,
@@ -227,13 +227,11 @@ export const getStoreById = async (
       ],
     });
     if (!store) {
-      return reply.status(404).send({ message: "Store not found" });
+      return reply.status(404).send({ message: "A bolt nem található" });
     }
-    // Collect the workers along with their available time slots
     const workersWithAvailability = store.storeWorkers.map((storeWorker) => {
       const user = storeWorker.user;
       const availabilityTimes = user.availabilityTimes;
-      // Filter for only available time slots
       const availableTimeSlots = availabilityTimes.filter(
         (availability) => availability.status === "available",
       );
@@ -252,7 +250,7 @@ export const getStoreById = async (
       };
     });
     return reply.status(200).send({
-      message: "Store and workers retrieved successfully",
+      message: "A bolt és a munkavállalók sikeresen lekérdezve",
       store: {
         storeId: store.storeId,
         name: store.name,
@@ -266,10 +264,9 @@ export const getStoreById = async (
       },
     });
   } catch (error) {
-    console.error("Error fetching store by ID:", error);
     return reply
       .status(500)
-      .send({ message: "An error occurred while retrieving the store" });
+      .send({ message: "Hiba történt a bolt lekérdezése közben" });
   }
 };
 
