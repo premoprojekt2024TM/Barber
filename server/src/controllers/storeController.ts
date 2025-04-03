@@ -547,7 +547,7 @@ export const exitStore = async (
     });
   }
 };
-
+//Bolt kapcsolata
 export const isConnectedToStore = async (
   request: AuthenticatedRequest,
   reply: FastifyReply,
@@ -582,10 +582,9 @@ export const isConnectedToStore = async (
       isConnectedToStore: false,
     });
   } catch (error) {
-    console.error("Error checking store connection:", error);
     return reply
       .status(500)
-      .send({ message: "An error occurred while checking store connection" });
+      .send({ message: "Hiba történt a bolt kapcsolatának ellenőrzése közben" });
   }
 };
 
