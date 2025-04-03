@@ -8,7 +8,7 @@ import * as dotenv from "dotenv";
 import { uploadStoreImage } from "../config/awsconfig";
 
 dotenv.config();
-
+//Bolt létrehozása
 export const createStore = async (
   request: AuthenticatedRequest,
   reply: FastifyReply,
@@ -16,14 +16,14 @@ export const createStore = async (
   const userId = request.user?.userId;
 
   if (!userId) {
-    return reply.status(401).send({ message: "User not authenticated" });
+    return reply.status(401).send({ message: "A felhasználó nincs hitelesítve" });
   }
 
   try {
     const { name, address, phone, email, workerId, image } =
       request.body as any;
     if (!name || !address || !phone || !email) {
-      return reply.status(400).send({ message: "Missing required fields" });
+      return reply.status(400).send({ message: "Hiányzó kötelező mezők" });
     }
 
     const creator = await AppDataSource.getRepository(model.User).findOne({
@@ -31,7 +31,7 @@ export const createStore = async (
     });
 
     if (!creator) {
-      return reply.status(404).send({ message: "User not found" });
+      return reply.status(404).send({ message: "A felhasználó nem található" });
     }
 
     const existingOwnerStore = await AppDataSource.getRepository(
@@ -45,7 +45,7 @@ export const createStore = async (
     });
 
     if (existingOwnerStore) {
-      return reply.status(400).send({ message: "User already owns a store" });
+      return reply.status(400).send({ message: "A felhasználónak már van boltja" });
     }
 
     const geocodedData = await geocodeAddress(address);
@@ -92,7 +92,7 @@ export const createStore = async (
         userId: parseInt(workerId),
       });
       if (!worker) {
-        return reply.status(404).send({ message: "Worker not found" });
+        return reply.status(404).send({ message: "A szakember nem található" });
       }
 
       // Check if the worker is already assigned to another store
@@ -108,7 +108,7 @@ export const createStore = async (
       if (existingWorkerStore) {
         return reply
           .status(400)
-          .send({ message: "Worker is already assigned to another store" });
+          .send({ message: "A munkavállaló már egy másik bolthoz van rendelve" });
       }
 
       const storeWorkersRepo = AppDataSource.getRepository(model.StoreWorker);
@@ -119,7 +119,7 @@ export const createStore = async (
       if (storeWorkersCount >= 4) {
         return reply
           .status(400)
-          .send({ message: "Store already has the maximum number of workers" });
+          .send({ message: "A bolt már elérte a maximális munkavállalói létszámot" });
       }
 
       const newStoreWorker = new model.StoreWorker();
@@ -132,12 +132,11 @@ export const createStore = async (
 
     return reply
       .status(201)
-      .send({ message: "Store created successfully", store });
+      .send({ message: "A bolt sikeresen létrejött", store });
   } catch (error) {
-    console.error("Error during store creation:", error);
     return reply
       .status(500)
-      .send({ message: "An error occurred while creating the store" });
+      .send({ message: "Hiba történt a bolt létrehozása közben" });
   }
 };
 
