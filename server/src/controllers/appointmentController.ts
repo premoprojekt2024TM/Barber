@@ -125,6 +125,7 @@ export const getAppointment = async (
   }
 };
 
+//szakemberhez tartozó bolt lekérdezése
 export const getWorkerStore = async (
   request: AuthenticatedRequest,
   reply: FastifyReply,
@@ -139,10 +140,9 @@ export const getWorkerStore = async (
       relations: ["store", "user"],
     });
 
-    // Check if store worker exists
     if (!storeWorker) {
       return reply.status(404).send({
-        message: "No store found for the specified worker",
+        message: "Nem található bolt a megadott dolgozóhoz.",
       });
     }
 
@@ -151,13 +151,13 @@ export const getWorkerStore = async (
       worker: storeWorker.user,
     });
   } catch (error) {
-    console.error("Error fetching worker's store:", error);
     return reply.status(500).send({
-      message: "Error retrieving worker's store information",
+      message: "Hiba törént lekérdezéskor",
     });
   }
 };
 
+//foglalások szakemberhez
 export const getAppointmentsByWorker = async (
   request: AuthenticatedRequest,
   reply: FastifyReply,
@@ -166,11 +166,10 @@ export const getAppointmentsByWorker = async (
     const user = request.user;
     if (!user || !user.userId) {
       return reply.status(401).send({
-        message: "Authentication required to access this resource",
+        message: "Nincsen jogod megtekinteni",
       });
     }
 
-    // Fetch appointments for the current worker
     const appointments = await AppDataSource.getRepository(model.Appointment)
       .createQueryBuilder("appointment")
       .leftJoinAndSelect("appointment.client", "client")
@@ -181,12 +180,11 @@ export const getAppointmentsByWorker = async (
 
     if (appointments.length === 0) {
       return reply.status(200).send({
-        message: "No appointments found for this worker",
+        message: "Nem található foglalás ehhez a szakemberhez.",
         appointments: [],
       });
     }
 
-    // Transform appointments to include more details
     const transformedAppointments = appointments.map((appointment) => ({
       appointmentId: appointment.appointmentId,
       client: {
@@ -205,13 +203,12 @@ export const getAppointmentsByWorker = async (
     }));
 
     return reply.status(200).send({
-      message: "Worker appointments fetched successfully",
+      message: "Szakember foglalásai sikeresen lekérdezve.",
       appointments: transformedAppointments,
     });
   } catch (error) {
-    console.error("Error fetching worker appointments:", error);
     return reply.status(500).send({
-      message: "Error fetching worker appointments",
+      message: "Hiba történt a szakember foglalásai lekérdezése közben.",
     });
   }
 };
