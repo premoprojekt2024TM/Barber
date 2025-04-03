@@ -270,6 +270,7 @@ export const getStoreById = async (
   }
 };
 
+//Bolt dolgozoi adat
 export const getStoreWorkerDetails = async (
   request: AuthenticatedRequest,
   reply: FastifyReply,
@@ -277,7 +278,7 @@ export const getStoreWorkerDetails = async (
   const userId = request.user?.userId;
 
   if (!userId) {
-    return reply.status(401).send({ message: "User not authenticated" });
+    return reply.status(401).send({ message: "A felhasználó nincs hitelesítve" });
   }
 
   try {
@@ -286,7 +287,7 @@ export const getStoreWorkerDetails = async (
     });
 
     if (!user) {
-      return reply.status(404).send({ message: "User not found" });
+      return reply.status(404).send({ message: "A felhasználó nem található" });
     }
 
     const storeWorker = await AppDataSource.getRepository(
@@ -301,14 +302,14 @@ export const getStoreWorkerDetails = async (
     if (!storeWorker) {
       return reply
         .status(404)
-        .send({ message: "User is not assigned to any store" });
+        .send({ message: "A felhasználó nincs hozzárendelve egy boltba." });
     }
 
     const store = storeWorker.store;
     const role = storeWorker.role;
 
     return reply.status(200).send({
-      message: "Store worker details retrieved successfully",
+      message: "A bolt munkavállalói adatainak lekérdezése sikeresen megtörtént",
       store: {
         storeId: store.storeId,
         name: store.name,
@@ -322,9 +323,8 @@ export const getStoreWorkerDetails = async (
       role: role,
     });
   } catch (error) {
-    console.error("Error getting store worker details:", error);
     return reply.status(500).send({
-      message: "An error occurred while retrieving store worker details",
+      message: "Hiba történt a bolt munkavállalói adatainak lekérdezése közben.",
     });
   }
 };
