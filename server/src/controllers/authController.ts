@@ -298,7 +298,7 @@ export const deleteUser = async (
   }
 };
 
-
+//jelenleg felhasználó
 export const getCurrentUser = async (
   request: AuthenticatedRequest,
   reply: FastifyReply,
