@@ -193,7 +193,7 @@ const geocodeAddress = async (
     return null;
   }
 };
-
+//Boltok lekérdezése
 export const getAllStores = async (
   request: FastifyRequest,
   reply: FastifyReply,
@@ -202,14 +202,13 @@ export const getAllStores = async (
     const stores = await AppDataSource.getRepository(model.Store).find();
 
     return reply.status(200).send({
-      message: "Stores retrieved successfully",
+      message: "A boltok sikeresen lekérdezve",
       stores: stores,
     });
   } catch (error) {
-    console.error("Error fetching stores:", error);
     return reply
       .status(500)
-      .send({ message: "An error occurred while retrieving stores" });
+      .send({ message: "Hiba történt a boltok lekérdezése közben" });
   }
 };
 
