@@ -20,10 +20,10 @@ interface FriendsResponse {
 }
 
 interface AddWorkerProps {
-  onWorkerSelect: (workerId: number) => void;
+  onWorkersSelect: (workerIds: number[]) => void;
 }
 
-export const AddWorker = ({ onWorkerSelect }: AddWorkerProps) => {
+export const AddWorker = ({ onWorkersSelect }: AddWorkerProps) => {
   const [selectedWorkers, setSelectedWorkers] = useState<
     (SelectedWorker | null)[]
   >(Array(4).fill(null));
@@ -35,6 +35,15 @@ export const AddWorker = ({ onWorkerSelect }: AddWorkerProps) => {
   const [noFriends, setNoFriends] = useState(false);
   const componentRef = useRef<HTMLDivElement | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+
+  // Function to extract and send all selected worker IDs
+  const updateSelectedWorkerIds = (workers: (SelectedWorker | null)[]) => {
+    const workerIds = workers
+      .filter((worker): worker is SelectedWorker => worker !== null)
+      .map((worker) => worker.userId);
+
+    onWorkersSelect(workerIds);
+  };
 
   useEffect(() => {
     const fetchFriends = async () => {
@@ -73,7 +82,9 @@ export const AddWorker = ({ onWorkerSelect }: AddWorkerProps) => {
       setAvailableFriends(
         availableFriends.filter((f) => f.userId !== friend.userId),
       );
-      onWorkerSelect(friend.userId);
+
+      // Update the selected worker IDs
+      updateSelectedWorkerIds(updatedWorkers);
     } else if (activeIndex !== null) {
       const previousWorker = selectedWorkers[activeIndex];
       updatedWorkers[activeIndex] = friend;
@@ -93,6 +104,9 @@ export const AddWorker = ({ onWorkerSelect }: AddWorkerProps) => {
 
       setAvailableFriends(newAvailableFriends);
       setActiveIndex(null);
+
+      // Update the selected worker IDs
+      updateSelectedWorkerIds(updatedWorkers);
     }
   };
 
@@ -112,6 +126,9 @@ export const AddWorker = ({ onWorkerSelect }: AddWorkerProps) => {
           profilePic: workerToRemove.profilePic,
         },
       ]);
+
+      // Update the selected worker IDs
+      updateSelectedWorkerIds(updatedWorkers);
     }
   };
 

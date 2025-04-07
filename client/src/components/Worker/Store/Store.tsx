@@ -19,7 +19,7 @@ interface StoreDataType {
   phone: string;
   email: string;
   location: LocationType | null;
-  workerId: number | null;
+  workerIds: number[]; // Changed from workerId to workerIds array
   imageBase64: string | null;
   imagePreviewUrl: string | null;
 }
@@ -38,7 +38,7 @@ export const Store = () => {
     phone: "",
     email: "",
     location: null,
-    workerId: null,
+    workerIds: [], // Initialize as empty array
     imageBase64: null,
     imagePreviewUrl: null,
   });
@@ -62,8 +62,9 @@ export const Store = () => {
     }));
   };
 
-  const handleWorkerSelect = (workerId: number): void => {
-    setStoreData((prev) => ({ ...prev, workerId }));
+  // Updated to handle array of worker IDs
+  const handleWorkersSelect = (workerIds: number[]): void => {
+    setStoreData((prev) => ({ ...prev, workerIds }));
   };
 
   const handleStoreInfoChange = (
@@ -85,17 +86,36 @@ export const Store = () => {
     setAlert((prev) => ({ ...prev, open: false }));
   };
 
+  // Extract address details from Google Places location object
+  const extractAddressDetails = (location: LocationType | null) => {
+    if (!location) return { fullAddress: "" };
+
+    // If we have a label or description, use that as the full address
+    // This ensures we get the complete address with house number
+    const fullAddress =
+      location.label ||
+      (location.value && location.value.description) ||
+      (location.value &&
+        location.value.structured_formatting &&
+        `${location.value.structured_formatting.main_text}, ${location.value.structured_formatting.secondary_text}`) ||
+      "";
+
+    return {
+      fullAddress: fullAddress,
+    };
+  };
+
   // Form validation and submission
   const handleSubmit = async (): Promise<void> => {
     // Validate required fields
-    const { name, phone, email, location, workerId, imageBase64 } = storeData;
+    const { name, phone, email, location, workerIds, imageBase64 } = storeData;
     const missingFields: string[] = [];
 
     if (!name) missingFields.push("Bolt neve");
     if (!phone) missingFields.push("Telefonszám");
     if (!email) missingFields.push("Email");
     if (!location) missingFields.push("Cím");
-    if (!workerId) missingFields.push("Munkatárs");
+    if (workerIds.length === 0) missingFields.push("Munkatárs"); // Check if array is empty
     if (!imageBase64) missingFields.push("Kép");
 
     if (missingFields.length > 0) {
@@ -107,16 +127,20 @@ export const Store = () => {
       return;
     }
 
-    // Create payload
+    // Extract address details from location object
+    const addressDetails = extractAddressDetails(location);
+
+    // Create payload with full address and worker IDs array
     const payload = {
       name,
-      address: location?.label || "",
+      address: addressDetails.fullAddress,
       phone,
       email,
-      workerId: workerId?.toString() || "",
+      workerIds: workerIds, // Send the entire array of worker IDs
       image: imageBase64,
     };
 
+    console.log("Submitting store with payload:", payload);
     setIsSubmitting(true);
 
     try {
@@ -135,7 +159,7 @@ export const Store = () => {
         phone: "",
         email: "",
         location: null,
-        workerId: null,
+        workerIds: [],
         imageBase64: null,
         imagePreviewUrl: null,
       });
@@ -197,9 +221,8 @@ export const Store = () => {
               />
               <div className="mt-6">
                 <AddWorker
-                  onWorkerSelect={handleWorkerSelect}
-                  // @ts-ignore - We'll assume the component accepts selectedWorkerId
-                  selectedWorkerId={storeData.workerId}
+                  onWorkersSelect={handleWorkersSelect}
+                  // No longer need to pass selectedWorkerId as we're handling an array now
                 />
               </div>
             </div>

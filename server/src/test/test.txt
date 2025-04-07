@@ -1,0 +1,788 @@
+import bcrypt from "bcryptjs";
+import { FastifyRequest, FastifyReply } from "fastify";
+import { AppDataSource } from "../config/dbconfig";
+import * as model from "../models/index";
+import {
+  registerSchema,
+  loginSchema,
+} from "../shared/validation/userValidation";
+import { registerUser, loginUser } from "../controllers/authController";
+
+const mockSave = jest.fn();
+const mockFindOneBy = jest.fn();
+const mockRemove = jest.fn();
+const mockFind = jest.fn();
+const mockDelete = jest.fn();
+
+jest.mock("../config/dbconfig", () => ({
+  AppDataSource: {
+    getRepository: jest.fn().mockImplementation(() => ({
+      findOneBy: mockFindOneBy,
+      save: mockSave,
+      remove: mockRemove,
+      find: mockFind,
+      delete: mockDelete,
+    })),
+  },
+}));
+
+jest.mock("../middlewares/authMiddleware", () => ({
+  generateToken: jest.fn().mockReturnValue("mockJWTToken"),
+}));
+import { generateToken } from "../middlewares/authMiddleware";
+
+jest.mock("bcryptjs", () => ({
+  genSalt: jest.fn().mockResolvedValue("mockSalt"),
+  hash: jest.fn().mockResolvedValue("mockHashedPassword"),
+  compare: jest.fn(),
+}));
+
+jest.mock("../shared/validation/userValidation", () => ({
+  registerSchema: { safeParse: jest.fn() },
+  loginSchema: { safeParse: jest.fn() },
+  updateSchema: { safeParse: jest.fn() },
+}));
+
+const mockRequest = (body: any): Partial<FastifyRequest> => ({
+  body,
+});
+
+const mockReply = (): Partial<FastifyReply> => {
+  const reply: any = {};
+  reply.status = jest.fn().mockReturnThis();
+  reply.send = jest.fn().mockReturnThis();
+  return reply as FastifyReply;
+};
+
+describe("authController - registerUser", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockFindOneBy.mockReset();
+    mockSave.mockReset();
+    mockRemove.mockReset();
+    mockFind.mockReset();
+    mockDelete.mockReset();
+    (registerSchema.safeParse as jest.Mock).mockReset();
+  });
+
+  const validUserData = {
+    username: "testuser",
+    email: "test@example.com",
+    password: "password123",
+    role: "client",
+    firstName: "Test",
+    lastName: "User",
+  };
+
+  it("Sikeres regisztráció", async () => {
+    const request = mockRequest(validUserData);
+    const reply = mockReply();
+
+    (registerSchema.safeParse as jest.Mock).mockReturnValue({
+      success: true,
+      data: validUserData,
+    });
+    mockFindOneBy.mockResolvedValue(null);
+    const savedUser = {
+      ...validUserData,
+      userId: 1,
+      password: "mockHashedPassword",
+      profilePic: `https://ui-avatars.com/api/?name=${validUserData.username[0]}&size=128`,
+    };
+    mockSave.mockResolvedValue(savedUser);
+
+    await registerUser(request as FastifyRequest, reply as FastifyReply);
+
+    expect(registerSchema.safeParse).toHaveBeenCalledWith(validUserData);
+    expect(AppDataSource.getRepository).toHaveBeenCalledWith(model.User);
+    expect(mockFindOneBy).toHaveBeenCalledTimes(2);
+    expect(mockFindOneBy).toHaveBeenNthCalledWith(1, {
+      email: validUserData.email,
+    });
+    expect(mockFindOneBy).toHaveBeenNthCalledWith(2, {
+      username: validUserData.username,
+    });
+    expect(bcrypt.genSalt).toHaveBeenCalledWith(12);
+    expect(bcrypt.hash).toHaveBeenCalledWith(
+      validUserData.password,
+      "mockSalt",
+    );
+    expect(mockSave).toHaveBeenCalledTimes(1);
+    expect(mockSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        username: validUserData.username,
+        email: validUserData.email,
+        password: "mockHashedPassword",
+        role: validUserData.role,
+        firstName: validUserData.firstName,
+        lastName: validUserData.lastName,
+        profilePic: `https://ui-avatars.com/api/?name=${validUserData.username[0]}&size=128`,
+      }),
+    );
+    expect(reply.status).toHaveBeenCalledWith(201);
+    expect(reply.send).toHaveBeenCalledWith({
+      message: "Felhasználó sikeresen létrehozva.",
+    });
+  });
+
+  it("400 ha validáció Sikertelen", async () => {
+    const invalidUserData = { ...validUserData, email: "not-an-email" };
+    const request = mockRequest(invalidUserData);
+    const reply = mockReply();
+    const validationError = {
+      success: false,
+      error: "validációs hibák",
+    };
+
+    (registerSchema.safeParse as jest.Mock).mockReturnValue(validationError);
+
+    await registerUser(request as FastifyRequest, reply as FastifyReply);
+
+    expect(registerSchema.safeParse).toHaveBeenCalledWith(invalidUserData);
+    expect(reply.status).toHaveBeenCalledWith(400);
+    expect(mockFindOneBy).not.toHaveBeenCalled();
+    expect(mockSave).not.toHaveBeenCalled();
+  });
+
+  it("400 ha szerep érvénytelen", async () => {
+    const invalidRoleData = { ...validUserData, role: "admin" };
+    const request = mockRequest(invalidRoleData);
+    const reply = mockReply();
+
+    (registerSchema.safeParse as jest.Mock).mockReturnValue({
+      success: true,
+      data: invalidRoleData,
+    });
+
+    await registerUser(request as FastifyRequest, reply as FastifyReply);
+
+    expect(registerSchema.safeParse).toHaveBeenCalledWith(invalidRoleData);
+    expect(reply.status).toHaveBeenCalledWith(400);
+    expect(reply.send).toHaveBeenCalledWith({
+      message:
+        "Érvénytelen szerep. A szerepnek „client” vagy „worker” kell lennie.",
+    });
+    expect(mockFindOneBy).not.toHaveBeenCalled();
+    expect(mockSave).not.toHaveBeenCalled();
+  });
+
+  it("400 ha email már létezik", async () => {
+    const request = mockRequest(validUserData);
+    const reply = mockReply();
+    const existingUserWithEmail = new model.User();
+    existingUserWithEmail.email = validUserData.email;
+    existingUserWithEmail.userId = 99;
+
+    (registerSchema.safeParse as jest.Mock).mockReturnValue({
+      success: true,
+      data: validUserData,
+    });
+    mockFindOneBy.mockResolvedValueOnce(existingUserWithEmail);
+
+    await registerUser(request as FastifyRequest, reply as FastifyReply);
+    expect(registerSchema.safeParse).toHaveBeenCalledWith(validUserData);
+    expect(AppDataSource.getRepository).toHaveBeenCalledWith(model.User);
+    expect(mockFindOneBy).toHaveBeenCalledTimes(1);
+    expect(mockFindOneBy).toHaveBeenCalledWith({ email: validUserData.email });
+    expect(reply.status).toHaveBeenCalledWith(400);
+    expect(reply.send).toHaveBeenCalledWith({
+      message: "Ez az email cím már létezik",
+    });
+    expect(bcrypt.hash).not.toHaveBeenCalled();
+    expect(mockSave).not.toHaveBeenCalled();
+  });
+
+  it("400 ha Felhasználónév már létezik", async () => {
+    const request = mockRequest(validUserData);
+    const reply = mockReply();
+    const existingUserWithUsername = new model.User();
+    existingUserWithUsername.username = validUserData.username;
+    existingUserWithUsername.userId = 100;
+
+    (registerSchema.safeParse as jest.Mock).mockReturnValue({
+      success: true,
+      data: validUserData,
+    });
+    mockFindOneBy.mockResolvedValueOnce(null);
+    mockFindOneBy.mockResolvedValueOnce(existingUserWithUsername);
+
+    await registerUser(request as FastifyRequest, reply as FastifyReply);
+
+    expect(registerSchema.safeParse).toHaveBeenCalledWith(validUserData);
+    expect(AppDataSource.getRepository).toHaveBeenCalledWith(model.User);
+    expect(mockFindOneBy).toHaveBeenCalledTimes(2);
+    expect(mockFindOneBy).toHaveBeenNthCalledWith(1, {
+      email: validUserData.email,
+    });
+    expect(mockFindOneBy).toHaveBeenNthCalledWith(2, {
+      username: validUserData.username,
+    });
+    expect(reply.status).toHaveBeenCalledWith(400);
+    expect(reply.send).toHaveBeenCalledWith({
+      message: "Ez a felhasználónév már létezik",
+    });
+    expect(bcrypt.hash).not.toHaveBeenCalled();
+    expect(mockSave).not.toHaveBeenCalled();
+  });
+});
+
+describe("authController- loginUser", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockFindOneBy.mockReset();
+    (loginSchema.safeParse as jest.Mock).mockReset();
+    (bcrypt.compare as jest.Mock).mockReset();
+    (generateToken as jest.Mock).mockClear();
+    (AppDataSource.getRepository as jest.Mock).mockClear();
+  });
+
+  const loginCredentials = {
+    email: "test@example.com",
+    password: "password123",
+  };
+
+  const mockExistingUser = {
+    userId: 1,
+    email: "test@example.com",
+    password: "hashedPasswordFromDb",
+    username: "testuser",
+    role: "client",
+  };
+
+  it("Sikeres bejelentkezés", async () => {
+    const request = mockRequest(loginCredentials);
+    const reply = mockReply();
+
+    (loginSchema.safeParse as jest.Mock).mockReturnValue({
+      success: true,
+      data: loginCredentials,
+    });
+    mockFindOneBy.mockResolvedValue(mockExistingUser);
+    (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+
+    await loginUser(request as FastifyRequest, reply as FastifyReply);
+    expect(loginSchema.safeParse).toHaveBeenCalledWith(loginCredentials);
+    expect(AppDataSource.getRepository).toHaveBeenCalledWith(model.User);
+    expect(mockFindOneBy).toHaveBeenCalledWith({
+      email: loginCredentials.email,
+    });
+    expect(bcrypt.compare).toHaveBeenCalledWith(
+      loginCredentials.password,
+      mockExistingUser.password,
+    );
+    expect(generateToken).toHaveBeenCalledWith(mockExistingUser);
+    expect(reply.status).not.toHaveBeenCalled();
+    expect(reply.send).toHaveBeenCalledWith({
+      message: "Sikeres bejelentkezés",
+      token: "mockJWTToken",
+    });
+  });
+
+  it("400 ha a validáció sikertelen", async () => {
+    const invalidCredentials = { email: "rosszemail", password: "pw" };
+    const request = mockRequest(invalidCredentials);
+    const reply = mockReply();
+
+    (loginSchema.safeParse as jest.Mock).mockReturnValue({
+      success: false,
+      error: "validációs hiba",
+    });
+
+    await loginUser(request as FastifyRequest, reply as FastifyReply);
+
+    expect(loginSchema.safeParse).toHaveBeenCalledWith(invalidCredentials);
+    expect(reply.status).toHaveBeenCalledWith(400);
+    expect(reply.send).toHaveBeenCalledWith({
+      message: "Sikertelen validáció",
+    });
+    expect(mockFindOneBy).not.toHaveBeenCalled();
+    expect(bcrypt.compare).not.toHaveBeenCalled();
+    expect(generateToken).not.toHaveBeenCalled();
+  });
+
+  it("401 ha a felhasználó nem található", async () => {
+    const request = mockRequest(loginCredentials);
+    const reply = mockReply();
+
+    (loginSchema.safeParse as jest.Mock).mockReturnValue({
+      success: true,
+      data: loginCredentials,
+    });
+    mockFindOneBy.mockResolvedValue(null);
+
+    await loginUser(request as FastifyRequest, reply as FastifyReply);
+    expect(loginSchema.safeParse).toHaveBeenCalledWith(loginCredentials);
+    expect(AppDataSource.getRepository).toHaveBeenCalledWith(model.User);
+    expect(mockFindOneBy).toHaveBeenCalledWith({
+      email: loginCredentials.email,
+    });
+    expect(reply.status).toHaveBeenCalledWith(401);
+    expect(reply.send).not.toHaveBeenCalledWith(
+      expect.objectContaining({ message: "Sikeres bejelentkezés" }),
+    );
+    expect(bcrypt.compare).not.toHaveBeenCalled();
+    expect(generateToken).not.toHaveBeenCalled();
+  });
+
+  it("400 ha a jelszó helytelen", async () => {
+    const request = mockRequest(loginCredentials);
+    const reply = mockReply();
+    (loginSchema.safeParse as jest.Mock).mockReturnValue({
+      success: true,
+      data: loginCredentials,
+    });
+    mockFindOneBy.mockResolvedValue(mockExistingUser);
+    (bcrypt.compare as jest.Mock).mockResolvedValue(false);
+
+    await loginUser(request as FastifyRequest, reply as FastifyReply);
+
+    expect(loginSchema.safeParse).toHaveBeenCalledWith(loginCredentials);
+    expect(AppDataSource.getRepository).toHaveBeenCalledWith(model.User);
+    expect(mockFindOneBy).toHaveBeenCalledWith({
+      email: loginCredentials.email,
+    });
+    expect(bcrypt.compare).toHaveBeenCalledWith(
+      loginCredentials.password,
+      mockExistingUser.password,
+    );
+    expect(reply.status).toHaveBeenCalledWith(400);
+    expect(reply.send).toHaveBeenCalledWith({
+      message: "Érvénytelen hitelesítő adatok",
+    });
+    expect(generateToken).not.toHaveBeenCalled();
+  });
+});
+
+
+
+import { FastifyReply, FastifyRequest } from "fastify";
+import { AppDataSource } from "../config/dbconfig";
+import * as model from "../models/index";
+import {
+  createAvailability,
+  getAvailabilitybyId,
+} from "../controllers/availController";
+import {
+  AuthenticatedRequest,
+  AvailabilityRequest,
+  GetIdParams,
+} from "../interfaces/interfaces";
+
+const mockSave = jest.fn();
+const mockFindOneBy = jest.fn();
+const mockFindOne = jest.fn();
+const mockFind = jest.fn();
+const mockRemove = jest.fn();
+
+const mockQueryBuilder = {
+  leftJoinAndSelect: jest.fn().mockReturnThis(),
+  where: jest.fn().mockReturnThis(),
+  andWhere: jest.fn().mockReturnThis(),
+  select: jest.fn().mockReturnThis(),
+  getMany: jest.fn(),
+  getOne: jest.fn(),
+};
+
+jest.mock("../config/dbconfig", () => ({
+  AppDataSource: {
+    getRepository: jest.fn().mockImplementation((entity) => {
+      return {
+        findOneBy: mockFindOneBy,
+        findOne: mockFindOne,
+        find: mockFind,
+        save: mockSave,
+        remove: mockRemove,
+        createQueryBuilder: jest.fn().mockReturnValue(mockQueryBuilder),
+      };
+    }),
+  },
+}));
+
+const mockAuthenticatedRequest = (
+  userId: number | undefined,
+  body: any,
+): Partial<AuthenticatedRequest> => ({
+  //@ts-ignore
+  user: userId ? { userId } : undefined,
+  body,
+});
+
+const mockRequestWithParams = (params: any): Partial<FastifyRequest> => ({
+  params,
+});
+
+const mockReply = (): Partial<FastifyReply> => {
+  const reply: any = {};
+  reply.status = jest.fn().mockReturnThis();
+  reply.send = jest.fn().mockReturnThis();
+  return reply as FastifyReply;
+};
+
+describe("Rendelkezésre Állás Vezérlő - createAvailability", () => {
+  const userId = 1;
+  const validAvailabilityData: AvailabilityRequest = {
+    monday: ["09:00", "10:00"],
+    tuesday: [],
+    wednesday: ["14:00"],
+  };
+
+  const mockExistingDbSlots: model.AvailabilityTimes[] = [
+    {
+      timeSlotId: 1, // Using timeSlotId from model
+      user: { userId } as model.User,
+      day: "monday",
+      timeSlot: "09:00",
+      status: "available",
+      appointments: [], // Initialize relation
+    },
+    {
+      timeSlotId: 2, // Using timeSlotId from model
+      user: { userId } as model.User,
+      day: "monday",
+      timeSlot: "11:00",
+      status: "available",
+      appointments: [], // Initialize relation
+    },
+    {
+      timeSlotId: 3, // Using timeSlotId from model
+      user: { userId } as model.User,
+      day: "friday",
+      timeSlot: "15:00",
+      status: "available",
+      appointments: [], // Initialize relation
+    },
+  ];
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockFind.mockReset();
+    mockRemove.mockReset();
+    mockFindOne.mockReset();
+    mockSave.mockReset();
+  });
+
+  it("Sikeres időpont létrehozás/frissítés (új, meglévő, törölt)", async () => {
+    const request = mockAuthenticatedRequest(userId, validAvailabilityData);
+    const reply = mockReply();
+
+    mockFind.mockResolvedValue(mockExistingDbSlots);
+    mockFindOne
+      .mockResolvedValueOnce(mockExistingDbSlots[0])
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce(null);
+
+    await createAvailability(
+      request as AuthenticatedRequest,
+      reply as FastifyReply,
+    );
+
+    expect(mockFind).toHaveBeenCalledTimes(1);
+    expect(mockFind).toHaveBeenCalledWith({
+      where: { user: { userId: userId } },
+    });
+
+    expect(mockRemove).toHaveBeenCalledTimes(2);
+    expect(mockRemove).toHaveBeenCalledWith(mockExistingDbSlots[1]);
+    expect(mockRemove).toHaveBeenCalledWith(mockExistingDbSlots[2]);
+
+    expect(mockFindOne).toHaveBeenCalledTimes(3);
+    expect(mockFindOne).toHaveBeenNthCalledWith(1, {
+      where: { user: { userId: userId }, day: "monday", timeSlot: "09:00" },
+    });
+    expect(mockFindOne).toHaveBeenNthCalledWith(2, {
+      where: { user: { userId: userId }, day: "monday", timeSlot: "10:00" },
+    });
+    expect(mockFindOne).toHaveBeenNthCalledWith(3, {
+      where: { user: { userId: userId }, day: "wednesday", timeSlot: "14:00" },
+    });
+
+    expect(mockSave).toHaveBeenCalledTimes(2);
+    expect(mockSave).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        user: { userId: userId },
+        day: "monday",
+        timeSlot: "10:00",
+        status: "available",
+      }),
+    );
+    expect(mockSave).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        user: { userId: userId },
+        day: "wednesday",
+        timeSlot: "14:00",
+        status: "available",
+      }),
+    );
+
+    expect(reply.status).toHaveBeenCalledWith(200);
+    expect(reply.send).toHaveBeenCalledWith({
+      message: "Időpont sikeresen létrehozva.",
+    });
+  });
+
+  it("400 ha a felhasználó nincs autentikálva", async () => {
+    const request = mockAuthenticatedRequest(undefined, validAvailabilityData);
+    const reply = mockReply();
+
+    await createAvailability(
+      request as AuthenticatedRequest,
+      reply as FastifyReply,
+    );
+
+    expect(reply.status).toHaveBeenCalledWith(400);
+    expect(reply.send).toHaveBeenCalledWith({
+      message: "Felhasználó nincs autentikálva",
+    });
+    expect(mockFind).not.toHaveBeenCalled();
+    expect(mockRemove).not.toHaveBeenCalled();
+    expect(mockFindOne).not.toHaveBeenCalled();
+    expect(mockSave).not.toHaveBeenCalled();
+  });
+});
+
+describe("Rendelkezésre Állás Vezérlő - getAvailabilitybyId", () => {
+  const targetUserId = 5;
+  const mockAvailabilities: Partial<model.AvailabilityTimes>[] = [
+    {
+      timeSlotId: 10,
+      user: { userId: targetUserId } as model.User,
+      day: "monday",
+      timeSlot: "10:00",
+      status: "available",
+    },
+    {
+      timeSlotId: 11,
+      user: { userId: targetUserId } as model.User,
+      day: "monday",
+      timeSlot: "11:00",
+      status: "available",
+    }, // Status is available in model, not booked
+    {
+      timeSlotId: 12,
+      user: { userId: targetUserId } as model.User,
+      day: "wednesday",
+      timeSlot: "15:00",
+      status: "available",
+    },
+  ];
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockQueryBuilder.leftJoinAndSelect.mockClear();
+    mockQueryBuilder.where.mockClear();
+    mockQueryBuilder.getMany.mockReset();
+    (AppDataSource.getRepository as jest.Mock).mockClear();
+  });
+
+  it("200 üres eredménnyel, ha nincs időpont a felhasználóhoz", async () => {
+    const request = mockRequestWithParams({ id: targetUserId.toString() });
+    const reply = mockReply();
+
+    mockQueryBuilder.getMany.mockResolvedValue([]);
+
+    await getAvailabilitybyId(request as FastifyRequest, reply as FastifyReply);
+
+    expect(mockQueryBuilder.getMany).toHaveBeenCalledTimes(1);
+    expect(reply.status).toHaveBeenCalledWith(200);
+    expect(reply.send).toHaveBeenCalledWith({
+      message: "Nincs időpont ehhez a felhasználóhoz.",
+    });
+  });
+});
+
+import { FastifyReply } from "fastify";
+import * as model from "../models/index";
+import { sendFriendRequest } from "../controllers/friendController";
+import { AuthenticatedRequest } from "../interfaces/interfaces";
+
+const mockSave = jest.fn();
+const mockFindOneBy = jest.fn();
+const mockFindOne = jest.fn();
+const mockFind = jest.fn();
+const mockRemove = jest.fn();
+
+jest.mock("../config/dbconfig", () => ({
+  AppDataSource: {
+    getRepository: jest.fn().mockImplementation(() => ({
+      findOneBy: mockFindOneBy,
+      findOne: mockFindOne,
+      find: mockFind,
+      save: mockSave,
+      remove: mockRemove,
+    })),
+  },
+}));
+
+const mockAuthenticatedRequest = (
+  userId: number | undefined,
+  body: any,
+): Partial<AuthenticatedRequest> => ({
+  //@ts-ignore
+  user: userId ? { userId } : undefined,
+  body,
+});
+
+const mockReply = (): Partial<FastifyReply> => {
+  const reply: any = {};
+  reply.status = jest.fn().mockReturnThis();
+  reply.send = jest.fn().mockReturnThis();
+  return reply as FastifyReply;
+};
+
+describe("friendController - sendFriendRequest", () => {
+  const requestingUserId = 1;
+  const targetFriendId = 2;
+  const targetClientId = 3;
+
+  const mockUser = new model.User();
+  mockUser.userId = requestingUserId;
+  mockUser.role = "client";
+
+  const mockFriendWorker = new model.User();
+  mockFriendWorker.userId = targetFriendId;
+  mockFriendWorker.role = "worker";
+
+  const mockFriendClient = new model.User();
+  mockFriendClient.userId = targetClientId;
+  mockFriendClient.role = "client";
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockFindOneBy.mockReset();
+    mockFindOne.mockReset();
+    mockSave.mockReset();
+  });
+
+  it("Sikeres barátkérelem küldése", async () => {
+    const request = mockAuthenticatedRequest(requestingUserId, {
+      friendId: targetFriendId,
+    });
+    const reply = mockReply();
+
+    mockFindOneBy
+      .mockResolvedValueOnce(mockUser)
+      .mockResolvedValueOnce(mockFriendWorker);
+    mockFindOne.mockResolvedValue(null);
+    mockSave.mockResolvedValue(new model.Friendship());
+
+    await sendFriendRequest(
+      request as AuthenticatedRequest,
+      reply as FastifyReply,
+    );
+
+    expect(mockFindOneBy).toHaveBeenCalledTimes(2);
+    expect(mockFindOneBy).toHaveBeenNthCalledWith(1, {
+      userId: requestingUserId,
+    });
+    expect(mockFindOneBy).toHaveBeenNthCalledWith(2, {
+      userId: targetFriendId,
+    });
+    expect(mockFindOne).toHaveBeenCalledTimes(1);
+    expect(mockSave).toHaveBeenCalledTimes(1);
+    expect(mockSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        user: mockUser,
+        friend: mockFriendWorker,
+        status: "pending",
+      }),
+    );
+    expect(reply.status).toHaveBeenCalledWith(201);
+    expect(reply.send).toHaveBeenCalledWith({
+      message: "Barátkérelem sikeresen elküldve",
+    });
+  });
+
+  it("400 ha magunknak küldünk kérelmet", async () => {
+    const request = mockAuthenticatedRequest(requestingUserId, {
+      friendId: requestingUserId,
+    });
+    const reply = mockReply();
+
+    await sendFriendRequest(
+      request as AuthenticatedRequest,
+      reply as FastifyReply,
+    );
+
+    expect(reply.status).toHaveBeenCalledWith(400);
+    expect(reply.send).toHaveBeenCalledWith({
+      message: "Magadnak nem tudsz barátkérelmet küldeni",
+    });
+
+    expect(mockFindOneBy).not.toHaveBeenCalled();
+    expect(mockFindOne).not.toHaveBeenCalled();
+    expect(mockSave).not.toHaveBeenCalled();
+  });
+
+  it("404 ha a felhasználó vagy a barát nem található", async () => {
+    const request = mockAuthenticatedRequest(requestingUserId, {
+      friendId: 999,
+    });
+    const reply = mockReply();
+
+    mockFindOneBy.mockResolvedValueOnce(mockUser).mockResolvedValueOnce(null);
+
+    await sendFriendRequest(
+      request as AuthenticatedRequest,
+      reply as FastifyReply,
+    );
+
+    expect(mockFindOneBy).toHaveBeenCalledTimes(2);
+    expect(reply.status).toHaveBeenCalledWith(404);
+    expect(reply.send).toHaveBeenCalledWith({ message: "Nem található" });
+    expect(mockFindOne).not.toHaveBeenCalled();
+    expect(mockSave).not.toHaveBeenCalled();
+  });
+
+  it("400 ha kliensnek próbálunk kérelmet küldeni", async () => {
+    const request = mockAuthenticatedRequest(requestingUserId, {
+      friendId: targetClientId,
+    });
+    const reply = mockReply();
+
+    mockFindOneBy
+      .mockResolvedValueOnce(mockUser)
+      .mockResolvedValueOnce(mockFriendClient);
+
+    await sendFriendRequest(
+      request as AuthenticatedRequest,
+      reply as FastifyReply,
+    );
+
+    expect(mockFindOneBy).toHaveBeenCalledTimes(2);
+    expect(reply.status).toHaveBeenCalledWith(400);
+    expect(reply.send).toHaveBeenCalledWith({
+      message: "Nem küldhetsz egy kliensnek barátkérelmet",
+    });
+    expect(mockFindOne).not.toHaveBeenCalled();
+    expect(mockSave).not.toHaveBeenCalled();
+  });
+
+  it("400 ha már létezik függőben lévő kérelem", async () => {
+    const request = mockAuthenticatedRequest(requestingUserId, {
+      friendId: targetFriendId,
+    });
+    const reply = mockReply();
+    const existingRequest = new model.Friendship();
+    existingRequest.status = "pending";
+
+    mockFindOneBy
+      .mockResolvedValueOnce(mockUser)
+      .mockResolvedValueOnce(mockFriendWorker);
+    mockFindOne.mockResolvedValue(existingRequest);
+
+    await sendFriendRequest(
+      request as AuthenticatedRequest,
+      reply as FastifyReply,
+    );
+
+    expect(mockFindOneBy).toHaveBeenCalledTimes(2);
+    expect(mockFindOne).toHaveBeenCalledTimes(1);
+    expect(reply.status).toHaveBeenCalledWith(400);
+    expect(reply.send).toHaveBeenCalledWith({
+      message: "Barátkérelem létezik vagy függőben van",
+    });
+    expect(mockSave).not.toHaveBeenCalled();
+  });
+});

@@ -36,6 +36,20 @@ export default function AvailabilityPageWithSidebar() {
     );
   }
 
+  if (loading && !error) {
+    return (
+      <div className="flex">
+        <Sidebar />
+        <div className="flex-1 min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900 mx-auto"></div>
+            <p className="mt-4 text-gray-700">Adatok betöltése...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col md:flex-row h-screen bg-gray-50">
       <Sidebar />
@@ -44,18 +58,13 @@ export default function AvailabilityPageWithSidebar() {
           <div className="container mx-auto p-6 pb-16">
             <h1 className="text-2xl font-bold mb-6">Kezeld az időpontjaidat</h1>
             <TaskButtonsRow />
-            {loading && !error && (
-              <div className="flex justify-center my-8">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
-              </div>
-            )}
             {error && (
               <div className="my-8 bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded flex items-center">
                 <AlertCircle className="mr-2" size={20} />
                 <span>{error}</span>
               </div>
             )}
-            {!loading && !error && (
+            {!error && (
               <DragDropContext onDragEnd={handleOnDragEnd}>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-12">
                   <ColumnMemo variant="monday" />

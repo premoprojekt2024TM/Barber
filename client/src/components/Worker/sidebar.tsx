@@ -113,7 +113,6 @@ export default function Sidebar() {
       return (
         <img
           src={userInfo.profilePic}
-          alt="Profile"
           className="h-8 w-8 rounded-full object-cover"
         />
       );
@@ -165,7 +164,6 @@ export default function Sidebar() {
               className="flex flex-col items-center justify-center p-2 text-gray-500"
             >
               {renderAvatar()}
-              <span className="text-xs mt-1">Profile</span>
             </button>
           </div>
         </div>

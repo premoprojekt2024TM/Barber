@@ -3,9 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import GooglePlacesAutocomplete from "react-google-places-autocomplete";
 import { X } from "lucide-react";
 
-const GOOGLE_MAPS_API_KEY = "AIzaSyCSJN2Qzyjhv-AFd1I2LVLD30hX7-lZhRE"; // HARDCODED API KEY - SECURE YOURS!
-
-// Define interface for location object
+const GOOGLE_MAPS_API_KEY = "AIzaSyCSJN2Qzyjhv-AFd1I2LVLD30hX7-lZhRE";
 interface LocationType {
   label: string;
   value?: {
@@ -15,7 +13,6 @@ interface LocationType {
   [key: string]: any;
 }
 
-// Add initialValues interface
 interface InitialValuesType {
   name?: string;
   phone?: string;
@@ -28,10 +25,10 @@ interface StoreInformationProps {
     name: string,
     phone: string,
     email: string,
-    location: LocationType,
+    location: LocationType | null,
   ) => void;
   initialValues?: InitialValuesType;
-  disabled?: boolean; // Add disabled prop
+  disabled?: boolean;
 }
 
 export const EditStoreInfo = ({
@@ -41,7 +38,6 @@ export const EditStoreInfo = ({
 }: StoreInformationProps) => {
   const [storeName, setStoreName] = useState(initialValues?.name || "");
   const [storePhone, setStorePhone] = useState(() => {
-    // Extract the phone number without the "+36 " prefix if it exists
     const phone = initialValues?.phone || "";
     return phone.startsWith("+36 ") ? phone.substring(4) : phone;
   });
@@ -107,16 +103,14 @@ export const EditStoreInfo = ({
       const isPhoneValid =
         !phoneWithoutPrefix || validatePhoneNumber(phoneWithoutPrefix);
 
-      // Only send valid values to parent
       const validEmail = isEmailValid ? initialValues.email || "" : "";
       const validPhone = isPhoneValid ? initialValues.phone || "" : "";
 
-      // Notify parent component with initial values
       onStoreInfoChange(
         initialValues.name || "",
         validPhone,
         validEmail,
-        initialValues.location,
+        initialValues.location || null, // Ensure null is handled
       );
     }
   }, []);
@@ -147,7 +141,7 @@ export const EditStoreInfo = ({
       name,
       storePhone ? "+36 " + storePhone : "",
       storeEmail,
-      location || ({} as LocationType),
+      location, // Already can be null
     );
   };
 
@@ -187,7 +181,7 @@ export const EditStoreInfo = ({
         storeName,
         "",
         storeEmail,
-        location || ({} as LocationType),
+        location, // Already can be null
       ); // Send empty string to parent on error
     } else {
       setPhoneError(null);
@@ -195,7 +189,7 @@ export const EditStoreInfo = ({
         storeName,
         fullPhoneNumber,
         storeEmail,
-        location || ({} as LocationType),
+        location, // Already can be null
       );
     }
   };
@@ -211,7 +205,7 @@ export const EditStoreInfo = ({
         storeName,
         storePhone ? "+36 " + storePhone : "",
         "",
-        location || ({} as LocationType),
+        location, // Already can be null
       ); // Send empty string to parent on error
     } else {
       setEmailError(null);
@@ -219,7 +213,7 @@ export const EditStoreInfo = ({
         storeName,
         storePhone ? "+36 " + storePhone : "",
         email,
-        location || ({} as LocationType),
+        location, // Already can be null
       );
     }
   };
@@ -272,7 +266,7 @@ export const EditStoreInfo = ({
       storeName,
       storePhone ? "+36 " + storePhone : "",
       storeEmail,
-      null,
+      null, // Explicitly pass null
     );
 
     // Reset the Google Places component
@@ -375,7 +369,7 @@ export const EditStoreInfo = ({
             selectProps={{
               placeholder: "Cím keresése",
               onChange: handlePlaceSelect,
-              value: location,
+              value: null, // Fixed: Don't pass location directly to avoid type mismatch
               noOptionsMessage: () => "Nincs találat",
               loadingMessage: () => "Keresés folyamatban...",
               styles: customStyles,

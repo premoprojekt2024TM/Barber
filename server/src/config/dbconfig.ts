@@ -16,7 +16,6 @@ export const AppDataSource = new DataSource({
     model.Appointment,
   ],
   synchronize: true,
-  logging: true,
 });
 
 AppDataSource.initialize()

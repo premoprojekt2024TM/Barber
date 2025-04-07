@@ -21,7 +21,7 @@ interface StoreDataType {
   phone: string;
   email: string;
   location: LocationType | null;
-  workerId: number | null;
+  workerIds: number[];
   imageBase64: string | null;
   imagePreviewUrl: string | null;
 }
@@ -65,7 +65,7 @@ export const EditStore = () => {
     phone: "",
     email: "",
     location: null,
-    workerId: null,
+    workerIds: [],
     imageBase64: null,
     imagePreviewUrl: null,
   });
@@ -95,7 +95,7 @@ export const EditStore = () => {
 
         if (isStoreOwner && store) {
           const location: LocationType = {
-            label: store.address,
+            label: `${store.city},${store.address}`,
             address: store.address,
             city: store.city,
             postalCode: store.postalCode,
@@ -103,8 +103,10 @@ export const EditStore = () => {
             longitude: store.longitude,
           };
 
-          const currentWorker =
-            workers && workers.length > 0 ? workers[0].userId : null;
+          const initialWorkerIds =
+            workers && workers.length > 0
+              ? workers.map((worker) => worker.userId)
+              : [];
 
           const fetchedData: StoreDataType = {
             storeId: store.storeId,
@@ -112,7 +114,7 @@ export const EditStore = () => {
             phone: store.phone,
             email: store.email,
             location: location,
-            workerId: currentWorker,
+            workerIds: initialWorkerIds,
             imageBase64: null,
             imagePreviewUrl: store.picture,
           };
@@ -126,7 +128,7 @@ export const EditStore = () => {
             phone: "",
             email: "",
             location: null,
-            workerId: null,
+            workerIds: [],
             imageBase64: null,
             imagePreviewUrl: null,
           };
@@ -145,7 +147,7 @@ export const EditStore = () => {
           phone: "",
           email: "",
           location: null,
-          workerId: null,
+          workerIds: [],
           imageBase64: null,
           imagePreviewUrl: null,
         };
@@ -171,8 +173,8 @@ export const EditStore = () => {
     }));
   };
 
-  const handleWorkerSelect = (workerId: number): void => {
-    setStoreData((prev) => ({ ...prev, workerId }));
+  const handleWorkerSelect = (workerIds: number[]): void => {
+    setStoreData((prev) => ({ ...prev, workerIds }));
   };
 
   const handleStoreInfoChange = (
@@ -199,14 +201,22 @@ export const EditStore = () => {
     }
     setIsEditMode(true);
   };
+
   const haveFieldsChanged = (): boolean => {
     if (!initialStoreData) return true;
+
     const imageChanged = storeData.imageBase64 !== null;
     if (imageChanged) return true;
     if (storeData.name !== initialStoreData.name) return true;
     if (storeData.phone !== initialStoreData.phone) return true;
     if (storeData.email !== initialStoreData.email) return true;
-    if (storeData.workerId !== initialStoreData.workerId) return true;
+
+    if (storeData.workerIds.length !== initialStoreData.workerIds.length)
+      return true;
+
+    for (let i = 0; i < storeData.workerIds.length; i++) {
+      if (storeData.workerIds[i] !== initialStoreData.workerIds[i]) return true;
+    }
 
     const currentLocation = storeData.location;
     const initialLocation = initialStoreData.location;
@@ -227,14 +237,14 @@ export const EditStore = () => {
   };
 
   const handleSubmit = async (): Promise<void> => {
-    const { name, phone, email, location, workerId } = storeData;
+    const { name, phone, email, location, workerIds } = storeData;
     const missingFields: string[] = [];
 
     if (!name) missingFields.push("Bolt neve");
     if (!phone) missingFields.push("Telefonszám");
     if (!email) missingFields.push("Email");
     if (!location || !location.label) missingFields.push("Cím");
-    if (!workerId) missingFields.push("Munkatárs");
+    if (workerIds.length === 0) missingFields.push("Munkatárs");
 
     if (
       !storeData.storeId &&
@@ -265,6 +275,8 @@ export const EditStore = () => {
       }
     }
 
+    const primaryWorkerId = workerIds.length > 0 ? workerIds[0] : null;
+
     const payload: any = {
       ...(storeData.storeId && { storeId: storeData.storeId }),
       name,
@@ -275,8 +287,10 @@ export const EditStore = () => {
       longitude: location?.longitude ?? null,
       phone,
       email,
-      workerId: workerId?.toString() || "",
+      workerId: primaryWorkerId?.toString() || "",
+      workerIds: workerIds.map((id) => id.toString()),
     };
+
     if (storeData.imageBase64) {
       payload.image = storeData.imageBase64;
     }
@@ -285,9 +299,9 @@ export const EditStore = () => {
 
     try {
       const endpoint = storeData.storeId
-        ? "/api/v1/updateStore"
+        ? "/api/v1/updatestore"
         : "/api/v1/createStore";
-      const response = await axiosInstance.post(endpoint, payload);
+      const response = await axiosInstance.put(endpoint, payload);
       const successMessage = storeData.storeId
         ? "Bolt sikeresen frissítve!"
         : "Bolt sikeresen létrehozva!";
@@ -310,6 +324,16 @@ export const EditStore = () => {
           latitude: updatedStoreDataFromApi.latitude,
           longitude: updatedStoreDataFromApi.longitude,
         };
+
+        let updatedWorkerIds = [...storeData.workerIds];
+        if (updatedStoreDataFromApi.workerId) {
+          const apiWorkerId = Number(updatedStoreDataFromApi.workerId);
+          updatedWorkerIds = updatedWorkerIds.filter(
+            (id) => id !== apiWorkerId,
+          );
+          updatedWorkerIds.unshift(apiWorkerId);
+        }
+
         newStoreState = {
           ...storeData,
           storeId: updatedStoreDataFromApi.storeId || storeData.storeId,
@@ -317,7 +341,7 @@ export const EditStore = () => {
           phone: updatedStoreDataFromApi.phone,
           email: updatedStoreDataFromApi.email,
           location: updatedLocation,
-          workerId: updatedStoreDataFromApi.workerId || storeData.workerId,
+          workerIds: updatedWorkerIds,
           imagePreviewUrl:
             updatedStoreDataFromApi.picture || storeData.imagePreviewUrl,
           imageBase64: null,
@@ -430,7 +454,7 @@ export const EditStore = () => {
               <div className="mt-6">
                 <EditWorker
                   onWorkerSelect={handleWorkerSelect}
-                  selectedWorkerId={storeData.workerId}
+                  selectedWorkerIds={storeData.workerIds}
                   workersList={workers}
                   disabled={formDisabled}
                 />

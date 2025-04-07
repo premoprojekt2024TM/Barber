@@ -16,11 +16,13 @@ export const createStore = async (
   const userId = request.user?.userId;
 
   if (!userId) {
-    return reply.status(401).send({ message: "A felhasználó nincs hitelesítve" });
+    return reply
+      .status(401)
+      .send({ message: "A felhasználó nincs hitelesítve" });
   }
 
   try {
-    const { name, address, phone, email, workerId, image } =
+    const { name, address, phone, email, workerIds, image } =
       request.body as any;
     if (!name || !address || !phone || !email) {
       return reply.status(400).send({ message: "Hiányzó kötelező mezők" });
@@ -45,8 +47,13 @@ export const createStore = async (
     });
 
     if (existingOwnerStore) {
-      return reply.status(400).send({ message: "A felhasználónak már van boltja" });
+      return reply
+        .status(400)
+        .send({ message: "A felhasználónak már van boltja" });
     }
+
+    // Before geocoding, store the original input address
+    const originalAddress = address;
 
     const geocodedData = await geocodeAddress(address);
     if (!geocodedData) {
@@ -68,7 +75,9 @@ export const createStore = async (
 
     const store = new model.Store();
     store.name = name;
-    store.address = streetAddress || address;
+    // Use the original address that was entered instead of relying on streetAddress
+    // This ensures we keep all the address details the user provided
+    store.address = originalAddress;
     store.city = city || "";
     store.postalCode = postalCode || "";
     store.phone = phone;
@@ -86,54 +95,67 @@ export const createStore = async (
     storeWorker.role = "owner";
     await AppDataSource.getRepository(model.StoreWorker).save(storeWorker);
 
-    // Logic to add the store worker if workerId is provided
-    if (workerId) {
-      const worker = await AppDataSource.getRepository(model.User).findOneBy({
-        userId: parseInt(workerId),
-      });
-      if (!worker) {
-        return reply.status(404).send({ message: "A szakember nem található" });
-      }
-
-      // Check if the worker is already assigned to another store
-      const existingWorkerStore = await AppDataSource.getRepository(
-        model.StoreWorker,
-      ).findOne({
-        where: {
-          user: worker,
-        },
-        relations: ["store"],
-      });
-
-      if (existingWorkerStore) {
-        return reply
-          .status(400)
-          .send({ message: "A munkavállaló már egy másik bolthoz van rendelve" });
-      }
-
+    // Logic to add store workers if workerIds array is provided
+    if (workerIds && Array.isArray(workerIds) && workerIds.length > 0) {
       const storeWorkersRepo = AppDataSource.getRepository(model.StoreWorker);
+
+      // Count existing workers (including the owner)
       const storeWorkersCount = await storeWorkersRepo.count({
         where: { store: { storeId: store.storeId } },
       });
 
-      if (storeWorkersCount >= 4) {
-        return reply
-          .status(400)
-          .send({ message: "A bolt már elérte a maximális munkavállalói létszámot" });
+      // Ensure we don't exceed maximum of 4 workers (including owner)
+      const maxAdditionalWorkers = 4 - storeWorkersCount;
+
+      // Limit the number of workers we'll process
+      const workersToProcess = workerIds.slice(0, maxAdditionalWorkers);
+
+      if (workersToProcess.length < workerIds.length) {
+        console.warn(
+          `Only processing ${workersToProcess.length} out of ${workerIds.length} workers due to store limit`,
+        );
       }
 
-      const newStoreWorker = new model.StoreWorker();
-      newStoreWorker.store = store;
-      newStoreWorker.user = worker;
-      newStoreWorker.role = "worker";
+      // Process each worker ID
+      for (const workerId of workersToProcess) {
+        const worker = await AppDataSource.getRepository(model.User).findOneBy({
+          userId: typeof workerId === "string" ? parseInt(workerId) : workerId,
+        });
 
-      await storeWorkersRepo.save(newStoreWorker);
+        if (!worker) {
+          console.warn(`Worker with ID ${workerId} not found`);
+          continue;
+        }
+
+        // Check if the worker is already assigned to another store
+        const existingWorkerStore = await storeWorkersRepo.findOne({
+          where: {
+            user: worker,
+          },
+          relations: ["store"],
+        });
+
+        if (existingWorkerStore) {
+          console.warn(
+            `Worker ${workerId} is already assigned to another store`,
+          );
+          continue;
+        }
+
+        const newStoreWorker = new model.StoreWorker();
+        newStoreWorker.store = store;
+        newStoreWorker.user = worker;
+        newStoreWorker.role = "worker";
+
+        await storeWorkersRepo.save(newStoreWorker);
+      }
     }
 
     return reply
       .status(201)
       .send({ message: "A bolt sikeresen létrejött", store });
   } catch (error) {
+    console.error("Store creation error:", error);
     return reply
       .status(500)
       .send({ message: "Hiba történt a bolt létrehozása közben" });
@@ -278,7 +300,9 @@ export const getStoreWorkerDetails = async (
   const userId = request.user?.userId;
 
   if (!userId) {
-    return reply.status(401).send({ message: "A felhasználó nincs hitelesítve" });
+    return reply
+      .status(401)
+      .send({ message: "A felhasználó nincs hitelesítve" });
   }
 
   try {
@@ -309,7 +333,8 @@ export const getStoreWorkerDetails = async (
     const role = storeWorker.role;
 
     return reply.status(200).send({
-      message: "A bolt munkavállalói adatainak lekérdezése sikeresen megtörtént",
+      message:
+        "A bolt munkavállalói adatainak lekérdezése sikeresen megtörtént",
       store: {
         storeId: store.storeId,
         name: store.name,
@@ -324,7 +349,8 @@ export const getStoreWorkerDetails = async (
     });
   } catch (error) {
     return reply.status(500).send({
-      message: "Hiba történt a bolt munkavállalói adatainak lekérdezése közben.",
+      message:
+        "Hiba történt a bolt munkavállalói adatainak lekérdezése közben.",
     });
   }
 };
@@ -336,7 +362,9 @@ export const getStoreWorkersAndAppointments = async (
   const userId = request.user?.userId;
 
   if (!userId) {
-    return reply.status(401).send({ message: "A felhasználó nincs hitelesítve" });
+    return reply
+      .status(401)
+      .send({ message: "A felhasználó nincs hitelesítve" });
   }
 
   try {
@@ -355,7 +383,8 @@ export const getStoreWorkersAndAppointments = async (
 
     if (!storeWorker.store || !storeWorker.store.storeId) {
       return reply.status(500).send({
-        message: "Nem sikerült lekérdezni a bolt információit a munkavállaló számára.",
+        message:
+          "Nem sikerült lekérdezni a bolt információit a munkavállaló számára.",
       });
     }
 
@@ -375,7 +404,7 @@ export const getStoreWorkersAndAppointments = async (
         "user",
         "user.workerAppointments",
         "user.workerAppointments.client",
-        "user.workerAppointments.timeSlot", 
+        "user.workerAppointments.timeSlot",
       ],
     });
 
@@ -397,8 +426,8 @@ export const getStoreWorkersAndAppointments = async (
               return {
                 appointmentId: appointment.appointmentId,
                 client: null,
-                day: null, 
-                timeSlot: null, 
+                day: null,
+                timeSlot: null,
                 status: appointment.status,
               };
             }
@@ -411,8 +440,8 @@ export const getStoreWorkersAndAppointments = async (
                 lastName: appointment.client.lastName,
                 firstName: appointment.client.firstName,
               },
-              day: appointment.timeSlot?.day || null, 
-              timeSlot: appointment.timeSlot?.timeSlot || null, 
+              day: appointment.timeSlot?.day || null,
+              timeSlot: appointment.timeSlot?.timeSlot || null,
               status: appointment.status,
             };
           }),
@@ -439,7 +468,9 @@ export const deleteStore = async (
   const userId = request.user?.userId;
 
   if (!userId) {
-    return reply.status(401).send({ message: "A felhasználó nincs hitelesítve" });
+    return reply
+      .status(401)
+      .send({ message: "A felhasználó nincs hitelesítve" });
   }
 
   try {
@@ -504,7 +535,9 @@ export const exitStore = async (
   const userId = request.user?.userId;
 
   if (!userId) {
-    return reply.status(401).send({ message: "A felhasználó nincs hitelesítve." });
+    return reply
+      .status(401)
+      .send({ message: "A felhasználó nincs hitelesítve." });
   }
 
   try {
@@ -520,7 +553,8 @@ export const exitStore = async (
 
     if (!storeWorker) {
       return reply.status(403).send({
-        message: "Csak a munkavállalók hagyhatják el a boltot. A bolt tulajdonosai nem hagyhatják el a boltot.",
+        message:
+          "Csak a munkavállalók hagyhatják el a boltot. A bolt tulajdonosai nem hagyhatják el a boltot.",
       });
     }
 
@@ -582,9 +616,9 @@ export const isConnectedToStore = async (
       isConnectedToStore: false,
     });
   } catch (error) {
-    return reply
-      .status(500)
-      .send({ message: "Hiba történt a bolt kapcsolatának ellenőrzése közben" });
+    return reply.status(500).send({
+      message: "Hiba történt a bolt kapcsolatának ellenőrzése közben",
+    });
   }
 };
 //Bolt tulajdonos
@@ -650,7 +684,227 @@ export const isStoreOwner = async (
     });
   } catch (error) {
     return reply.status(500).send({
-      message: "Hiba történt annak ellenőrzése közben, hogy a felhasználó bolt tulajdonos-e",
+      message:
+        "Hiba történt annak ellenőrzése közben, hogy a felhasználó bolt tulajdonos-e",
     });
+  }
+};
+
+export const updateStore = async (
+  request: AuthenticatedRequest,
+  reply: FastifyReply,
+) => {
+  const userId = request.user?.userId;
+
+  if (!userId) {
+    return reply
+      .status(401)
+      .send({ message: "A felhasználó nincs hitelesítve" });
+  }
+
+  try {
+    // Ellenőrizzük, hogy a felhasználó a bolt tulajdonosa-e
+    const storeWorker = await AppDataSource.getRepository(
+      model.StoreWorker,
+    ).findOne({
+      where: {
+        user: { userId },
+        role: "owner",
+      },
+      relations: ["store"],
+    });
+
+    if (!storeWorker || !storeWorker.store) {
+      return reply
+        .status(403)
+        .send({ message: "Csak a bolt tulajdonosa frissítheti a boltot" });
+    }
+
+    const store = storeWorker.store;
+    const storeId = store.storeId;
+    const {
+      name,
+      address,
+      phone,
+      email,
+      image,
+      workerIds = [], // Default to empty array if not provided
+    } = request.body as any;
+
+    // Ellenőrizzük a kötelező mezőket
+    if (!name || !address || !phone || !email) {
+      return reply.status(400).send({ message: "Hiányzó kötelező mezők" });
+    }
+
+    // Ha a cím változott, új geokódolásra van szükség
+    let geocodedData = null;
+    if (address !== store.address) {
+      geocodedData = await geocodeAddress(address);
+      if (!geocodedData) {
+        return reply.status(400).send({ message: "Nem létezik ilyen cím" });
+      }
+    }
+
+    // Képfeltöltés kezelése
+    let pictureUrl = store.picture;
+    if (image && image !== store.picture) {
+      const contentType =
+        image.match(/^data:([A-Za-z-+\/]+);base64,/)?.[1] || "image/jpeg";
+      pictureUrl = await uploadStoreImage(
+        image,
+        "store-image.jpg",
+        contentType,
+      );
+    }
+
+    // Store adatok frissítése
+    store.name = name;
+
+    if (geocodedData) {
+      const { lat, lng, city, postalCode, streetAddress } = geocodedData;
+      store.address = streetAddress || address;
+      store.city = city || store.city;
+      store.postalCode = postalCode || store.postalCode;
+      store.latitude = lat;
+      store.longitude = lng;
+    }
+
+    store.phone = phone;
+    store.email = email;
+    store.picture = pictureUrl;
+
+    await AppDataSource.getRepository(model.Store).save(store);
+
+    // Munkavállaló kezelése - Most már több munkavállalót is kezelünk
+    if (workerIds && Array.isArray(workerIds) && workerIds.length > 0) {
+      const storeWorkersRepo = AppDataSource.getRepository(model.StoreWorker);
+      const userRepo = AppDataSource.getRepository(model.User);
+
+      // Megkeressük a jelenlegi munkavállalókat
+      const existingWorkers = await storeWorkersRepo.find({
+        where: { store: { storeId } },
+        relations: ["user"],
+      });
+
+      // Csak a "worker" szerepkörű felhasználókat vizsgáljuk (nem az tulajdonost)
+      const currentWorkers = existingWorkers.filter(
+        (sw) => sw.role === "worker",
+      );
+
+      // Töröljük azokat a munkavállalókat, akik már nincsenek a listában
+      const workerIdsAsNumbers = workerIds.map((id) => parseInt(id));
+      const workersToRemove = currentWorkers.filter(
+        (worker) => !workerIdsAsNumbers.includes(worker.user.userId),
+      );
+
+      for (const workerToRemove of workersToRemove) {
+        // Töröljük a munkavállaló időpontjait
+        await AppDataSource.getRepository(model.Appointment).delete({
+          worker: { userId: workerToRemove.user.userId },
+        });
+
+        // Töröljük a munkavállaló elérhetőségi időit
+        await AppDataSource.getRepository(model.AvailabilityTimes).delete({
+          user: { userId: workerToRemove.user.userId },
+        });
+
+        // Töröljük a munkavállalót a boltból
+        await storeWorkersRepo.delete({
+          storeWorkerId: workerToRemove.storeWorkerId,
+        });
+      }
+
+      // Adjuk hozzá az új munkavállalókat
+      for (const workerId of workerIdsAsNumbers) {
+        // Ellenőrizzük, hogy ez a munkavállaló már hozzá van-e rendelve a bolthoz
+        const existingWorker = currentWorkers.find(
+          (worker) => worker.user.userId === workerId,
+        );
+
+        if (!existingWorker) {
+          // Ellenőrizzük, hogy létezik-e a felhasználó
+          const newWorker = await userRepo.findOneBy({
+            userId: workerId,
+          });
+
+          if (!newWorker) {
+            return reply
+              .status(404)
+              .send({ message: `A szakember (ID: ${workerId}) nem található` });
+          }
+
+          // Ellenőrizzük, hogy az új munkavállaló más bolthoz van-e rendelve
+          const newWorkerExistsInAnotherStore = await storeWorkersRepo.findOne({
+            where: {
+              user: { userId: workerId },
+            },
+            relations: ["store"],
+          });
+
+          if (newWorkerExistsInAnotherStore) {
+            return reply.status(400).send({
+              message: `A munkavállaló (ID: ${workerId}) már egy másik bolthoz van rendelve`,
+            });
+          }
+
+          // Új munkavállaló hozzáadása
+          const newStoreWorker = new model.StoreWorker();
+          newStoreWorker.store = store;
+          newStoreWorker.user = newWorker;
+          newStoreWorker.role = "worker";
+
+          await storeWorkersRepo.save(newStoreWorker);
+        }
+      }
+    } else {
+      // Ha nincs munkavállaló megadva, az összes jelenlegi "worker" törölhető
+      const storeWorkersRepo = AppDataSource.getRepository(model.StoreWorker);
+      const existingWorkers = await storeWorkersRepo.find({
+        where: { store: { storeId }, role: "worker" },
+        relations: ["user"],
+      });
+
+      for (const worker of existingWorkers) {
+        // Töröljük a munkavállaló időpontjait
+        await AppDataSource.getRepository(model.Appointment).delete({
+          worker: { userId: worker.user.userId },
+        });
+
+        // Töröljük a munkavállaló elérhetőségi időit
+        await AppDataSource.getRepository(model.AvailabilityTimes).delete({
+          user: { userId: worker.user.userId },
+        });
+
+        // Töröljük a munkavállalót a boltból
+        await storeWorkersRepo.delete({
+          storeWorkerId: worker.storeWorkerId,
+        });
+      }
+    }
+
+    // Lekérjük a frissített munkavállalói listát a válaszhoz
+    const updatedWorkers = await AppDataSource.getRepository(
+      model.StoreWorker,
+    ).find({
+      where: { store: { storeId } },
+      relations: ["user"],
+    });
+
+    return reply.status(200).send({
+      message: "A bolt sikeresen frissítve",
+      store,
+      workers: updatedWorkers.map((sw) => ({
+        userId: sw.user.userId,
+        username: sw.user.username,
+        email: sw.user.email,
+        role: sw.role,
+        storeWorkerId: sw.storeWorkerId,
+      })),
+    });
+  } catch (error) {
+    console.error("Error updating store:", error);
+    return reply
+      .status(500)
+      .send({ message: "Hiba történt a bolt frissítése közben" });
   }
 };

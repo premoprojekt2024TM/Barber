@@ -40,7 +40,7 @@ interface ClusteredAppointments {
 export default function AppointmentCalendar() {
   const [startHour, setStartHour] = useState(8);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
-  // Removed the unused loading and error state variables
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [popoverAnchor, setPopoverAnchor] = useState<HTMLElement | null>(null);
   const [popoverAppointments, setPopoverAppointments] = useState<Appointment[]>(
     [],
@@ -91,13 +91,15 @@ export default function AppointmentCalendar() {
 
   useEffect(() => {
     const fetchAppointments = async () => {
+      setIsLoading(true);
       try {
         const response = await axiosInstance.get("/api/v1/appointment");
         const appointmentsData: Appointment[] =
           response.data?.appointments || [];
         setAppointments(appointmentsData);
       } catch (err) {
-        console.error("Error fetching appointments:", err);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -205,6 +207,20 @@ export default function AppointmentCalendar() {
       </div>
     );
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex bg-gradient-to-br from-gray-50 to-white">
+        <Sidebar />
+        <div className="flex-1 min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900 mx-auto"></div>
+            <p className="mt-4 text-gray-700">Adatok betöltése...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex bg-gradient-to-br from-gray-50 to-white">

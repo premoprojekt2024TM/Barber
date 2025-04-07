@@ -79,21 +79,6 @@ export const Profile = (props: ProfileProps) => {
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <label
-              htmlFor="firstName"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Keresztnév
-            </label>
-            <input
-              id="firstName"
-              name="firstName"
-              value={formData.firstName}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-black"
-            />
-          </div>
-          <div className="space-y-2">
-            <label
               htmlFor="lastName"
               className="block text-sm font-medium text-gray-700"
             >
@@ -103,6 +88,21 @@ export const Profile = (props: ProfileProps) => {
               id="lastName"
               name="lastName"
               value={formData.lastName}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-black"
+            />
+          </div>
+          <div className="space-y-2">
+            <label
+              htmlFor="firstName"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Keresztnév
+            </label>
+            <input
+              id="firstName"
+              name="firstName"
+              value={formData.firstName}
               onChange={handleChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-black"
             />

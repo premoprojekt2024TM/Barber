@@ -34,7 +34,6 @@ export default function FriendsPage() {
       setWorkers(mappedWorkers);
       return mappedWorkers;
     } catch (err) {
-      console.error("Error fetching workers:", err);
       setError(
         "Nem sikerült betölteni a felhasználókat, kérjük próbálja később.",
       );
@@ -47,16 +46,15 @@ export default function FriendsPage() {
   useEffect(() => {
     fetchWorkers().then((mappedWorkers) => {
       if (mappedWorkers) {
-        applyFilters(mappedWorkers);
+        applyFilters(mappedWorkers, false);
       }
     });
   }, [fetchWorkers]);
 
   const applyFilters = useCallback(
-    (workerList: Friend[]) => {
+    (workerList: Friend[], resetPagination: boolean = true) => {
       let filtered = workerList;
 
-      // Apply search query
       if (searchQuery.trim()) {
         filtered = filtered.filter(
           (worker) =>
@@ -65,21 +63,19 @@ export default function FriendsPage() {
         );
       }
 
-      // Filter logic
       if (showFriends) {
-        // Show only accepted friends
         filtered = filtered.filter(
           (worker) => worker.friendshipStatus === "accepted",
         );
       } else {
-        // Show non-friends and pending requests
         filtered = filtered.filter(
           (worker) => worker.friendshipStatus !== "accepted",
         );
       }
-
       setFilteredWorkers(filtered);
-      setCurrentPage(1);
+      if (resetPagination) {
+        setCurrentPage(1);
+      }
     },
     [searchQuery, showFriends],
   );
@@ -87,26 +83,41 @@ export default function FriendsPage() {
   const handleSearch = useCallback(
     (query: string) => {
       setSearchQuery(query);
-      applyFilters(workers);
+      applyFilters(workers, true);
     },
     [applyFilters, workers],
   );
 
   const handleToggleView = useCallback(() => {
     setShowFriends((prevShowFriends) => !prevShowFriends);
+    setCurrentPage(1);
   }, []);
 
   useEffect(() => {
-    applyFilters(workers);
+    applyFilters(workers, false);
   }, [showFriends, workers, applyFilters]);
 
   const handleFriendStatusChange = useCallback(() => {
+    const savedCurrentPage = currentPage;
     fetchWorkers().then((mappedWorkers) => {
       if (mappedWorkers) {
-        applyFilters(mappedWorkers);
+        applyFilters(mappedWorkers, false);
+        const newTotalPages = Math.ceil(
+          mappedWorkers.filter(
+            (w: Friend) =>
+              (showFriends
+                ? w.friendshipStatus === "accepted"
+                : w.friendshipStatus !== "accepted") &&
+              (searchQuery.trim()
+                ? w.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                  w.username.toLowerCase().includes(searchQuery.toLowerCase())
+                : true),
+          ).length / FRIENDS_PER_PAGE,
+        );
+        setCurrentPage(Math.min(savedCurrentPage, Math.max(newTotalPages, 1)));
       }
     });
-  }, [applyFilters, fetchWorkers]);
+  }, [applyFilters, fetchWorkers, currentPage, showFriends, searchQuery]);
 
   const totalPages = useMemo(
     () => Math.ceil(filteredWorkers.length / FRIENDS_PER_PAGE),
@@ -130,9 +141,9 @@ export default function FriendsPage() {
         style={{}}
       >
         <div className="max-w-3xl mx-auto">
-          {/* Search and View Toggle */}
           <div className="flex flex-col sm:flex-row gap-4 items-center mb-4">
-            <div className="relative flex-grow">
+            <div className="relative flex-grow w-full sm:w-auto">
+              {" "}
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Search size={18} className="text-gray-400" />
               </div>
@@ -144,39 +155,69 @@ export default function FriendsPage() {
                 className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
               />
             </div>
-            <div className="flex items-center space-x-2 bg-gray-100 p-1 rounded-full">
+            <div className="flex items-center space-x-2 bg-gray-100 p-1 rounded-full flex-shrink-0">
+              {" "}
               <button
                 onClick={handleToggleView}
-                className={`p-2 rounded-full ${
-                  !showFriends ? "bg-white shadow" : "hover:bg-gray-200"
+                className={`p-2 rounded-full transition-colors duration-200 ${
+                  !showFriends
+                    ? "bg-white shadow"
+                    : "hover:bg-gray-200 text-gray-500"
                 }`}
-                aria-label="Non-Friends"
+                aria-label={
+                  !showFriends
+                    ? "Jelenleg látható: Felhasználók"
+                    : "Váltás: Felhasználók"
+                }
+                title={
+                  !showFriends
+                    ? "Jelenleg látható: Felhasználók"
+                    : "Váltás: Felhasználók"
+                }
               >
-                <Search size={18} className="text-gray-700" />
+                <Search
+                  size={18}
+                  className={!showFriends ? "text-black" : "text-gray-500"}
+                />
               </button>
               <button
                 onClick={handleToggleView}
-                className={`p-2 rounded-full ${
-                  showFriends ? "bg-white shadow" : "hover:bg-gray-200"
+                className={`p-2 rounded-full transition-colors duration-200 ${
+                  showFriends
+                    ? "bg-white shadow"
+                    : "hover:bg-gray-200 text-gray-500"
                 }`}
-                aria-label="Friends"
+                aria-label={
+                  showFriends ? "Jelenleg látható: Barátok" : "Váltás: Barátok"
+                }
+                title={
+                  showFriends ? "Jelenleg látható: Barátok" : "Váltás: Barátok"
+                }
               >
-                <UserCheck size={18} className="text-gray-700" />
+                <UserCheck
+                  size={18}
+                  className={showFriends ? "text-black" : "text-gray-500"}
+                />
               </button>
             </div>
           </div>
 
           {isLoading ? (
-            <div className="text-center py-8">Felhasználók betöltése...</div>
-          ) : error ? (
-            <div className="text-center py-8 text-red-500">{error}</div>
-          ) : filteredWorkers.length === 0 ? (
             <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900 mx-auto"></div>
+              <p className="mt-4 text-gray-700">Adatok betöltése...</p>
+            </div>
+          ) : error ? (
+            <div className="text-center py-8 text-red-500 bg-red-50 p-4 rounded-lg">
+              {error}
+            </div>
+          ) : filteredWorkers.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
               {searchQuery
-                ? "Nem található ilyen felhasználó."
+                ? `Nincs találat erre: "${searchQuery}"`
                 : showFriends
-                  ? "Nincs egyetlen barátod sem."
-                  : "Nincs elérhető felhasználó."}
+                  ? "Nincs egyetlen barátod sem. Keress új felhasználókat!"
+                  : "Nincsenek felhasználók ebben a nézetben."}
             </div>
           ) : (
             <>

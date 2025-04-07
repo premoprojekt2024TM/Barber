@@ -20,8 +20,8 @@ interface FriendsResponse {
 }
 
 interface EditWorkerProps {
-  onWorkerSelect: (workerId: number) => void;
-  selectedWorkerId: number | null;
+  onWorkerSelect: (workerIds: number[]) => void;
+  selectedWorkerIds: number[];
   workersList: {
     userId: number;
     username: string;
@@ -35,7 +35,7 @@ interface EditWorkerProps {
 
 export const EditWorker = ({
   onWorkerSelect,
-  selectedWorkerId,
+  selectedWorkerIds,
   workersList,
   disabled = false,
 }: EditWorkerProps) => {
@@ -51,7 +51,6 @@ export const EditWorker = ({
   const componentRef = useRef<HTMLDivElement | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
 
-  // Fetch available friends and handle initial selected worker
   useEffect(() => {
     const fetchFriends = async () => {
       try {
@@ -62,33 +61,34 @@ export const EditWorker = ({
 
         let friends = response.data.friends || [];
 
-        // Set up the initial selected worker if it exists
-        if (selectedWorkerId && workersList.length > 0) {
-          const currentWorker = workersList.find(
-            (worker) => worker.userId === selectedWorkerId,
-          );
+        const newSelectedWorkers = Array(4).fill(null);
 
-          if (currentWorker) {
-            // Update the first slot with the current worker
-            const initialSelectedWorker: SelectedWorker = {
-              userId: currentWorker.userId,
-              username: currentWorker.username,
-              profilePic: currentWorker.profilepic,
-            };
+        if (selectedWorkerIds.length > 0 && workersList.length > 0) {
+          const processedIds = selectedWorkerIds.slice(0, 4);
 
-            const updatedWorkers = [...selectedWorkers];
-            updatedWorkers[0] = initialSelectedWorker;
-            setSelectedWorkers(updatedWorkers);
+          processedIds.forEach((workerId, index) => {
+            if (index > 3) return;
 
-            // Remove the selected worker from available friends to prevent duplication
-            friends = friends.filter(
-              (friend) => friend.userId !== selectedWorkerId,
+            const currentWorker = workersList.find(
+              (worker) => worker.userId === workerId,
             );
-          }
+
+            if (currentWorker) {
+              newSelectedWorkers[index] = {
+                userId: currentWorker.userId,
+                username: currentWorker.username,
+                profilePic: currentWorker.profilepic,
+              };
+
+              friends = friends.filter((friend) => friend.userId !== workerId);
+            }
+          });
         }
 
+        setSelectedWorkers(newSelectedWorkers);
+
         if (friends.length > 0) {
-          setAvailableFriends(friends);
+          setAvailableFriends([...friends]);
           setNoFriends(false);
         } else {
           setNoFriends(true);
@@ -96,65 +96,91 @@ export const EditWorker = ({
 
         setLoading(false);
       } catch (err) {
-        console.error("Error fetching friends:", err);
         setError("Failed to load friends.");
         setLoading(false);
       }
     };
 
     fetchFriends();
-  }, [selectedWorkerId, workersList]);
+  }, []);
+
+  useEffect(() => {
+    console.log("Selected Workers:", selectedWorkers);
+  }, [selectedWorkers]);
+
+  const handleActivateSlot = (index: number) => {
+    if (disabled || noFriends || availableFriends.length === 0 || index > 3)
+      return;
+
+    setActiveIndex(index);
+    setShowSelection(true);
+  };
+
+  const notifyParentOfUpdatedWorkers = (
+    updatedWorkers: (SelectedWorker | null)[],
+  ) => {
+    const workerIds = updatedWorkers
+      .slice(0, 4)
+      .filter((worker): worker is SelectedWorker => worker !== null)
+      .map((worker) => worker.userId);
+
+    onWorkerSelect(workerIds);
+  };
 
   const handleWorkerSelect = (friend: Friend) => {
     if (disabled) return;
 
     const updatedWorkers = [...selectedWorkers];
-    const emptySlotIndex = selectedWorkers.findIndex(
-      (worker) => worker === null,
-    );
 
-    if (emptySlotIndex !== -1) {
-      updatedWorkers[emptySlotIndex] = friend;
-      setSelectedWorkers(updatedWorkers);
-      setAvailableFriends(
-        availableFriends.filter((f) => f.userId !== friend.userId),
-      );
-      onWorkerSelect(friend.userId);
-    } else if (activeIndex !== null) {
-      const previousWorker = selectedWorkers[activeIndex];
-      updatedWorkers[activeIndex] = friend;
-      setSelectedWorkers(updatedWorkers);
+    let targetIndex =
+      activeIndex !== null
+        ? activeIndex
+        : updatedWorkers.findIndex((worker) => worker === null);
 
-      const newAvailableFriends = availableFriends.filter(
-        (f) => f.userId !== friend.userId,
-      );
+    if (targetIndex === -1 || targetIndex > 3) targetIndex = 0;
 
-      if (previousWorker) {
-        newAvailableFriends.push({
+    const previousWorker = updatedWorkers[targetIndex];
+    if (previousWorker) {
+      setAvailableFriends((prev) => [
+        ...prev,
+        {
           userId: previousWorker.userId,
           username: previousWorker.username,
           profilePic: previousWorker.profilePic,
-        });
-      }
-
-      setAvailableFriends(newAvailableFriends);
-      onWorkerSelect(friend.userId);
-      setActiveIndex(null);
+        },
+      ]);
     }
+
+    const newWorker = {
+      userId: friend.userId,
+      username: friend.username,
+      profilePic: friend.profilePic,
+    };
+
+    console.log("Adding new worker:", newWorker);
+
+    updatedWorkers[targetIndex] = newWorker;
+
+    setAvailableFriends((prev) =>
+      prev.filter((f) => f.userId !== friend.userId),
+    );
+
+    setSelectedWorkers(updatedWorkers.slice(0, 4));
+    setShowSelection(false);
+    setActiveIndex(null);
+
+    notifyParentOfUpdatedWorkers(updatedWorkers);
   };
 
   const handleWorkerRemove = (index: number) => {
-    if (disabled) return;
+    if (disabled || index > 3) return;
 
     const updatedWorkers = [...selectedWorkers];
     const workerToRemove = updatedWorkers[index];
 
     if (workerToRemove) {
-      updatedWorkers[index] = null;
-      setSelectedWorkers(updatedWorkers);
-
-      setAvailableFriends([
-        ...availableFriends,
+      setAvailableFriends((prev) => [
+        ...prev,
         {
           userId: workerToRemove.userId,
           username: workerToRemove.username,
@@ -162,12 +188,20 @@ export const EditWorker = ({
         },
       ]);
 
-      // If all workers have been removed, notify parent component
-      if (updatedWorkers.every((worker) => worker === null)) {
-        onWorkerSelect(0); // or some default value indicating no worker selected
-      }
+      updatedWorkers[index] = null;
+      setSelectedWorkers(updatedWorkers);
+
+      notifyParentOfUpdatedWorkers(updatedWorkers);
+
+      setActiveIndex(index);
+      setShowSelection(true);
     }
   };
+
+  useEffect(() => {
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const handleClickOutside = (event: MouseEvent) => {
     if (
@@ -178,11 +212,6 @@ export const EditWorker = ({
       setShowSelection(false);
     }
   };
-
-  useEffect(() => {
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
   const getInitials = (username: string) => username.charAt(0).toUpperCase();
 
@@ -196,10 +225,12 @@ export const EditWorker = ({
       </h2>
 
       <div className="flex flex-wrap gap-2 sm:gap-4 justify-center">
-        {selectedWorkers.map((worker, index) => (
+        {selectedWorkers.slice(0, 4).map((worker, index) => (
           <div
             key={index}
-            className={`w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center relative overflow-hidden flex-shrink-0 ${disabled && !worker ? "cursor-not-allowed" : worker ? "cursor-default" : "cursor-pointer"} group`}
+            className={`w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center relative overflow-hidden flex-shrink-0 ${
+              !worker && !disabled ? "cursor-pointer" : "cursor-default"
+            } ${worker ? "group" : ""}`}
             style={{
               backgroundImage: worker?.profilePic
                 ? `url(${worker.profilePic})`
@@ -211,9 +242,8 @@ export const EditWorker = ({
               backgroundColor: worker ? "rgba(255,255,255,0.3)" : "transparent",
             }}
             onClick={() => {
-              if (!disabled && !worker && !noFriends) {
-                setActiveIndex(index);
-                setShowSelection(true);
+              if (!worker && !noFriends && !disabled) {
+                handleActivateSlot(index);
               }
             }}
           >
@@ -222,12 +252,14 @@ export const EditWorker = ({
                 {getInitials(worker.username)}
               </span>
             )}
-            {!worker && !noFriends && (
+
+            {!worker && !noFriends && !disabled && (
               <Plus
                 className="h-8 w-8 sm:h-10 sm:w-10 text-black/50"
                 strokeWidth={1.5}
               />
             )}
+
             {worker && !disabled && (
               <div className="absolute inset-0 bg-black/30 backdrop-blur-sm opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all duration-200">
                 <button
@@ -265,26 +297,39 @@ export const EditWorker = ({
               ref={scrollContainerRef}
               className="flex gap-2 sm:gap-4 overflow-x-auto py-4 pb-2"
             >
-              {availableFriends.map((friend) => (
-                <div
-                  key={friend.userId}
-                  className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-white cursor-pointer overflow-hidden flex items-center justify-center flex-shrink-0 hover:shadow-md transition-shadow duration-200"
-                  style={{ aspectRatio: "1/1" }}
-                  onClick={() => handleWorkerSelect(friend)}
-                >
-                  {friend.profilePic ? (
-                    <img
-                      src={friend.profilePic || "/placeholder.svg"}
-                      alt={friend.username}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <span className="text-lg sm:text-2xl font-bold text-black/70 flex items-center justify-center">
-                      {getInitials(friend.username)}
-                    </span>
-                  )}
-                </div>
-              ))}
+              {availableFriends.length > 0 ? (
+                availableFriends.map((friend) => (
+                  <div
+                    key={friend.userId}
+                    className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-white cursor-pointer overflow-hidden flex items-center justify-center flex-shrink-0 hover:shadow-md transition-shadow duration-200"
+                    style={{ aspectRatio: "1/1" }}
+                    onClick={() => handleWorkerSelect(friend)}
+                  >
+                    {friend.profilePic ? (
+                      <img
+                        src={friend.profilePic}
+                        alt={friend.username}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = "none";
+                          target.parentElement!.innerHTML = getInitials(
+                            friend.username,
+                          );
+                        }}
+                      />
+                    ) : (
+                      <span className="text-lg sm:text-2xl font-bold text-black/70 flex items-center justify-center">
+                        {getInitials(friend.username)}
+                      </span>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <p className="text-gray-500 w-full text-center py-4">
+                  Nincs több elérhető munkatárs.
+                </p>
+              )}
             </div>
           </>
         )}

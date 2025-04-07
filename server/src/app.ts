@@ -9,7 +9,6 @@ import { availRoutes } from "./routes/availRoutes";
 import { appointmentRoutes } from "./routes/appointmentRoutes";
 
 dotenv.config();
-
 const fastify = Fastify();
 
 fastify.register(cors, {

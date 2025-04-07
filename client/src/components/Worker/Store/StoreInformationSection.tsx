@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import GooglePlacesAutocomplete from "react-google-places-autocomplete";
 import { X } from "lucide-react";
 
-const GOOGLE_MAPS_API_KEY = "AIzaSyCSJN2Qzyjhv-AFd1I2LVLD30hX7-lZhRE"; // HARDCODED API KEY - SECURE YOURS!
+const GOOGLE_MAPS_API_KEY = "AIzaSyCSJN2Qzyjhv-AFd1I2LVLD30hX7-lZhRE";
 
 interface StoreInformationProps {
   onStoreInfoChange: (
@@ -125,9 +125,22 @@ export const StoreInformationSection = ({
   };
 
   const handlePlaceSelect = (value: any) => {
+    console.log("Selected place:", value); // Debug the structure
     setLocation(value);
-    setAddressText(value.label || "");
-    setIsManualInput(true); // Switch to manual mode after selection
+
+    // Make sure you're getting the full address description including house number
+    const fullAddress =
+      value.label ||
+      (value.value && value.value.description) ||
+      (value.value &&
+        value.value.structured_formatting &&
+        value.value.structured_formatting.main_text +
+          ", " +
+          value.value.structured_formatting.secondary_text) ||
+      "";
+
+    setAddressText(fullAddress);
+    setIsManualInput(true);
     onStoreInfoChange(storeName, storePhone, storeEmail, value);
   };
 
