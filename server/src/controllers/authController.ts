@@ -11,7 +11,6 @@ import {
 } from "../shared/validation/userValidation";
 import { AuthenticatedRequest } from "../interfaces/interfaces";
 
-
 //regisztráció
 export const registerUser = async (
   request: FastifyRequest,
@@ -27,7 +26,10 @@ export const registerUser = async (
   if (role !== "client" && role !== "worker") {
     return reply
       .status(400)
-      .send({ message: 'Érvénytelen szerep. A szerepnek „client” vagy „worker” kell lennie.' });
+      .send({
+        message:
+          "Érvénytelen szerep. A szerepnek „client” vagy „worker” kell lennie.",
+      });
   }
 
   const existingEmail = await AppDataSource.getRepository(model.User).findOneBy(
@@ -48,10 +50,8 @@ export const registerUser = async (
       .send({ message: "Ez a felhasználónév már létezik" });
   }
 
-
   //profilekép
   const generateProfilepic = `https://ui-avatars.com/api/?name=${username[0]}&size=128`;
-
 
   //adatbázisba beillesztés
   try {
@@ -76,8 +76,6 @@ export const registerUser = async (
   }
 };
 
-
-
 //bejelentkezés
 export const loginUser = async (
   request: FastifyRequest,
@@ -85,9 +83,7 @@ export const loginUser = async (
 ) => {
   const result = loginSchema.safeParse(request.body);
   if (!result.success) {
-    return reply
-      .status(400)
-      .send({ message: "Sikertelen validáció"});
+    return reply.status(400).send({ message: "Sikertelen validáció" });
   }
 
   const { email, password } = result.data;
@@ -129,9 +125,7 @@ export const updateUser = async (
 
   const result = updateSchema.safeParse(request.body);
   if (!result.success) {
-    return reply
-      .status(400)
-      .send({ message: "Sikertelen validáció" });
+    return reply.status(400).send({ message: "Sikertelen validáció" });
   }
 
   const { username, email, password, firstName, lastName, profilePic } =
@@ -149,7 +143,9 @@ export const updateUser = async (
     if (username && username !== user.username) {
       const checkUsername = await userRepository.findOneBy({ username });
       if (checkUsername) {
-        return reply.status(400).send({ message: "Ez a felhasználónév már létezik!" });
+        return reply
+          .status(400)
+          .send({ message: "Ez a felhasználónév már létezik!" });
       }
     }
 
@@ -157,9 +153,9 @@ export const updateUser = async (
     if (profilePic) {
       try {
         profilePictureUrl = await uploadProfilePicture(
-          profilePic, 
-          `${userId}-${Date.now()}.png`, 
-          "image/png", 
+          profilePic,
+          `${userId}-${Date.now()}.png`,
+          "image/png",
         );
       } catch (uploadError) {
         return reply
@@ -180,7 +176,7 @@ export const updateUser = async (
     }
 
     await userRepository.save(user);
-    
+
     const { password: removedPassword, ...userWithoutPassword } = user;
 
     return reply.send({
@@ -326,7 +322,9 @@ export const getCurrentUser = async (
     });
 
     if (!user) {
-      return reply.status(404).send({ message: "Felhasználói profil nem található" });
+      return reply
+        .status(404)
+        .send({ message: "Felhasználói profil nem található" });
     }
 
     return reply.send(user);
