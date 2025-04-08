@@ -38,6 +38,28 @@ interface WorkerStoreRouteProps {
   routePath?: string;
 }
 
+
+const WorkerRoute = ({ children }: ProtectedRouteProps) => {
+  const [loading, setLoading] = useState<boolean>(true);
+  const [authorized, setAuthorized] = useState<boolean>(false);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const workerResult = await checkWorkerAccess();
+      setAuthorized(workerResult.status === 200);
+      setLoading(false);
+    };
+
+    checkAuth();
+  }, []);
+
+  if (loading) {
+    return <div></div>;
+  }
+
+  return authorized ? <>{children}</> : <Navigate to="/login" />;
+};
+
 const ClientRoute = ({ children }: ProtectedRouteProps) => {
   const [loading, setLoading] = useState<boolean>(true);
   const [authorized, setAuthorized] = useState<boolean>(false);
@@ -128,7 +150,6 @@ const WorkerStoreRoute = ({
     return <Navigate to="/noedit" />;
   }
 
-  // New condition: Redirect store owners from /store to /edit
   if (
     checksFinished &&
     authorized &&
@@ -144,10 +165,10 @@ const WorkerStoreRoute = ({
   }
 
   if (checksFinished && !authorized) {
-    return <Navigate to="/nostore" />;
+    return <Navigate to="/login" />;
   }
 
-  return authorized ? <>{children}</> : <Navigate to="/nostore" />;
+  return authorized ? <>{children}</> : <Navigate to="/login" />;
 };
 
 const PublicOnlyRoute = ({ children }: ProtectedRouteProps) => {
@@ -271,9 +292,30 @@ function App() {
             </WorkerStoreRoute>
           }
         />
-        <Route path="/edit" element={<EditStore />} />
-        <Route path="/noedit" element={<NoEditRightsPage />} />
-        <Route path="/nostore" element={<NotInStorePage />} />
+        <Route
+          path="/edit"
+          element={
+            <WorkerRoute>
+              <EditStore />
+            </WorkerRoute>
+          }
+        />
+        <Route
+          path="/noedit"
+          element={
+            <WorkerRoute>
+              <NoEditRightsPage />
+            </WorkerRoute>
+          }
+        />
+        <Route
+          path="/nostore"
+          element={
+            <WorkerRoute>
+              <NotInStorePage />
+            </WorkerRoute>
+          }
+        />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>

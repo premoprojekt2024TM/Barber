@@ -1,6 +1,5 @@
 import { z } from "zod";
 
-// Step 1 validation schema
 export const emailSchema = z.object({
   email: z
     .string()
@@ -8,12 +7,28 @@ export const emailSchema = z.object({
     .email("Érvénytelen email cím"),
 });
 
-// Step 2 validation schema
 export const personalInfoSchema = z.object({
-  firstName: z.string().min(1, "Keresztnév megadása kötelező"),
-  lastName: z.string().min(1, "Vezetéknév megadása kötelező"),
+  firstName: z
+    .string()
+    .min(1, "Keresztnév megadása kötelező")
+    .min(3, "Minimum 3 karakteresnek kell lennie")
+    .max(12, "Nem haladhatja meg a 12 karaktert")
+    .refine(
+      (val) => /^[a-zA-ZáéíóöőúüűÁÉÍÓÖŐÚÜŰ\s]*$/.test(val),
+      "Csak betűt tartalmazhat",
+    ),
+  lastName: z
+    .string()
+    .min(1, "Vezetéknév megadása kötelező")
+    .min(3, "Minimum 3 karakteresnek kell lennie")
+    .max(12, "Nem haladhatja meg a 12 karaktert")
+    .refine(
+      (val) => /^[a-zA-ZáéíóöőúüűÁÉÍÓÖŐÚÜŰ\s]*$/.test(val),
+      "Csak betűt tartalmazhat",
+    ),
   username: z
     .string()
+    .min(1, "Felhasználónév megadása kötelező")
     .min(3, "A felhasználónév legalább 3 karakter hosszú kell legyen")
     .max(12, "A felhasználónév legfeljebb 12 karakter hosszú lehet")
     .refine(
@@ -22,27 +37,23 @@ export const personalInfoSchema = z.object({
     ),
 });
 
-// Step 3 validation schema
-export const passwordAndTermsSchema = z.object({
+
+export const passwordSchema = z.object({
   password: z
     .string()
     .min(1, "Jelszó megadása kötelező")
     .min(6, "A jelszó legalább 6 karakter hosszú kell legyen"),
-  agreedToTerms: z
-    .boolean()
-    .refine((val) => val === true, "El kell fogadnod a feltételeket"),
   userType: z.enum(["kliens", "fodrasz"]),
 });
 
-// Combined schema for full registration data
 export const registerFormSchema = emailSchema
   .merge(personalInfoSchema)
-  .merge(passwordAndTermsSchema);
+  .merge(passwordSchema);
 
-// Type for the form data
+
 export type RegisterFormData = z.infer<typeof registerFormSchema>;
 
-// Schema for API registration
+
 export const apiRegisterSchema = z.object({
   email: z.string().email("Érvénytelen email cím"),
   username: z
@@ -61,14 +72,12 @@ export const apiRegisterSchema = z.object({
   role: z.enum(["client", "worker"]),
 });
 
-// Validation helper functions
 export const validateStep = (
   step: number,
   data: Partial<RegisterFormData>,
 ): { success: boolean; errors: Record<string, string> } => {
   let result;
   let errors: Record<string, string> = {};
-
   try {
     switch (step) {
       case 1:
@@ -78,12 +87,11 @@ export const validateStep = (
         result = personalInfoSchema.safeParse(data);
         break;
       case 3:
-        result = passwordAndTermsSchema.safeParse(data);
+        result = passwordSchema.safeParse(data);
         break;
       default:
         return { success: false, errors: { form: "Érvénytelen lépés" } };
     }
-
     if (!result.success && "error" in result) {
       result.error.errors.forEach((err) => {
         const field = err.path[0].toString();
@@ -91,10 +99,8 @@ export const validateStep = (
       });
       return { success: false, errors };
     }
-
     return { success: true, errors: {} };
   } catch (error) {
-    console.error("Validation error:", error);
     return {
       success: false,
       errors: { form: "Hiba történt a validáció során" },
@@ -102,13 +108,11 @@ export const validateStep = (
   }
 };
 
-// Validate the entire form data
 export const validateFullForm = (
   data: Partial<RegisterFormData>,
 ): { success: boolean; errors: Record<string, string> } => {
   try {
     const result = registerFormSchema.safeParse(data);
-
     if (!result.success && "error" in result) {
       const errors: Record<string, string> = {};
       result.error.errors.forEach((err) => {
@@ -117,10 +121,8 @@ export const validateFullForm = (
       });
       return { success: false, errors };
     }
-
     return { success: true, errors: {} };
   } catch (error) {
-    console.error("Form validation error:", error);
     return {
       success: false,
       errors: { form: "Hiba történt a validáció során" },
@@ -128,7 +130,7 @@ export const validateFullForm = (
   }
 };
 
-// Map user type to role for API
+
 export const mapUserTypeToRole = (userType: string): "client" | "worker" => {
   return userType === "kliens" ? "client" : "worker";
 };

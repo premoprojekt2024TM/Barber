@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { User, Briefcase, Calendar, X, ChevronLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
-
 import Profile from "./Profile";
 import Workplace from "./Workplace";
 import Bookings from "./Booking";
@@ -40,7 +39,7 @@ interface IsStoreOwnerResponse {
   storeName: string;
 }
 
-// Added missing Booking interface
+
 interface Booking {
   id: number;
   type: string;
@@ -65,13 +64,12 @@ export function ProfileModal({ onClose }: ProfileModalProps) {
   const [isMobile, setIsMobile] = useState(false);
   const [showMobileContent, setShowMobileContent] = useState(false);
   const [myStore, setMyStore] = useState<StoreData | null>(null);
-  // Removed unused myRole variable, directly use response.data.role when needed
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
-  const [deleteStoreError, setDeleteStoreError] = useState<string | null>(null); // For error messages
+  const [deleteStoreError, setDeleteStoreError] = useState<string | null>(null); 
 
   const navigate = useNavigate();
 
@@ -93,7 +91,6 @@ export function ProfileModal({ onClose }: ProfileModalProps) {
       setAvatar(userData.profilePic);
       initialAvatar.current = userData.profilePic;
     } catch (error) {
-      console.error("Error fetching user data:", error);
     }
   }, []);
 
@@ -102,10 +99,8 @@ export function ProfileModal({ onClose }: ProfileModalProps) {
       const response =
         await axiosInstance.get<MyStoreResponse>("/api/v1/mystore");
       setMyStore(response.data.store);
-      // Removed setMyRole call since the variable is removed
     } catch (error) {
       setMyStore(null);
-      // Removed setMyRole call
     }
   }, []);
 
@@ -113,7 +108,7 @@ export function ProfileModal({ onClose }: ProfileModalProps) {
     try {
       const response = await axiosInstance.get<IsStoreOwnerResponse>(
         "/api/v1/isStoreOwner",
-      ); //explicitly type
+      ); 
       setIsOwner(response.data.isStoreOwner);
     } catch (error) {
       setIsOwner(false);
@@ -145,7 +140,6 @@ export function ProfileModal({ onClose }: ProfileModalProps) {
 
       setBookings(bookingsTransformed);
     } catch (error) {
-      console.error("Error fetching booking data:", error);
     }
   }, []);
 
@@ -206,7 +200,6 @@ export function ProfileModal({ onClose }: ProfileModalProps) {
         payload.profilePic = avatar;
       }
 
-      // Fix for unused response variable
       await axiosInstance.put("/api/v1/update", JSON.stringify(payload), {
         headers: {
           "Content-Type": "application/json",
@@ -222,7 +215,6 @@ export function ProfileModal({ onClose }: ProfileModalProps) {
       navigate("/login");
       onClose();
     } catch (error) {
-      console.error("Error saving profile:", error);
     } finally {
       setIsLoading(false);
     }
@@ -287,19 +279,13 @@ export function ProfileModal({ onClose }: ProfileModalProps) {
     setDeleteStoreError(null);
     try {
       if (!myStore) {
-        throw new Error("No store to delete.");
+        throw new Error("Nem vagy tagja egy munkahelynek sem.");
       }
-      console.log("Deleting store with ID:", myStore.storeId);
-
-      // Call delete store API
       await axiosInstance.delete(`/api/v1/deletestore`);
-
-      // Force full page refresh to reset application state
       window.location.reload();
     } catch (error: any) {
-      console.error("Error deleting store:", error);
       setDeleteStoreError(
-        error.response?.data?.message || "Failed to delete store.",
+        error.response?.data?.message || "Hiba történt a bolt törlése közben",
       );
     } finally {
       setIsDeleting(false);
@@ -339,7 +325,6 @@ export function ProfileModal({ onClose }: ProfileModalProps) {
       navigate("/login");
       onClose();
     } catch (error) {
-      console.error("Error deleting account:", error);
     } finally {
       setIsDeleting(false);
     }

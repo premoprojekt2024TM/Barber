@@ -91,7 +91,7 @@ const AppointmentsTable = ({ appointmentData }: AppointmentsTableProps) => {
     }
   });
 
-  // Calculate pagination
+  
   const indexOfLastAppointment = currentPage * appointmentsPerPage;
   const indexOfFirstAppointment = indexOfLastAppointment - appointmentsPerPage;
   const currentAppointments = sortedAppointmentData.slice(

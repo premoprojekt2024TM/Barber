@@ -36,13 +36,11 @@ export const StoreInformationSection = ({
   }, [location, isTyping]);
 
   const validateEmail = (email: string): boolean => {
-    // Basic email validation using regex
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
 
   const validatePhoneNumber = (phoneNumber: string): boolean => {
-    // Check if it matches 12 345 6789 format
     const phoneRegex = /^\d{2} \d{3} \d{4}$/;
     return phoneRegex.test(phoneNumber);
   };
@@ -84,7 +82,7 @@ export const StoreInformationSection = ({
       setPhoneError(
         "Kérlek, érvényes telefonszámot adj meg (12 345 6789 formátum).",
       );
-      onStoreInfoChange(storeName, "", storeEmail, location); // Send empty string to parent on error
+      onStoreInfoChange(storeName, "", storeEmail, location);
     } else {
       setPhoneError(null);
       onStoreInfoChange(storeName, fullPhoneNumber, storeEmail, location);
@@ -97,7 +95,7 @@ export const StoreInformationSection = ({
 
     if (email && !validateEmail(email)) {
       setEmailError("Kérlek, érvényes email címet adj meg.");
-      onStoreInfoChange(storeName, storePhone, "", location); // Send empty string to parent on error
+      onStoreInfoChange(storeName, storePhone, "", location); 
     } else {
       setEmailError(null);
       onStoreInfoChange(storeName, storePhone, email, location);
@@ -125,10 +123,7 @@ export const StoreInformationSection = ({
   };
 
   const handlePlaceSelect = (value: any) => {
-    console.log("Selected place:", value); // Debug the structure
     setLocation(value);
-
-    // Make sure you're getting the full address description including house number
     const fullAddress =
       value.label ||
       (value.value && value.value.description) ||
@@ -149,8 +144,6 @@ export const StoreInformationSection = ({
     setLocation(null);
     setIsManualInput(false);
     onStoreInfoChange(storeName, storePhone, storeEmail, null);
-
-    // Reset the Google Places component
     if (placesRef.current) {
       placesRef.current.select.clearValue();
     }
@@ -201,7 +194,6 @@ export const StoreInformationSection = ({
     }),
   };
 
-  // Hungarian flag mini-SVG
   const HungarianFlag = () => (
     <svg width="24" height="16" viewBox="0 0 24 16" className="mr-1">
       <rect width="24" height="5.33" fill="#ce2b37" />

@@ -136,7 +136,7 @@ export const EditImage = ({
 
   const handleDrop = useCallback(
     (e: React.DragEvent<HTMLDivElement>) => {
-      if (disabled) return; // Don't handle drop if disabled
+      if (disabled) return;
       e.preventDefault();
       e.stopPropagation();
       setIsDragging(false);
@@ -145,7 +145,6 @@ export const EditImage = ({
         const files = e.dataTransfer.files;
         if (files && files.length > 0) {
           const droppedFile = files[0];
-          // Perform validation checks directly in the drop handler.
           if (droppedFile.size > 1024 * 1024) {
             showSnackbar("A fálj nem lehet nagyobb mint 1 MB");
             return;

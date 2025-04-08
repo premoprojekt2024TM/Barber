@@ -221,16 +221,15 @@ const BookingSystem = () => {
         </div>
 
         <div className="max-w-6xl mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-white bg-opacity-70 backdrop-blur-lg rounded-xl shadow-md overflow-hidden border border-white border-opacity-20">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:items-start">
+            <div className="bg-white bg-opacity-70 backdrop-blur-lg rounded-xl shadow-md overflow-hidden border border-white border-opacity-20 md:h-[500px] md:self-start md:sticky md:top-4">
               <div className="h-60 overflow-hidden">
                 <img
-                  src={storeData.picture || "/placeholder.svg"}
-                  alt="Salon interior"
+                  src={storeData.picture}
                   className="w-full h-full object-cover"
                 />
               </div>
-              <div className="p-6">
+              <div className="p-6 md:overflow-auto">
                 <h2 className="text-2xl font-bold text-gray-800 mb-2">
                   {storeData.name}
                 </h2>

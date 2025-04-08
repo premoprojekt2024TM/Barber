@@ -31,7 +31,6 @@ export default function Register() {
     lastName: "",
     username: "",
     password: "",
-    agreedToTerms: false,
     userType: "kliens",
   });
 
@@ -43,67 +42,21 @@ export default function Register() {
     severity: "error",
   });
 
-  const validateName = (name: string, fieldName: string): string => {
-    if (typeof name !== "string") {
-      return `${fieldName} Csak szöveget tartalmazhat`;
-    }
-    if (!/^[a-zA-ZáéíóöőúüűÁÉÍÓÖŐÚÜŰ\s]*$/.test(name)) {
-      return `Csak betűt tartalmazhat`;
-    }
-
-    if (name.length < 5) {
-      return `Minimum 5 karakteresnek kell lennie`;
-    }
-
-    if (name.length > 12) {
-      return `Nem haladhatja meg a 12 karaktert`;
-    }
-
-    return "";
-  };
-
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const { name, value, checked, type } = e.target;
-    if ((name === "firstName" || name === "lastName") && type !== "checkbox") {
-      const validationError = validateName(
-        value,
-        name === "firstName" ? "First name" : "Last name",
-      );
-      if (validationError) {
-        setErrors({
-          ...errors,
-          [name]: validationError,
-        });
-      } else {
-        const { [name]: _, ...restErrors } = errors;
-        setErrors(restErrors);
-      }
+    const { name, value } = e.target;
+
+    if (errors[name]) {
+      const { [name]: _, ...restErrors } = errors;
+      setErrors(restErrors);
     }
 
     setFormData({
       ...formData,
-      [name]: type === "checkbox" ? checked : value,
+      [name]: value,
     });
   };
 
   const handleNextStep = () => {
-    if (currentStep === 2) {
-      const firstNameError = validateName(
-        formData.firstName || "",
-        "First name",
-      );
-      const lastNameError = validateName(formData.lastName || "", "Last name");
-
-      if (firstNameError || lastNameError) {
-        setErrors({
-          ...errors,
-          ...(firstNameError ? { firstName: firstNameError } : {}),
-          ...(lastNameError ? { lastName: lastNameError } : {}),
-        });
-        return;
-      }
-    }
-
     const validation = validateStep(currentStep, formData);
 
     if (!validation.success) {
@@ -128,7 +81,7 @@ export default function Register() {
       return;
     }
 
-    const fullValidation = validateFullForm(formData as RegisterFormData);
+    const fullValidation = validateFullForm(formData);
     if (!fullValidation.success) {
       setErrors(fullValidation.errors);
       showSnackbar("Hiányos vagy érvénytelen adatok", "error");
@@ -157,7 +110,6 @@ export default function Register() {
         navigate("/login");
       }, 2000);
     } catch (error: any) {
-      console.error("Registration error:", error);
       let errorMessage = "Hiba történt a regisztráció során";
 
       if (
@@ -299,7 +251,7 @@ export default function Register() {
                         type="text"
                         value={formData.firstName}
                         onChange={handleInputChange}
-                        placeholder="Keresztnév (5-12 betű)"
+                        placeholder="Keresztnév"
                         className={`w-full px-3 py-2 border ${errors.firstName ? "border-red-500" : "border-gray-300"} rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-black`}
                       />
                       {errors.firstName && (
@@ -458,33 +410,6 @@ export default function Register() {
                     </div>
                   </div>
                 </div>
-
-                <div className="flex items-center">
-                  <input
-                    id="agreedToTerms"
-                    name="agreedToTerms"
-                    type="checkbox"
-                    checked={formData.agreedToTerms}
-                    onChange={handleInputChange}
-                    className={`h-4 w-4 text-black focus:ring-black border-gray-300 rounded ${errors.agreedToTerms ? "border-red-500" : ""}`}
-                  />
-                  <label
-                    htmlFor="agreedToTerms"
-                    className={`ml-2 block text-sm ${errors.agreedToTerms ? "text-red-500" : "text-gray-700"}`}
-                  >
-                    Beleegyezem a{" "}
-                    <a href="#" className="text-black hover:text-gray-800">
-                      Szolgáltatási feltételekbe
-                    </a>{" "}
-                    és a{" "}
-                    <a href="#" className="text-black hover:text-gray-800">
-                      Adatvédelmi szabályzatba
-                    </a>
-                  </label>
-                </div>
-                {errors.agreedToTerms && (
-                  <p className="text-red-500 text-xs">{errors.agreedToTerms}</p>
-                )}
               </div>
             )}
 

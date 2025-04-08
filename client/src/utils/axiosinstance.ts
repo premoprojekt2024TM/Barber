@@ -122,7 +122,7 @@ export const isWorkerAuthenticated = (): boolean => {
 export const checkClientAccess = async (): Promise<ApiResponse> => {
   try {
     if (!isClientAuthenticated()) {
-      return { status: 403, data: { message: "Not authenticated as client" } };
+      return { status: 403, data: { message: "Nincs jogod megtekinteni." } };
     }
     const response = await axiosInstance.get("/api/v1/client");
     return { status: 200, data: response.data };
@@ -130,7 +130,7 @@ export const checkClientAccess = async (): Promise<ApiResponse> => {
     const axiosError = error as AxiosError;
     return {
       status: axiosError.response?.status || 500,
-      data: axiosError.response?.data || { message: "Server error" },
+      data: axiosError.response?.data || { message: "Szerver hiba" },
     };
   }
 };
@@ -144,7 +144,6 @@ export const checkStoreOwner = async (): Promise<StoreOwnerResponse> => {
       storeName: response.data.storeName || null,
     };
   } catch (error) {
-    console.error("Error checking store owner:", error);
     return {
       isStoreOwner: false,
       storeId: null,
@@ -174,7 +173,7 @@ export const checkStoreConnection =
 export const checkWorkerAccess = async (): Promise<ApiResponse> => {
   try {
     if (!isWorkerAuthenticated()) {
-      return { status: 403, data: { message: "Not authenticated as worker" } };
+      return { status: 403, data: { message: "Nincs jogod megtekintei" } };
     }
     const response = await axiosInstance.get("/api/v1/hair");
     return { status: 200, data: response.data };
@@ -182,7 +181,7 @@ export const checkWorkerAccess = async (): Promise<ApiResponse> => {
     const axiosError = error as AxiosError;
     return {
       status: axiosError.response?.status || 500,
-      data: axiosError.response?.data || { message: "Server error" },
+      data: axiosError.response?.data || { message: "Szerver hiba" },
     };
   }
 };

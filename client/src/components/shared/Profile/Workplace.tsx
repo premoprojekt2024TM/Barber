@@ -12,7 +12,7 @@ interface WorkplaceProps {
     picture: string;
   } | null;
   handleExitWorkplace: () => void;
-  handleDeleteStore?: () => void; // Optional function to delete the store
+  handleDeleteStore?: () => void; 
 }
 
 const Workplace = ({

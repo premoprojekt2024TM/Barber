@@ -96,9 +96,8 @@ const BarberShopDashboard = (): React.ReactElement => {
 
         setAppointmentData(transformedAppointments);
       } catch (err) {
-        console.error("Error fetching appointments:", err);
         setError(
-          err instanceof Error ? err : new Error("Unknown error occurred"),
+          err instanceof Error ? err : new Error("Ismeretlen hiba lépett fel."),
         );
       } finally {
         setIsLoading(false);

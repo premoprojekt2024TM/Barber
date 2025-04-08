@@ -51,19 +51,15 @@ export const EditStoreInfo = ({
   const [isManualInput, setIsManualInput] = useState(!!initialValues?.location);
   const [isTyping, setIsTyping] = useState(false);
   const placesRef = useRef<any>(null);
-
   const [phoneError, setPhoneError] = useState<string | null>(null);
   const [emailError, setEmailError] = useState<string | null>(null);
 
-  // Initialize with initial values if provided
   useEffect(() => {
     if (initialValues) {
-      // Only update if values change to avoid infinite loops
       if (initialValues.name !== storeName) {
         setStoreName(initialValues.name || "");
       }
 
-      // Handle phone number formatting
       if (initialValues.phone) {
         const formattedPhone = initialValues.phone.startsWith("+36 ")
           ? initialValues.phone.substring(4)
@@ -89,14 +85,11 @@ export const EditStoreInfo = ({
     }
   }, [initialValues]);
 
-  // Initial notification to parent component with valid values
   useEffect(() => {
     if (initialValues) {
-      // Validate initial email if provided
       const isEmailValid =
         !initialValues.email || validateEmail(initialValues.email);
-
-      // Validate initial phone if provided
+        
       const phoneWithoutPrefix = initialValues.phone?.startsWith("+36 ")
         ? initialValues.phone.substring(4)
         : initialValues.phone || "";
@@ -110,7 +103,7 @@ export const EditStoreInfo = ({
         initialValues.name || "",
         validPhone,
         validEmail,
-        initialValues.location || null, // Ensure null is handled
+        initialValues.location || null, 
       );
     }
   }, []);
@@ -122,31 +115,29 @@ export const EditStoreInfo = ({
   }, [location, isTyping]);
 
   const validateEmail = (email: string): boolean => {
-    // Basic email validation using regex
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
 
   const validatePhoneNumber = (phoneNumber: string): boolean => {
-    // Check if it matches 12 345 6789 format
     const phoneRegex = /^\d{2} \d{3} \d{4}$/;
     return phoneRegex.test(phoneNumber);
   };
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (disabled) return; // Don't process if disabled
+    if (disabled) return;
     const name = e.target.value;
     setStoreName(name);
     onStoreInfoChange(
       name,
       storePhone ? "+36 " + storePhone : "",
       storeEmail,
-      location, // Already can be null
+      location, 
     );
   };
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (disabled) return; // Don't process if disabled
+    if (disabled) return;
     const inputValue = e.target.value;
     const digitsOnly = inputValue.replace(/\D/g, "");
 
@@ -181,21 +172,21 @@ export const EditStoreInfo = ({
         storeName,
         "",
         storeEmail,
-        location, // Already can be null
-      ); // Send empty string to parent on error
+        location, 
+      ); 
     } else {
       setPhoneError(null);
       onStoreInfoChange(
         storeName,
         fullPhoneNumber,
         storeEmail,
-        location, // Already can be null
+        location, 
       );
     }
   };
 
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (disabled) return; // Don't process if disabled
+    if (disabled) return;
     const email = e.target.value;
     setStoreEmail(email);
 
@@ -205,21 +196,21 @@ export const EditStoreInfo = ({
         storeName,
         storePhone ? "+36 " + storePhone : "",
         "",
-        location, // Already can be null
-      ); // Send empty string to parent on error
+        location,
+      ); 
     } else {
       setEmailError(null);
       onStoreInfoChange(
         storeName,
         storePhone ? "+36 " + storePhone : "",
         email,
-        location, // Already can be null
+        location, 
       );
     }
   };
 
   const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (disabled) return; // Don't process if disabled
+    if (disabled) return; 
     const address = e.target.value;
     setAddressText(address);
     setIsTyping(true);
@@ -245,10 +236,10 @@ export const EditStoreInfo = ({
   };
 
   const handlePlaceSelect = (value: any) => {
-    if (disabled) return; // Don't process if disabled
+    if (disabled) return; 
     setLocation(value);
     setAddressText(value.label || "");
-    setIsManualInput(true); // Switch to manual mode after selection
+    setIsManualInput(true);
     onStoreInfoChange(
       storeName,
       storePhone ? "+36 " + storePhone : "",
@@ -266,10 +257,9 @@ export const EditStoreInfo = ({
       storeName,
       storePhone ? "+36 " + storePhone : "",
       storeEmail,
-      null, // Explicitly pass null
+      null, 
     );
 
-    // Reset the Google Places component
     if (placesRef.current) {
       placesRef.current.select.clearValue();
     }
@@ -322,7 +312,6 @@ export const EditStoreInfo = ({
     }),
   };
 
-  // Hungarian flag mini-SVG
   const HungarianFlag = () => (
     <svg width="24" height="16" viewBox="0 0 24 16" className="mr-1">
       <rect width="24" height="5.33" fill="#ce2b37" />
@@ -369,7 +358,7 @@ export const EditStoreInfo = ({
             selectProps={{
               placeholder: "Cím keresése",
               onChange: handlePlaceSelect,
-              value: null, // Fixed: Don't pass location directly to avoid type mismatch
+              value: null,
               noOptionsMessage: () => "Nincs találat",
               loadingMessage: () => "Keresés folyamatban...",
               styles: customStyles,

@@ -35,8 +35,6 @@ export const AddWorker = ({ onWorkersSelect }: AddWorkerProps) => {
   const [noFriends, setNoFriends] = useState(false);
   const componentRef = useRef<HTMLDivElement | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
-
-  // Function to extract and send all selected worker IDs
   const updateSelectedWorkerIds = (workers: (SelectedWorker | null)[]) => {
     const workerIds = workers
       .filter((worker): worker is SelectedWorker => worker !== null)
@@ -61,8 +59,7 @@ export const AddWorker = ({ onWorkersSelect }: AddWorkerProps) => {
 
         setLoading(false);
       } catch (err) {
-        console.error("Error fetching friends:", err);
-        setError("Failed to load friends.");
+        setError("Hiba történt az ismerősök betöltése közben.");
         setLoading(false);
       }
     };
@@ -83,7 +80,6 @@ export const AddWorker = ({ onWorkersSelect }: AddWorkerProps) => {
         availableFriends.filter((f) => f.userId !== friend.userId),
       );
 
-      // Update the selected worker IDs
       updateSelectedWorkerIds(updatedWorkers);
     } else if (activeIndex !== null) {
       const previousWorker = selectedWorkers[activeIndex];
@@ -105,7 +101,6 @@ export const AddWorker = ({ onWorkersSelect }: AddWorkerProps) => {
       setAvailableFriends(newAvailableFriends);
       setActiveIndex(null);
 
-      // Update the selected worker IDs
       updateSelectedWorkerIds(updatedWorkers);
     }
   };
@@ -126,8 +121,7 @@ export const AddWorker = ({ onWorkersSelect }: AddWorkerProps) => {
           profilePic: workerToRemove.profilePic,
         },
       ]);
-
-      // Update the selected worker IDs
+      
       updateSelectedWorkerIds(updatedWorkers);
     }
   };

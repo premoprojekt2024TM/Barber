@@ -1,6 +1,6 @@
 import type React from "react";
 import type { AppointmentPopoverProps as AppointmentPopoverPropsType } from "./hairdresser";
-import { Clock, X } from "lucide-react";
+import { Clock, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { axiosInstance } from "../../../utils/axiosinstance";
@@ -15,6 +15,17 @@ const dayTranslations: Record<string, string> = {
   sunday: "Vasárnap",
 };
 
+
+const dayOrder = [
+  "monday",
+  "tuesday",
+  "wednesday",
+  "thursday",
+  "friday",
+  "saturday",
+  "sunday",
+];
+
 interface AppointmentPopoverProps extends AppointmentPopoverPropsType {}
 
 export default function AppointmentPopover({
@@ -28,6 +39,9 @@ export default function AppointmentPopover({
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
+  const [availableDays, setAvailableDays] = useState<string[]>([]);
+  const [currentDayIndex, setCurrentDayIndex] = useState(0);
+
   useEffect(() => {
     const fetchWorkerStore = async () => {
       try {
@@ -38,7 +52,7 @@ export default function AppointmentPopover({
         if (response.data.store) {
           setStoreId(response.data.store.storeId);
         } else {
-          setError("Nem dolgozik jelenleg ez a fodrász ");
+          setError("Nem dolgozik jelenleg ez a fodrász");
         }
       } catch (err) {
         setError("Nem sikerült lekérdezni a bolt információt.");
@@ -48,15 +62,27 @@ export default function AppointmentPopover({
     fetchWorkerStore();
   }, [hairdresser.id]);
 
-  const availableTimes = Object.entries(hairdresser.availability || {}).flatMap(
-    ([day, daySlots]) =>
-      (daySlots as any[])
-        .filter((slot) => slot.status === "available")
-        .map((slot) => ({
-          day,
-          time: slot.timeSlot,
-        })),
-  );
+  useEffect(() => {
+    if (hairdresser.availability) {
+      const days = Object.entries(hairdresser.availability)
+        .filter(([_, daySlots]) =>
+          (daySlots as any[]).some((slot) => slot.status === "available"),
+        )
+        .map(([day]) => day)
+        .sort((a, b) => dayOrder.indexOf(a) - dayOrder.indexOf(b));
+
+      setAvailableDays(days);
+      setCurrentDayIndex(days.length > 0 ? 0 : -1);
+    }
+  }, [hairdresser.availability]);
+
+  const currentDay = availableDays[currentDayIndex];
+  const currentDayTimes =
+    currentDay && hairdresser.availability?.[currentDay]
+      ? (hairdresser.availability[currentDay] as any[])
+          .filter((slot) => slot.status === "available")
+          .map((slot) => slot.timeSlot)
+      : [];
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -77,25 +103,16 @@ export default function AppointmentPopover({
   useEffect(() => {
     if (!popoverRef.current) return;
     const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
-
     const popoverRect = popoverRef.current.getBoundingClientRect();
     const popoverWidth = popoverRect.width;
-    const popoverHeight = popoverRect.height;
-
     let left = position.x;
     let top = position.y + 20;
-
     if (left + popoverWidth / 2 > viewportWidth) {
       left = viewportWidth - popoverWidth / 2 - 20;
     }
 
     if (left - popoverWidth / 2 < 0) {
       left = popoverWidth / 2 + 20;
-    }
-
-    if (top + popoverHeight > viewportHeight) {
-      top = position.y - popoverHeight - 20;
     }
 
     setPopoverStyles({
@@ -111,6 +128,16 @@ export default function AppointmentPopover({
     if (storeId) {
       navigate(`/booking/${storeId}`);
     }
+  };
+
+  const goToPreviousDay = () => {
+    setCurrentDayIndex((prev) => (prev > 0 ? prev - 1 : prev));
+  };
+
+  const goToNextDay = () => {
+    setCurrentDayIndex((prev) =>
+      prev < availableDays.length - 1 ? prev + 1 : prev,
+    );
   };
 
   return (
@@ -140,40 +167,58 @@ export default function AppointmentPopover({
           <Clock size={16} className="text-gray-400 mr-2" />
           <h4 className="font-medium text-gray-800">Elérhető időpontok:</h4>
         </div>
-        {availableTimes.length > 0 ? (
-          <div>
-            {Object.entries(
-              availableTimes.reduce(
-                (acc, { day, time }) => {
-                  if (!acc[day]) acc[day] = [];
-                  acc[day].push(time);
-                  return acc;
-                },
-                {} as Record<string, string[]>,
-              ),
-            ).map(([day, times]) => (
-              <div key={day} className="mb-3">
-                <div className="text-sm font-medium text-gray-600 mb-2">
-                  {dayTranslations[day] || day}:
-                </div>
-                <div className="grid grid-cols-3 gap-2">
-                  {times.map((time, index) => (
-                    <button
-                      key={index}
-                      className="
-                        py-1 px-2 text-sm rounded-full text-center
-                        bg-black text-white hover:bg-gray-800
-                      "
-                    >
-                      {time}
-                    </button>
-                  ))}
-                </div>
+
+        {availableDays.length > 0 ? (
+          <>
+            <div className="flex items-center justify-between mb-3">
+              <button
+                onClick={goToPreviousDay}
+                disabled={currentDayIndex === 0}
+                className={`p-1 rounded-full ${
+                  currentDayIndex === 0
+                    ? "text-gray-300"
+                    : "text-gray-600 hover:bg-gray-100"
+                }`}
+              >
+                <ChevronLeft size={18} />
+              </button>
+
+              <div className="text-sm font-medium text-gray-800">
+                {dayTranslations[currentDay] || currentDay}
               </div>
-            ))}
-          </div>
+
+              <button
+                onClick={goToNextDay}
+                disabled={currentDayIndex === availableDays.length - 1}
+                className={`p-1 rounded-full ${
+                  currentDayIndex === availableDays.length - 1
+                    ? "text-gray-300"
+                    : "text-gray-600 hover:bg-gray-100"
+                }`}
+              >
+                <ChevronRight size={18} />
+              </button>
+            </div>
+            
+            {currentDayTimes.length > 0 ? (
+              <div className="grid grid-cols-3 gap-2">
+                {currentDayTimes.map((time, index) => (
+                  <button
+                    key={index}
+                    className="py-1 px-2 text-sm rounded-full text-center bg-black text-white hover:bg-gray-800"
+                  >
+                    {time}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center text-gray-500 italic py-2">
+                Nincs elérhető időpont ezen a napon
+              </div>
+            )}
+          </>
         ) : (
-          <div className="text-center text-gray-500 italic">
+          <div className="text-center text-gray-500 italic py-4">
             Jelenleg nincs elérhető időpont
           </div>
         )}
@@ -185,11 +230,11 @@ export default function AppointmentPopover({
         ) : (
           <button
             onClick={handleBooking}
-            disabled={!storeId || availableTimes.length === 0}
+            disabled={!storeId || availableDays.length === 0}
             className={`
               w-full rounded-full py-2 px-4 font-medium transition-colors text-sm
               ${
-                storeId && availableTimes.length > 0
+                storeId && availableDays.length > 0
                   ? "bg-black text-white hover:bg-gray-800"
                   : "bg-gray-200 text-gray-400 cursor-not-allowed"
               }

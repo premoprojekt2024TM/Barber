@@ -184,9 +184,7 @@ export const rejectFriendRequest = async (
     });
 
     if (!friendRequest) {
-      return reply
-        .status(404)
-        .send({ message: "Nincs ilyen barátkérelem" });
+      return reply.status(404).send({ message: "Nincs ilyen barátkérelem" });
     }
 
     friendRequest.status = "rejected";
@@ -306,7 +304,9 @@ export const getPendingFriendRequests = async (
     });
 
     if (pendingRequests.length === 0) {
-      return reply.status(404).send({ message: "Nincsen függőben lévő barétkérelmed." });
+      return reply
+        .status(404)
+        .send({ message: "Nincsen függőben lévő barétkérelmed." });
     }
 
     const pendingFriends = pendingRequests.map((request) => request.user);
@@ -328,8 +328,7 @@ export const deleteFriendship = async (
   const { friendId } = request.body as FriendRequestBody;
 
   if (userId === friendId) {
-    return reply
-      .status(400)
+    return reply.status(400);
   }
 
   try {
@@ -348,13 +347,9 @@ export const deleteFriendship = async (
 
     await AppDataSource.getRepository(model.Friendship).remove(friendships);
 
-    return reply
-      .status(200)
-      .send({ message: "Barátság sikeresen törölve" });
+    return reply.status(200).send({ message: "Barátság sikeresen törölve" });
   } catch (error) {
-    return reply
-      .status(500)
-      .send({ message: "Hiba történt" });
+    return reply.status(500).send({ message: "Hiba történt" });
   }
 };
 
@@ -373,11 +368,13 @@ export const getSentFriendRequests = async (
         user: { userId: userId },
         status: "pending",
       },
-      relations: ["friend"], 
+      relations: ["friend"],
     });
 
     if (sentRequests.length === 0) {
-      return reply.status(404).send({ message: "Nincs elküldött ismeröskérelmed." });
+      return reply
+        .status(404)
+        .send({ message: "Nincs elküldött ismeröskérelmed." });
     }
 
     const friendIds = sentRequests.map((request) => request.friend.userId);
@@ -471,7 +468,6 @@ export const getFriendsv2 = async (
   reply: FastifyReply,
 ) => {
   const userId = request.user?.userId;
-
   try {
     const friendships = await AppDataSource.getRepository(
       model.Friendship,
@@ -487,13 +483,25 @@ export const getFriendsv2 = async (
       return reply.status(200).send({ message: "Nincsen ismerösőd" });
     }
 
-    const friends = friendships.map((friendship) => {
+    const allFriends = friendships.map((friendship) => {
       return friendship.user.userId === userId
         ? friendship.friend
         : friendship.user;
     });
 
-    return reply.status(200).send({ friends });
+    const storeWorkerUserIds = await AppDataSource.getRepository(
+      model.StoreWorker,
+    )
+      .createQueryBuilder("storeWorker")
+      .select("storeWorker.user_id")
+      .getRawMany()
+      .then((results) => results.map((result) => result.user_id));
+
+    const nonStoreWorkerFriends = allFriends.filter(
+      (friend) => !storeWorkerUserIds.includes(friend.userId),
+    );
+
+    return reply.status(200).send({ friends: nonStoreWorkerFriends });
   } catch (error) {
     return reply
       .status(500)

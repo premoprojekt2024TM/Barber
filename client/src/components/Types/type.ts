@@ -95,12 +95,11 @@ export interface UserInfo {
   profilePic?: string;
 }
 
-// Props for the AppBar component
+
 export interface AppBarProps {
-  // Add any props if needed
 }
 
-// Menu state
+
 export interface MenuState {
   anchorEl: HTMLElement | null;
   open: boolean;
@@ -112,10 +111,9 @@ export interface Feature {
   linkGoto: string;
 }
 
-// Component props (if needed in the future)
+
 export interface FeaturesProps {
   customFeatures?: Feature[];
 }
 
-// Type for our state variables
 export type IndexState = number | null;

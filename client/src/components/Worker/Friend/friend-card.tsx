@@ -29,7 +29,7 @@ export default function FriendCard({
 
       setNotification({
         open: true,
-        message: "Baráti kérelem elküldve",
+        message: "Barát kérelem elküldve",
         severity: "success",
       });
 
@@ -37,7 +37,6 @@ export default function FriendCard({
         onFriendStatusChange();
       }
     } catch (error: any) {
-      console.error("Error sending friend request:", error);
       setNotification({
         open: true,
         message:
@@ -59,7 +58,7 @@ export default function FriendCard({
 
       setNotification({
         open: true,
-        message: "Baráti kérelem elfogadva",
+        message: "Barát kérelem elfogadva",
         severity: "success",
       });
 
@@ -67,7 +66,6 @@ export default function FriendCard({
         onFriendStatusChange();
       }
     } catch (error: any) {
-      console.error("Error accepting friend request:", error);
       setNotification({
         open: true,
         message:
@@ -97,7 +95,6 @@ export default function FriendCard({
         onFriendStatusChange();
       }
     } catch (error: any) {
-      console.error("Error deleting friendship:", error);
       setNotification({
         open: true,
         message:

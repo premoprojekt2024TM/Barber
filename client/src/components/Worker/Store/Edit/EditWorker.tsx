@@ -96,7 +96,7 @@ export const EditWorker = ({
 
         setLoading(false);
       } catch (err) {
-        setError("Failed to load friends.");
+        setError("Hiba történt az ismerősök betöltése közben.");
         setLoading(false);
       }
     };
@@ -105,7 +105,6 @@ export const EditWorker = ({
   }, []);
 
   useEffect(() => {
-    console.log("Selected Workers:", selectedWorkers);
   }, [selectedWorkers]);
 
   const handleActivateSlot = (index: number) => {
@@ -156,8 +155,6 @@ export const EditWorker = ({
       username: friend.username,
       profilePic: friend.profilePic,
     };
-
-    console.log("Adding new worker:", newWorker);
 
     updatedWorkers[targetIndex] = newWorker;
 

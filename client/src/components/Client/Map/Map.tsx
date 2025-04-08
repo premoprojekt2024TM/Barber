@@ -128,14 +128,14 @@ const setupMapClustering = (
       const coordinates = geometry.coordinates;
       const properties = e.features![0].properties || {};
       setPopoverInfo({
-        title: properties.name || "Store",
-        description: properties.description || "Store description.",
-        address: properties.address || "Unknown",
-        phone: properties.phone || "No phone",
-        email: properties.email || "No email",
-        city: properties.city || "No city",
-        picture: properties.picture || "No city",
-        storeId: properties.storeId || "No Id",
+        name: properties.name,
+        description: properties.description,
+        address: properties.address,
+        phone: properties.phone,
+        email: properties.email,
+        city: properties.city,
+        picture: properties.picture,
+        storeId: properties.storeId,
         visible: true,
         location: `${coordinates[1].toFixed(4)}, ${coordinates[0].toFixed(4)}`,
       });
@@ -179,7 +179,7 @@ const Map = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [popoverInfo, setPopoverInfo] = useState({
-    title: "",
+    name: "",
     description: "",
     address: "",
     phone: "",

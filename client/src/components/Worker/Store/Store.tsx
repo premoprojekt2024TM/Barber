@@ -6,25 +6,22 @@ import { AddWorker } from "./AddWorker";
 import { StoreInformationSection } from "./StoreInformationSection";
 import { axiosInstance } from "../../../utils/axiosinstance";
 
-// Define interface for location object
+
 interface LocationType {
   label: string;
-  // Add any other properties your location object might have
   [key: string]: any;
 }
 
-// Define the store data interface
 interface StoreDataType {
   name: string;
   phone: string;
   email: string;
   location: LocationType | null;
-  workerIds: number[]; // Changed from workerId to workerIds array
+  workerIds: number[];
   imageBase64: string | null;
   imagePreviewUrl: string | null;
 }
 
-// Define alert state interface
 interface AlertState {
   open: boolean;
   message: string;
@@ -38,12 +35,11 @@ export const Store = () => {
     phone: "",
     email: "",
     location: null,
-    workerIds: [], // Initialize as empty array
+    workerIds: [], 
     imageBase64: null,
     imagePreviewUrl: null,
   });
 
-  // UI state
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [alert, setAlert] = useState<AlertState>({
     open: false,
@@ -62,7 +58,6 @@ export const Store = () => {
     }));
   };
 
-  // Updated to handle array of worker IDs
   const handleWorkersSelect = (workerIds: number[]): void => {
     setStoreData((prev) => ({ ...prev, workerIds }));
   };
@@ -86,12 +81,9 @@ export const Store = () => {
     setAlert((prev) => ({ ...prev, open: false }));
   };
 
-  // Extract address details from Google Places location object
   const extractAddressDetails = (location: LocationType | null) => {
     if (!location) return { fullAddress: "" };
 
-    // If we have a label or description, use that as the full address
-    // This ensures we get the complete address with house number
     const fullAddress =
       location.label ||
       (location.value && location.value.description) ||
@@ -105,9 +97,8 @@ export const Store = () => {
     };
   };
 
-  // Form validation and submission
+
   const handleSubmit = async (): Promise<void> => {
-    // Validate required fields
     const { name, phone, email, location, workerIds, imageBase64 } = storeData;
     const missingFields: string[] = [];
 
@@ -115,7 +106,7 @@ export const Store = () => {
     if (!phone) missingFields.push("Telefonszám");
     if (!email) missingFields.push("Email");
     if (!location) missingFields.push("Cím");
-    if (workerIds.length === 0) missingFields.push("Munkatárs"); // Check if array is empty
+    if (workerIds.length === 0) missingFields.push("Munkatárs");
     if (!imageBase64) missingFields.push("Kép");
 
     if (missingFields.length > 0) {
@@ -127,33 +118,27 @@ export const Store = () => {
       return;
     }
 
-    // Extract address details from location object
     const addressDetails = extractAddressDetails(location);
 
-    // Create payload with full address and worker IDs array
     const payload = {
       name,
       address: addressDetails.fullAddress,
       phone,
       email,
-      workerIds: workerIds, // Send the entire array of worker IDs
+      workerIds: workerIds,
       image: imageBase64,
     };
 
-    console.log("Submitting store with payload:", payload);
     setIsSubmitting(true);
 
     try {
       await axiosInstance.post("/api/v1/createStore", payload);
-
-      // Show success message
       setAlert({
         open: true,
         message: "Bolt sikeresen létrehozva!",
         severity: "success",
       });
       navigate("/edit");
-      // Optional: Clear form after successful submission
       setStoreData({
         name: "",
         phone: "",
@@ -164,14 +149,12 @@ export const Store = () => {
         imagePreviewUrl: null,
       });
     } catch (error: unknown) {
-      // Handle error with proper type checking
       const errorMessage =
         error instanceof Error
           ? error.message
           : (error as any)?.response?.data?.message ||
             "Hiba történt a bolt létrehozása közben.";
 
-      // Show error message
       setAlert({
         open: true,
         message: errorMessage,
@@ -216,13 +199,12 @@ export const Store = () => {
             <div className="md:col-span-7">
               <StoreInformationSection
                 onStoreInfoChange={handleStoreInfoChange}
-                // @ts-ignore - We'll assume the component accepts initialValues
+                // @ts-ignore
                 initialValues={storeData}
               />
               <div className="mt-6">
                 <AddWorker
                   onWorkersSelect={handleWorkersSelect}
-                  // No longer need to pass selectedWorkerId as we're handling an array now
                 />
               </div>
             </div>
@@ -230,14 +212,13 @@ export const Store = () => {
             <div className="md:col-span-5">
               <AddImage
                 onImageChange={handleImageChange}
-                // @ts-ignore - We'll assume the component accepts previewUrl
+                // @ts-ignore
                 previewUrl={storeData.imagePreviewUrl}
               />
             </div>
           </div>
         </div>
 
-        {/* Alert notification */}
         {alert.open && (
           <div className="fixed bottom-4 right-4 left-4 md:left-auto md:w-96 z-50">
             <div

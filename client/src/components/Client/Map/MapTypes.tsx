@@ -29,7 +29,7 @@ export interface Store {
 
 export interface PopoverProps {
   popoverInfo: {
-    title: string;
+    name: string;
     description: string;
     address: string;
     phone: string;

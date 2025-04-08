@@ -16,7 +16,7 @@ function Popover({ popoverInfo, handleClose }: PopoverProps) {
       <div className="relative">
         <img
           src={popoverInfo.picture || "/placeholder.svg"}
-          alt={popoverInfo.title}
+          alt={popoverInfo.name}
           className="w-full h-[200px] object-cover"
         />
         <button
@@ -28,11 +28,15 @@ function Popover({ popoverInfo, handleClose }: PopoverProps) {
       </div>
 
       <div className="p-5">
-        <h2 className="text-xl font-bold">{popoverInfo.city}</h2>
-        <p className="mb-4">{popoverInfo.address}</p>
-        <p className="text-sm text-gray-500">Cím: {popoverInfo.address}</p>
+        <h2 className="text-xl font-bold">{popoverInfo.name}</h2>
+        <p className="mb-4">
+          {popoverInfo.city}, {popoverInfo.address}
+        </p>
         <p className="text-sm text-gray-500">
-          Telefonszám: {popoverInfo.phone}
+          Cím: {popoverInfo.city}, {popoverInfo.address}
+        </p>
+        <p className="text-sm text-gray-500">
+          Telefonszám: +36 {popoverInfo.phone}
         </p>
         <p className="text-sm text-gray-500 mb-4">Email: {popoverInfo.email}</p>
 

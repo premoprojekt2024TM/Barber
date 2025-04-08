@@ -22,14 +22,14 @@ export default function FriendsPage() {
       setIsLoading(true);
       const response = await axiosInstance.get("/api/v1/list");
       if (!response.data || !Array.isArray(response.data.data)) {
-        throw new Error("Invalid API response format");
+        throw new Error("Érvénytelen adat.");
       }
       const mappedWorkers = response.data.data.map((worker: Worker) => ({
         userId: worker.userId,
         name: `${worker.lastName} ${worker.firstName}`,
-        username: worker.username || "",
-        avatar: worker.profilePic || "/placeholder.svg?height=80&width=80",
-        friendshipStatus: worker.friendshipStatus || "none",
+        username: worker.username ,
+        avatar: worker.profilePic,
+        friendshipStatus: worker.friendshipStatus,
       }));
       setWorkers(mappedWorkers);
       return mappedWorkers;

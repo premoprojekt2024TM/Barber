@@ -51,14 +51,26 @@ export const createStore = async (
         .send({ message: "A felhasználónak már van boltja" });
     }
 
-    const originalAddress = address;
+    const extractStreetAddress = (fullAddress: string): string => {
+      const parts = fullAddress.split(",");
+      if (parts.length > 1) {
+        return parts[1].trim();
+      }
+      const streetMatch = fullAddress.match(/([^\d,]+\s\d+)/);
+      if (streetMatch) {
+        return streetMatch[0].trim();
+      }
+      return fullAddress;
+    };
+
+    const streetOnlyAddress = extractStreetAddress(address);
 
     const geocodedData = await geocodeAddress(address);
     if (!geocodedData) {
       return reply.status(400).send({ message: "Nem létezik ilyen cím" });
     }
 
-    const { lat, lng, city, postalCode, streetAddress, country } = geocodedData;
+    const { lat, lng, city, postalCode } = geocodedData;
 
     let pictureUrl = undefined;
     if (image) {
@@ -73,7 +85,7 @@ export const createStore = async (
 
     const store = new model.Store();
     store.name = name;
-    store.address = originalAddress;
+    store.address = streetOnlyAddress;
     store.city = city || "";
     store.postalCode = postalCode || "";
     store.phone = phone;
@@ -101,7 +113,7 @@ export const createStore = async (
 
       if (workersToProcess.length < workerIds.length) {
         return reply.status(400).send({
-          error: `Csak ${workersToProcess.length} munkavállaló került feldolgozásra a(z) ${workerIds.length} közül a bikt korlátja miatt.`,
+          error: `Csak ${workersToProcess.length} munkavállaló került feldolgozásra a(z) ${workerIds.length} közül a bolt korlátja miatt.`,
         });
       }
 
@@ -147,6 +159,7 @@ export const createStore = async (
       .send({ message: "Hiba történt a bolt létrehozása közben" });
   }
 };
+
 //Cím alapján geokodolás
 const geocodeAddress = async (
   address: string,
@@ -722,10 +735,28 @@ export const updateStore = async (
       return reply.status(400).send({ message: "Hiányzó kötelező mezők" });
     }
 
+    // Extract only the street part from the address (without city or country)
+    const extractStreetAddress = (fullAddress: string): string => {
+      const parts = fullAddress.split(",");
+      if (parts.length > 1) {
+        // If there are commas, take the relevant part (usually the second part is the street)
+        return parts[1].trim();
+      }
+      // If there are no commas, use regex to try extracting just the street and number
+      const streetMatch = fullAddress.match(/([^\d,]+\s\d+)/);
+      if (streetMatch) {
+        return streetMatch[0].trim();
+      }
+      // Fallback to original
+      return fullAddress;
+    };
+
+    const streetOnlyAddress = extractStreetAddress(address);
+
     // Ha a cím változott, új geokódolásra van szükség
     let geocodedData = null;
     if (address !== store.address) {
-      geocodedData = await geocodeAddress(address);
+      geocodedData = await geocodeAddress(address); // Use full address for geocoding
       if (!geocodedData) {
         return reply.status(400).send({ message: "Nem létezik ilyen cím" });
       }
@@ -747,12 +778,16 @@ export const updateStore = async (
     store.name = name;
 
     if (geocodedData) {
-      const { lat, lng, city, postalCode, streetAddress } = geocodedData;
-      store.address = streetAddress || address;
+      const { lat, lng, city, postalCode } = geocodedData;
+      // Use the extracted street address only
+      store.address = streetOnlyAddress;
       store.city = city || store.city;
       store.postalCode = postalCode || store.postalCode;
       store.latitude = lat;
       store.longitude = lng;
+    } else {
+      // If address changed but geocoding didn't happen for some reason
+      store.address = streetOnlyAddress;
     }
 
     store.phone = phone;

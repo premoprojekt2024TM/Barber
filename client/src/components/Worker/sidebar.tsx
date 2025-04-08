@@ -289,7 +289,7 @@ export default function Sidebar() {
                 className="fixed bg-gray-800 text-white text-xs py-1 px-2 rounded z-30 whitespace-nowrap"
                 style={{
                   top: `${sidebarRef.current.getBoundingClientRect().bottom - 44}px`,
-                  left: `${sidebarRef.current.offsetLeft + sidebarRef.current.offsetWidth + 8}px`, // Added 8px margin
+                  left: `${sidebarRef.current.offsetLeft + sidebarRef.current.offsetWidth + 8}px`,
                 }}
               >
                 Fiók
