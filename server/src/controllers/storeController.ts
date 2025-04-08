@@ -2,7 +2,6 @@ import { FastifyRequest, FastifyReply } from "fastify";
 import * as model from "../models/index";
 import { AppDataSource } from "../config/dbconfig";
 import { AuthenticatedRequest, GetStoreId } from "../interfaces/interfaces";
-import { storeSchema } from "../shared/validation/userValidation";
 import axios from "axios";
 import * as dotenv from "dotenv";
 import { uploadStoreImage } from "../config/awsconfig";
@@ -52,7 +51,6 @@ export const createStore = async (
         .send({ message: "A felhasználónak már van boltja" });
     }
 
-    // Before geocoding, store the original input address
     const originalAddress = address;
 
     const geocodedData = await geocodeAddress(address);
@@ -75,8 +73,6 @@ export const createStore = async (
 
     const store = new model.Store();
     store.name = name;
-    // Use the original address that was entered instead of relying on streetAddress
-    // This ensures we keep all the address details the user provided
     store.address = originalAddress;
     store.city = city || "";
     store.postalCode = postalCode || "";
@@ -88,46 +84,38 @@ export const createStore = async (
 
     await AppDataSource.getRepository(model.Store).save(store);
 
-    // Add the creator as the store owner
     const storeWorker = new model.StoreWorker();
     storeWorker.store = store;
     storeWorker.user = creator;
     storeWorker.role = "owner";
     await AppDataSource.getRepository(model.StoreWorker).save(storeWorker);
 
-    // Logic to add store workers if workerIds array is provided
     if (workerIds && Array.isArray(workerIds) && workerIds.length > 0) {
       const storeWorkersRepo = AppDataSource.getRepository(model.StoreWorker);
-
-      // Count existing workers (including the owner)
       const storeWorkersCount = await storeWorkersRepo.count({
         where: { store: { storeId: store.storeId } },
       });
-
-      // Ensure we don't exceed maximum of 4 workers (including owner)
       const maxAdditionalWorkers = 4 - storeWorkersCount;
 
-      // Limit the number of workers we'll process
       const workersToProcess = workerIds.slice(0, maxAdditionalWorkers);
 
       if (workersToProcess.length < workerIds.length) {
-        console.warn(
-          `Only processing ${workersToProcess.length} out of ${workerIds.length} workers due to store limit`,
-        );
+        return reply.status(400).send({
+          error: `Csak ${workersToProcess.length} munkavállaló került feldolgozásra a(z) ${workerIds.length} közül a bikt korlátja miatt.`,
+        });
       }
 
-      // Process each worker ID
       for (const workerId of workersToProcess) {
         const worker = await AppDataSource.getRepository(model.User).findOneBy({
           userId: typeof workerId === "string" ? parseInt(workerId) : workerId,
         });
 
         if (!worker) {
-          console.warn(`Worker with ID ${workerId} not found`);
-          continue;
+          return reply.status(404).send({
+            error: `A(z) ${workerId} azonosítójú munkavállaló nem található.`,
+          });
         }
 
-        // Check if the worker is already assigned to another store
         const existingWorkerStore = await storeWorkersRepo.findOne({
           where: {
             user: worker,
@@ -136,10 +124,9 @@ export const createStore = async (
         });
 
         if (existingWorkerStore) {
-          console.warn(
-            `Worker ${workerId} is already assigned to another store`,
-          );
-          continue;
+          return reply.status(400).send({
+            error: `A(z) ${workerId} azonosítójú munkavállaló már hozzá van rendelve egy másik áruházhoz.`,
+          });
         }
 
         const newStoreWorker = new model.StoreWorker();
@@ -155,7 +142,6 @@ export const createStore = async (
       .status(201)
       .send({ message: "A bolt sikeresen létrejött", store });
   } catch (error) {
-    console.error("Store creation error:", error);
     return reply
       .status(500)
       .send({ message: "Hiba történt a bolt létrehozása közben" });
