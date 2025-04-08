@@ -211,3 +211,130 @@ jest.mock("../config/dbconfig", () => ({
 
 
   });
+
+  describe("authController- loginUser", () => {
+    beforeEach(() => {
+      jest.clearAllMocks();
+      mockFindOneBy.mockReset();
+      (loginSchema.safeParse as jest.Mock).mockReset();
+      (bcrypt.compare as jest.Mock).mockReset();
+      (generateToken as jest.Mock).mockClear();
+      (AppDataSource.getRepository as jest.Mock).mockClear();
+    });
+  
+    const loginCredentials = {
+      email: "test@example.com",
+      password: "password123",
+    };
+  
+    const mockExistingUser = {
+      userId: 1,
+      email: "test@example.com",
+      password: "hashedPasswordFromDb",
+      username: "testuser",
+      role: "client",
+    };
+  
+    it("Sikeres bejelentkezés", async () => {
+      const request = mockRequest(loginCredentials);
+      const reply = mockReply();
+  
+      (loginSchema.safeParse as jest.Mock).mockReturnValue({
+        success: true,
+        data: loginCredentials,
+      });
+      mockFindOneBy.mockResolvedValue(mockExistingUser);
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+  
+      await loginUser(request as FastifyRequest, reply as FastifyReply);
+      expect(loginSchema.safeParse).toHaveBeenCalledWith(loginCredentials);
+      expect(AppDataSource.getRepository).toHaveBeenCalledWith(model.User);
+      expect(mockFindOneBy).toHaveBeenCalledWith({
+        email: loginCredentials.email,
+      });
+      expect(bcrypt.compare).toHaveBeenCalledWith(
+        loginCredentials.password,
+        mockExistingUser.password,
+      );
+      expect(generateToken).toHaveBeenCalledWith(mockExistingUser);
+      expect(reply.status).not.toHaveBeenCalled();
+      expect(reply.send).toHaveBeenCalledWith({
+        message: "Sikeres bejelentkezés",
+        token: "mockJWTToken",
+      });
+    });
+  
+    it("400 ha a validáció sikertelen", async () => {
+      const invalidCredentials = { email: "rosszemail", password: "pw" };
+      const request = mockRequest(invalidCredentials);
+      const reply = mockReply();
+  
+      (loginSchema.safeParse as jest.Mock).mockReturnValue({
+        success: false,
+        error: "validációs hiba",
+      });
+  
+      await loginUser(request as FastifyRequest, reply as FastifyReply);
+  
+      expect(loginSchema.safeParse).toHaveBeenCalledWith(invalidCredentials);
+      expect(reply.status).toHaveBeenCalledWith(400);
+      expect(reply.send).toHaveBeenCalledWith({
+        message: "Sikertelen validáció",
+      });
+      expect(mockFindOneBy).not.toHaveBeenCalled();
+      expect(bcrypt.compare).not.toHaveBeenCalled();
+      expect(generateToken).not.toHaveBeenCalled();
+    });
+  
+    it("401 ha a felhasználó nem található", async () => {
+      const request = mockRequest(loginCredentials);
+      const reply = mockReply();
+  
+      (loginSchema.safeParse as jest.Mock).mockReturnValue({
+        success: true,
+        data: loginCredentials,
+      });
+      mockFindOneBy.mockResolvedValue(null);
+  
+      await loginUser(request as FastifyRequest, reply as FastifyReply);
+      expect(loginSchema.safeParse).toHaveBeenCalledWith(loginCredentials);
+      expect(AppDataSource.getRepository).toHaveBeenCalledWith(model.User);
+      expect(mockFindOneBy).toHaveBeenCalledWith({
+        email: loginCredentials.email,
+      });
+      expect(reply.status).toHaveBeenCalledWith(401);
+      expect(reply.send).not.toHaveBeenCalledWith(
+        expect.objectContaining({ message: "Sikeres bejelentkezés" }),
+      );
+      expect(bcrypt.compare).not.toHaveBeenCalled();
+      expect(generateToken).not.toHaveBeenCalled();
+    });
+  
+    it("400 ha a jelszó helytelen", async () => {
+      const request = mockRequest(loginCredentials);
+      const reply = mockReply();
+      (loginSchema.safeParse as jest.Mock).mockReturnValue({
+        success: true,
+        data: loginCredentials,
+      });
+      mockFindOneBy.mockResolvedValue(mockExistingUser);
+      (bcrypt.compare as jest.Mock).mockResolvedValue(false);
+  
+      await loginUser(request as FastifyRequest, reply as FastifyReply);
+  
+      expect(loginSchema.safeParse).toHaveBeenCalledWith(loginCredentials);
+      expect(AppDataSource.getRepository).toHaveBeenCalledWith(model.User);
+      expect(mockFindOneBy).toHaveBeenCalledWith({
+        email: loginCredentials.email,
+      });
+      expect(bcrypt.compare).toHaveBeenCalledWith(
+        loginCredentials.password,
+        mockExistingUser.password,
+      );
+      expect(reply.status).toHaveBeenCalledWith(400);
+      expect(reply.send).toHaveBeenCalledWith({
+        message: "Érvénytelen hitelesítő adatok",
+      });
+      expect(generateToken).not.toHaveBeenCalled();
+    });
+  });
