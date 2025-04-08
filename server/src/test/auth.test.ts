@@ -148,4 +148,31 @@ jest.mock("../config/dbconfig", () => ({
       expect(mockFindOneBy).not.toHaveBeenCalled();
       expect(mockSave).not.toHaveBeenCalled();
     });
+
+
+    it("400 ha email már létezik", async () => {
+      const request = mockRequest(validUserData);
+      const reply = mockReply();
+      const existingUserWithEmail = new model.User();
+      existingUserWithEmail.email = validUserData.email;
+      existingUserWithEmail.userId = 99;
+  
+      (registerSchema.safeParse as jest.Mock).mockReturnValue({
+        success: true,
+        data: validUserData,
+      });
+      mockFindOneBy.mockResolvedValueOnce(existingUserWithEmail);
+  
+      await registerUser(request as FastifyRequest, reply as FastifyReply);
+      expect(registerSchema.safeParse).toHaveBeenCalledWith(validUserData);
+      expect(AppDataSource.getRepository).toHaveBeenCalledWith(model.User);
+      expect(mockFindOneBy).toHaveBeenCalledTimes(1);
+      expect(mockFindOneBy).toHaveBeenCalledWith({ email: validUserData.email });
+      expect(reply.status).toHaveBeenCalledWith(400);
+      expect(reply.send).toHaveBeenCalledWith({
+        message: "Ez az email cím már létezik",
+      });
+      expect(bcrypt.hash).not.toHaveBeenCalled();
+      expect(mockSave).not.toHaveBeenCalled();
+    });
   });
