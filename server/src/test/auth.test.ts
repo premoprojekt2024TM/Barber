@@ -126,4 +126,26 @@ jest.mock("../config/dbconfig", () => ({
         message: "Felhasználó sikeresen létrehozva.",
       });
     });
+
+    it("400 ha szerep érvénytelen", async () => {
+      const invalidRoleData = { ...validUserData, role: "admin" };
+      const request = mockRequest(invalidRoleData);
+      const reply = mockReply();
+  
+      (registerSchema.safeParse as jest.Mock).mockReturnValue({
+        success: true,
+        data: invalidRoleData,
+      });
+  
+      await registerUser(request as FastifyRequest, reply as FastifyReply);
+  
+      expect(registerSchema.safeParse).toHaveBeenCalledWith(invalidRoleData);
+      expect(reply.status).toHaveBeenCalledWith(400);
+      expect(reply.send).toHaveBeenCalledWith({
+        message:
+          "Érvénytelen szerep. A szerepnek „client” vagy „worker” kell lennie.",
+      });
+      expect(mockFindOneBy).not.toHaveBeenCalled();
+      expect(mockSave).not.toHaveBeenCalled();
+    });
   });
