@@ -13,7 +13,7 @@
 
 # Dokumentáció
 
-A word dokumentáció itt tölthető le: [Dokumentáció](https://barberandblade.shop)
+A word dokumentáció itt tölthető le: [Dokumentáció](https://github.com/user-attachments/files/19655469/doksi.04.08.docx)
 
 Az online dokumentáció ezen az oldalon érhető el [Dokumentáció](https://barberandblade.shop)
 
