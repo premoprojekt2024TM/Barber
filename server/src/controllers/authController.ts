@@ -24,12 +24,10 @@ export const registerUser = async (
   const { username, email, password, role, firstName, lastName } = result.data;
 
   if (role !== "client" && role !== "worker") {
-    return reply
-      .status(400)
-      .send({
-        message:
-          "Érvénytelen szerep. A szerepnek „client” vagy „worker” kell lennie.",
-      });
+    return reply.status(400).send({
+      message:
+        "Érvénytelen szerep. A szerepnek „client” vagy „worker” kell lennie.",
+    });
   }
 
   const existingEmail = await AppDataSource.getRepository(model.User).findOneBy(
@@ -50,10 +48,8 @@ export const registerUser = async (
       .send({ message: "Ez a felhasználónév már létezik" });
   }
 
-  //profilekép
   const generateProfilepic = `https://ui-avatars.com/api/?name=${username[0]}&size=128`;
 
-  //adatbázisba beillesztés
   try {
     const salt = await bcrypt.genSalt(12);
     const hashedPassword = await bcrypt.hash(password, salt);

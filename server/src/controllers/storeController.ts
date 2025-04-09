@@ -702,7 +702,6 @@ export const updateStore = async (
   }
 
   try {
-    // Ellenőrizzük, hogy a felhasználó a bolt tulajdonosa-e
     const storeWorker = await AppDataSource.getRepository(
       model.StoreWorker,
     ).findOne({
@@ -727,42 +726,35 @@ export const updateStore = async (
       phone,
       email,
       image,
-      workerIds = [], // Default to empty array if not provided
+      workerIds = [],
     } = request.body as any;
 
-    // Ellenőrizzük a kötelező mezőket
     if (!name || !address || !phone || !email) {
       return reply.status(400).send({ message: "Hiányzó kötelező mezők" });
     }
 
-    // Extract only the street part from the address (without city or country)
     const extractStreetAddress = (fullAddress: string): string => {
       const parts = fullAddress.split(",");
       if (parts.length > 1) {
-        // If there are commas, take the relevant part (usually the second part is the street)
         return parts[1].trim();
       }
-      // If there are no commas, use regex to try extracting just the street and number
       const streetMatch = fullAddress.match(/([^\d,]+\s\d+)/);
       if (streetMatch) {
         return streetMatch[0].trim();
       }
-      // Fallback to original
       return fullAddress;
     };
 
     const streetOnlyAddress = extractStreetAddress(address);
 
-    // Ha a cím változott, új geokódolásra van szükség
     let geocodedData = null;
     if (address !== store.address) {
-      geocodedData = await geocodeAddress(address); // Use full address for geocoding
+      geocodedData = await geocodeAddress(address);
       if (!geocodedData) {
         return reply.status(400).send({ message: "Nem létezik ilyen cím" });
       }
     }
 
-    // Képfeltöltés kezelése
     let pictureUrl = store.picture;
     if (image && image !== store.picture) {
       const contentType =
@@ -774,19 +766,16 @@ export const updateStore = async (
       );
     }
 
-    // Store adatok frissítése
     store.name = name;
 
     if (geocodedData) {
       const { lat, lng, city, postalCode } = geocodedData;
-      // Use the extracted street address only
       store.address = streetOnlyAddress;
       store.city = city || store.city;
       store.postalCode = postalCode || store.postalCode;
       store.latitude = lat;
       store.longitude = lng;
     } else {
-      // If address changed but geocoding didn't happen for some reason
       store.address = streetOnlyAddress;
     }
 
@@ -795,55 +784,43 @@ export const updateStore = async (
     store.picture = pictureUrl;
 
     await AppDataSource.getRepository(model.Store).save(store);
-
-    // Munkavállaló kezelése - Most már több munkavállalót is kezelünk
     if (workerIds && Array.isArray(workerIds) && workerIds.length > 0) {
       const storeWorkersRepo = AppDataSource.getRepository(model.StoreWorker);
       const userRepo = AppDataSource.getRepository(model.User);
-
-      // Megkeressük a jelenlegi munkavállalókat
       const existingWorkers = await storeWorkersRepo.find({
         where: { store: { storeId } },
         relations: ["user"],
       });
 
-      // Csak a "worker" szerepkörű felhasználókat vizsgáljuk (nem az tulajdonost)
       const currentWorkers = existingWorkers.filter(
         (sw) => sw.role === "worker",
       );
 
-      // Töröljük azokat a munkavállalókat, akik már nincsenek a listában
       const workerIdsAsNumbers = workerIds.map((id) => parseInt(id));
       const workersToRemove = currentWorkers.filter(
         (worker) => !workerIdsAsNumbers.includes(worker.user.userId),
       );
 
       for (const workerToRemove of workersToRemove) {
-        // Töröljük a munkavállaló időpontjait
         await AppDataSource.getRepository(model.Appointment).delete({
           worker: { userId: workerToRemove.user.userId },
         });
 
-        // Töröljük a munkavállaló elérhetőségi időit
         await AppDataSource.getRepository(model.AvailabilityTimes).delete({
           user: { userId: workerToRemove.user.userId },
         });
 
-        // Töröljük a munkavállalót a boltból
         await storeWorkersRepo.delete({
           storeWorkerId: workerToRemove.storeWorkerId,
         });
       }
 
-      // Adjuk hozzá az új munkavállalókat
       for (const workerId of workerIdsAsNumbers) {
-        // Ellenőrizzük, hogy ez a munkavállaló már hozzá van-e rendelve a bolthoz
         const existingWorker = currentWorkers.find(
           (worker) => worker.user.userId === workerId,
         );
 
         if (!existingWorker) {
-          // Ellenőrizzük, hogy létezik-e a felhasználó
           const newWorker = await userRepo.findOneBy({
             userId: workerId,
           });
@@ -854,7 +831,6 @@ export const updateStore = async (
               .send({ message: `A szakember (ID: ${workerId}) nem található` });
           }
 
-          // Ellenőrizzük, hogy az új munkavállaló más bolthoz van-e rendelve
           const newWorkerExistsInAnotherStore = await storeWorkersRepo.findOne({
             where: {
               user: { userId: workerId },
@@ -868,7 +844,6 @@ export const updateStore = async (
             });
           }
 
-          // Új munkavállaló hozzáadása
           const newStoreWorker = new model.StoreWorker();
           newStoreWorker.store = store;
           newStoreWorker.user = newWorker;
@@ -878,7 +853,6 @@ export const updateStore = async (
         }
       }
     } else {
-      // Ha nincs munkavállaló megadva, az összes jelenlegi "worker" törölhető
       const storeWorkersRepo = AppDataSource.getRepository(model.StoreWorker);
       const existingWorkers = await storeWorkersRepo.find({
         where: { store: { storeId }, role: "worker" },
@@ -886,24 +860,20 @@ export const updateStore = async (
       });
 
       for (const worker of existingWorkers) {
-        // Töröljük a munkavállaló időpontjait
         await AppDataSource.getRepository(model.Appointment).delete({
           worker: { userId: worker.user.userId },
         });
 
-        // Töröljük a munkavállaló elérhetőségi időit
         await AppDataSource.getRepository(model.AvailabilityTimes).delete({
           user: { userId: worker.user.userId },
         });
 
-        // Töröljük a munkavállalót a boltból
         await storeWorkersRepo.delete({
           storeWorkerId: worker.storeWorkerId,
         });
       }
     }
 
-    // Lekérjük a frissített munkavállalói listát a válaszhoz
     const updatedWorkers = await AppDataSource.getRepository(
       model.StoreWorker,
     ).find({
@@ -923,7 +893,6 @@ export const updateStore = async (
       })),
     });
   } catch (error) {
-    console.error("Error updating store:", error);
     return reply
       .status(500)
       .send({ message: "Hiba történt a bolt frissítése közben" });
