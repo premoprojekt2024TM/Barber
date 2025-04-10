@@ -23,7 +23,6 @@ COPY .env ./
 
 RUN npx tsc
 
-COPY src/shared/validation/cities.json dist/shared/validation/cities.json
 EXPOSE 8080
 
 CMD ["node", "dist/app.js"]

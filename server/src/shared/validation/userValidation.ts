@@ -1,89 +1,65 @@
 import { z } from "zod";
-import * as fs from "fs";
-import path from "path";
 
-const citiesFilePath = path.resolve(__dirname, "./cities.json");
-const citiesData = JSON.parse(fs.readFileSync(citiesFilePath, "utf8"));
-
-const postalCodeToPlaceName = citiesData.reduce(
-  (
-    acc: Record<string, string>,
-    city: { "Postal Code": string; "Place Name": string },
-  ) => {
-    if (city["Postal Code"] && city["Place Name"]) {
-      acc[city["Postal Code"]] = city["Place Name"];
-    }
-    return acc;
-  },
-  {},
-);
-
-const placeNameToPostalCode = citiesData.reduce(
-  (
-    acc: Record<string, string>,
-    city: { "Postal Code": string; "Place Name": string },
-  ) => {
-    if (city["Postal Code"] && city["Place Name"]) {
-      acc[city["Place Name"]] = city["Postal Code"];
-    }
-    return acc;
-  },
-  {},
-);
-
-const postalCodes = citiesData
-  .filter((city: { "Postal Code": string }) => city["Postal Code"] !== "")
-  .map((city: { "Postal Code": string }) => city["Postal Code"]);
-
+// Regisztrációs űrlap séma
 export const registerSchema = z.object({
   username: z
     .string()
-    .min(3, "Username should be at least 3 characters long")
-    .max(12, "Username should be at most 12 characters long")
-    .refine((val) => !/\s/.test(val), "Username should not contain spaces"),
-  email: z.string().email("Invalid email format"),
+    .min(3, "A felhasználónévnek legalább 3 karakter hosszúnak kell lennie")
+    .max(12, "A felhasználónév legfeljebb 12 karakter hosszú lehet")
+    .refine(
+      (val) => !/\s/.test(val),
+      "A felhasználónév nem tartalmazhat szóközt",
+    ),
+  email: z.string().email("Érvénytelen email formátum"),
   firstName: z.string(),
   lastName: z.string(),
-  password: z.string().min(6, "Password should be at least 6 characters long"),
+  password: z
+    .string()
+    .min(6, "A jelszónak legalább 6 karakter hosszúnak kell lennie"),
   role: z.enum(["client", "worker"]),
 });
 
+// Bejelentkezési űrlap séma
 export const loginSchema = z.object({
-  email: z.string().email("Invalid email format"),
-  password: z.string().min(6, "Password should be at least 6 characters long"),
+  email: z.string().email("Érvénytelen email formátum"),
+  password: z
+    .string()
+    .min(6, "A jelszónak legalább 6 karakter hosszúnak kell lennie"),
 });
 
+// Felhasználó frissítési séma
 export const updateSchema = z.object({
   username: z.string().min(3).max(50).optional(),
   email: z.string().email().optional(),
   password: z.string().min(6).optional(),
   firstName: z.string().optional(),
   lastName: z.string().optional(),
-  profilePic: z.string().optional(), // Assuming profilePic is a string (e.g., URL or base64)
+  profilePic: z.string().optional(),
 });
 
+// Bolt létrehozási séma
 export const storeSchema = z.object({
   name: z
     .string()
-    .min(3, "Store name should be at least 3 characters long")
-    .max(100, "Store name should be at most 100 characters long"),
+    .min(3, "A bolt nevének legalább 3 karakter hosszúnak kell lennie")
+    .max(100, "A bolt neve legfeljebb 100 karakter hosszú lehet"),
 
   workerId: z
     .number()
     .int()
-    .min(1, "Worker ID must be a valid positive integer"),
+    .min(1, "A dolgozó azonosítónak pozitív egész számnak kell lennie"),
 
   address: z
     .string()
-    .min(3, "Address should be at least 3 characters long")
-    .max(100, "Address should be at most 100 characters long"),
+    .min(3, "A címnek legalább 3 karakter hosszúnak kell lennie")
+    .max(100, "A cím legfeljebb 100 karakter hosszú lehet"),
 
   phone: z
     .string()
-    .min(10, "Phone number should be at least 10 characters long")
-    .max(15, "Phone number should be at most 15 characters long"),
+    .min(10, "A telefonszámnak legalább 10 karakter hosszúnak kell lennie")
+    .max(15, "A telefonszám legfeljebb 15 karakter hosszú lehet"),
 
-  email: z.string().email("Invalid email format"),
+  email: z.string().email("Érvénytelen email formátum"),
 
   picture: z.string(),
 });
