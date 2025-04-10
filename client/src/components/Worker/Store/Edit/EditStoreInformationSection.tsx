@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import GooglePlacesAutocomplete from "react-google-places-autocomplete";
 import { X } from "lucide-react";
 
-const GOOGLE_MAPS_API_KEY = "AIzaSyCSJN2Qzyjhv-AFd1I2LVLD30hX7-lZhRE";
+const GOOGLE_MAPS_API_KEY = "AIzaSyAh9GRxQHisAb85TYLkBk0_L4s1j_CIXjU";
 interface LocationType {
   label: string;
   value?: {
