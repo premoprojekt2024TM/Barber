@@ -18,9 +18,6 @@ A  dokumentáció itt tölthető le: [Dokumentáció](https://github.com/temleit
 Az online dokumentáció ezen az oldalon érhető el [Dokumentáció](https://docs.barberandblade.shop/)
 
 
-
-
-
 ## Környezeti változok
 
  A projekt futtatásához kérjük, hogy adja hozzá a következő környezeti változókat a .env fájlhoz:
@@ -62,6 +59,8 @@ A projekt futtatásához kövesse az alábbi lépéseket:
   ```bash
     docker compose up  
   ```
+5.A projekt adatainak feltöltéséhez használjon egy PostgresSQL kliens-t (Pl. DataGrip,Beekeeper Studio)
+   Az alábbi linken tölthető le : [SQL](https://github.com/temleitnermarcell01/Barber/releases/download/doc/dataonly.sql)
 
 # Az alábbi portokon futnak a szerverek:
 `localhost:8080` - Backend
