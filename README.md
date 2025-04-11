@@ -15,7 +15,7 @@
 
 A  dokumentáció itt tölthető le: [Dokumentáció](https://github.com/temleitnermarcell01/Barber/releases/download/doc/Dokumentacio.pdf)
 
-Az online dokumentáció ezen az oldalon érhető el [Dokumentáció](https://barberandblade.shop)
+Az online dokumentáció ezen az oldalon érhető el [Dokumentáció](https://docs.barberandblade.shop/)
 
 
 
